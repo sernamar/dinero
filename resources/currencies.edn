@@ -1,0 +1,2 @@
+{:eur {:currency-code "EUR", :numeric-code 978, :minor-unit 2},
+ :gbp {:currency-code "GBP", :numeric-code 826, :minor-unit 2}}
