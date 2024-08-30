@@ -4,7 +4,7 @@
             [clojure.java.io :as io]
             [clojure.string :as str])
   (:import [java.math RoundingMode]
-           [java.text NumberFormat]
+           [java.text DecimalFormat DecimalFormatSymbols]
            [java.util Currency Locale]))
 
 (set! *warn-on-reflection* true)
@@ -69,7 +69,7 @@
 (defn- make-formatter
   "Creates a new formatter for the given currency, locale, rounding mode, and decimal places."
   [currency locale rounding-mode decimal-places]
-  (let [formatter (NumberFormat/getCurrencyInstance locale)]
+  (let [formatter (DecimalFormat/getCurrencyInstance locale)]
     (doto formatter
       (.setRoundingMode rounding-mode)
       (.setMinimumFractionDigits decimal-places)
@@ -96,7 +96,17 @@
         rounding-mode (or rounding-mode RoundingMode/HALF_EVEN)
         decimal-places (or decimal-places (minor-unit currency))
         formatter (make-formatter currency locale rounding-mode decimal-places)
-        formatted-money (.format ^NumberFormat formatter amount)]
+        formatted-money (.format ^DecimalFormat formatter amount)]
     (if (iso-4217? currency)
       formatted-money
       (replace-currency-symbol formatted-money currency locale))))
+
+(defn format-with-pattern
+  [money pattern & {:keys [locale rounding-mode] :as _options}]
+  (let [amount (get-amount money)
+        locale (or locale (Locale/getDefault))
+        rounding-mode (or rounding-mode RoundingMode/HALF_EVEN)
+        symbols (DecimalFormatSymbols/getInstance locale)
+        formatter (DecimalFormat. pattern symbols)]
+    (.setRoundingMode formatter rounding-mode)
+    (.format ^DecimalFormat formatter amount)))

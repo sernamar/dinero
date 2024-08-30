@@ -49,3 +49,15 @@
     (t/is (= "1.234 €" (sut/format money {:locale germany
                                           :rounding-mode RoundingMode/DOWN
                                           :decimal-places 0})))))
+(t/deftest test-format-with-pattern
+  (let [money (sut/money-of 1234.5678 :eur)
+        germany Locale/GERMANY
+        uk Locale/UK]
+    (t/is (= "1.234,57 €" (sut/format-with-pattern money "#,##0.00 ¤" {:locale germany})))
+    (t/is (= "1.234,57 EUR" (sut/format-with-pattern money "#,##0.00 ¤¤" {:locale germany})))
+    (t/is (= "1.234,57 euros" (sut/format-with-pattern money "#,##0.00 euros" {:locale germany})))
+    (t/is (= "1.234,568 €" (sut/format-with-pattern money "#,##0.000 ¤" {:locale germany})))
+    (t/is (= "1,234.57 £" (sut/format-with-pattern money "#,##0.00 ¤" {:locale uk})))
+    (t/is (= "1,234.57 GBP" (sut/format-with-pattern money "#,##0.00 ¤¤" {:locale uk})))
+    (t/is (= "1.234,57 €" (sut/format-with-pattern money "#,##0.00 ¤" {:locale germany :rounding-mode RoundingMode/HALF_EVEN})))
+    (t/is (= "1.234,56 €" (sut/format-with-pattern money "#,##0.00 ¤" {:locale germany :rounding-mode RoundingMode/DOWN})))))
