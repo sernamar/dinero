@@ -1,0 +1,2 @@
+{:default-currency :eur
+ :default-rounding-mode :half-even}

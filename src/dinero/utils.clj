@@ -1,5 +1,7 @@
 (ns dinero.utils
-  (:import [java.math RoundingMode]))
+  (:require [clojure.edn :as edn])
+  (:import [java.io File]
+           [java.math RoundingMode]))
 
 (defn keyword->rounding-mode
   "Returns the rounding mode for the given keyword."
@@ -14,3 +16,11 @@
     :half-even RoundingMode/HALF_EVEN
     :unnecessary RoundingMode/UNNECESSARY
     (throw (ex-info "Invalid rounding mode" {:mode mode}))))
+
+(defn read-config
+  "Reads the configuration from the given pathname."
+  [pathname]
+  (when (.exists (File. ^String pathname))
+      (-> pathname
+          slurp
+          edn/read-string)))

@@ -9,6 +9,13 @@
 
 (set! *warn-on-reflection* true)
 
+;;; Configuration
+
+(defonce config (utils/read-config "config.edn"))
+
+(def ^:dynamic *default-currency* (:default-currency config))
+(def ^:dynamic *default-rounding-mode* (:default-rounding-mode config))
+
 ;;; Currencies
 
 (defonce currencies (-> "currencies.edn" io/resource slurp edn/read-string))
@@ -50,9 +57,13 @@
 
 (defn money-of
   "Creates a monetary amount with the given amount and currency."
-  [amount currency]
-  (assert-currency currency)
-  {:amount (bigdec amount) :currency currency})
+  ([]
+   (money-of 0 *default-currency*))
+  ([amount]
+   (money-of amount *default-currency*))
+  ([amount currency]
+   (assert-currency currency)
+   {:amount (bigdec amount) :currency currency}))
 
 (defn get-amount
   "Returns the amount of the given monetary amount."
@@ -94,7 +105,7 @@
   (let [amount (get-amount money)
         currency (get-currency money)
         locale (or locale (Locale/getDefault))
-        rounding-mode (utils/keyword->rounding-mode (or rounding-mode :half-even))
+        rounding-mode (utils/keyword->rounding-mode (or rounding-mode *default-rounding-mode* :half-even))
         decimal-places (or decimal-places (minor-unit currency))
         formatter (make-formatter currency locale rounding-mode decimal-places)
         formatted-money (.format ^DecimalFormat formatter amount)]
@@ -107,7 +118,7 @@
   [money pattern & {:keys [locale rounding-mode] :as _options}]
   (let [amount (get-amount money)
         locale (or locale (Locale/getDefault))
-        rounding-mode (utils/keyword->rounding-mode (or rounding-mode :half-even))
+        rounding-mode (utils/keyword->rounding-mode (or rounding-mode *default-rounding-mode* :half-even))
         symbols (DecimalFormatSymbols/getInstance locale)
         formatter (DecimalFormat. pattern symbols)]
     (.setRoundingMode formatter rounding-mode)
