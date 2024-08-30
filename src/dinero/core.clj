@@ -98,12 +98,3 @@
     (if (iso-4217? currency)
       formatted-money
       (replace-currency-symbol formatted-money currency locale))))
-
-(comment
-  (format (money-of 1 :eur))
-  (format (money-of 1 :eur) {:locale Locale/UK})
-  (format (money-of 1 :gbp))
-  (format (money-of 1 :gbp) {:locale Locale/UK})
-  (format (money-of 1 :btc))
-  (format (money-of 1 :btc) {:locale Locale/UK})
-  )
