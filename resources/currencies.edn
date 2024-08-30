@@ -1,3 +1,4 @@
 {:eur {:currency-code "EUR", :type :iso-4217, :minor-unit 2},
- :gbp {:currency-code "GBP", :type :iso-4217, :minor-unit 2}
+ :gbp {:currency-code "GBP", :type :iso-4217, :minor-unit 2},
+ :jpy {:currency-code "JPY", :type :iso-4217, :minor-unit 0},
  :btc {:currency-code "BTC", :type :crypto, :minor-unit 8, :symbol "₿"}}

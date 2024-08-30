@@ -23,19 +23,27 @@
 
 ;;; Formatting
 
-(t/deftest format
+(t/deftest test-format
   ;; different locales
   (let [m1 (sut/money-of 1 :eur)
         m2 (sut/money-of 1 :gbp)
-        m3 (sut/money-of 1 :btc)
+        m3 (sut/money-of 1 :jpy)
+        m4 (sut/money-of 1 :btc)
         germany Locale/GERMANY
-        uk Locale/UK]
+        uk Locale/UK
+        japan Locale/JAPAN]
     (t/is (= "1,00 €" (sut/format m1 {:locale germany})))
     (t/is (= "1,00 £" (sut/format m2 {:locale germany})))
-    (t/is (= "1,00000000 ₿" (sut/format m3 {:locale germany})))
+    (t/is (= "1 ¥" (sut/format m3 {:locale germany})))
+    (t/is (= "1,00000000 ₿" (sut/format m4 {:locale germany})))
     (t/is (= "€1.00" (sut/format m1 {:locale uk})))
     (t/is (= "£1.00" (sut/format m2 {:locale uk})))
-    (t/is (= "₿1.00000000" (sut/format m3 {:locale uk}))))
+    (t/is (= "JP¥1" (sut/format m3 {:locale uk})))
+    (t/is (= "₿1.00000000" (sut/format m4 {:locale uk})))
+    (t/is (= "€1.00" (sut/format m1 {:locale japan})))
+    (t/is (= "£1.00" (sut/format m2 {:locale japan})))
+    (t/is (= "￥1" (sut/format m3 {:locale japan})))
+    (t/is (= "₿1.00000000" (sut/format m4 {:locale japan}))))
   ;; different formatting options
   (let [money (sut/money-of 1234.5678 :eur)
         germany Locale/GERMANY]
