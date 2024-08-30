@@ -89,6 +89,7 @@
     (str/replace string locale-symbol currency-symbol)))
 
 (defn format
+  "Formats the given monetary amount with the given options."
   [money & {:keys [locale rounding-mode decimal-places] :as _options}]
   (let [amount (get-amount money)
         currency (get-currency money)
@@ -102,6 +103,7 @@
       (replace-currency-symbol formatted-money currency locale))))
 
 (defn format-with-pattern
+  "Formats the given monetary amount with the given pattern and options."
   [money pattern & {:keys [locale rounding-mode] :as _options}]
   (let [amount (get-amount money)
         locale (or locale (Locale/getDefault))
