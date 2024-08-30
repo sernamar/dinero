@@ -76,6 +76,16 @@
       (.setCurrency formatter (Currency/getInstance (currency-code currency))))
     formatter))
 
+(defn- replace-currency-symbol
+  "Replaces the locale currency symbol with the currency symbol.
+
+  If the currency has no symbol, the currency code is used instead."
+  [string currency locale]
+  (let [locale-currency (Currency/getInstance locale)
+        locale-symbol (.getSymbol locale-currency locale)
+        currency-symbol (or (currency-symbol currency) (currency-code currency))]
+    (str/replace string locale-symbol currency-symbol)))
+
 (defn format
   [money & {:keys [locale rounding-mode decimal-places] :as _options}]
   (let [amount (get-amount money)
@@ -87,10 +97,7 @@
         formatted-money (.format formatter amount)]
     (if (iso-4217? currency)
       formatted-money
-      (let [locale-currency (Currency/getInstance locale)
-            locale-symbol (.getSymbol locale-currency locale)
-            currency-symbol (currency-symbol currency)]
-        (str/replace formatted-money locale-symbol currency-symbol)))))
+      (replace-currency-symbol formatted-money currency locale))))
 
 (comment
   (format (money-of 1 :eur))
