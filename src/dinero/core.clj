@@ -7,6 +7,8 @@
            [java.text NumberFormat]
            [java.util Currency Locale]))
 
+(set! *warn-on-reflection* true)
+
 ;;; Currencies
 
 (defonce currencies (-> "currencies.edn" io/resource slurp edn/read-string))
@@ -73,7 +75,7 @@
       (.setMinimumFractionDigits decimal-places)
       (.setMaximumFractionDigits decimal-places))
     (when (iso-4217? currency)
-      (.setCurrency formatter (Currency/getInstance (currency-code currency))))
+      (.setCurrency formatter (Currency/getInstance ^String (currency-code currency))))
     formatter))
 
 (defn- replace-currency-symbol
@@ -81,7 +83,7 @@
 
   If the currency has no symbol, the currency code is used instead."
   [string currency locale]
-  (let [locale-currency (Currency/getInstance locale)
+  (let [locale-currency (Currency/getInstance ^Locale locale)
         locale-symbol (.getSymbol locale-currency locale)
         currency-symbol (or (currency-symbol currency) (currency-code currency))]
     (str/replace string locale-symbol currency-symbol)))
@@ -94,7 +96,7 @@
         rounding-mode (or rounding-mode RoundingMode/HALF_EVEN)
         decimal-places (or decimal-places (minor-unit currency))
         formatter (make-formatter currency locale rounding-mode decimal-places)
-        formatted-money (.format formatter amount)]
+        formatted-money (.format ^NumberFormat formatter amount)]
     (if (iso-4217? currency)
       formatted-money
       (replace-currency-symbol formatted-money currency locale))))
