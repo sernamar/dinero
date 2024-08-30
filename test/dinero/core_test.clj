@@ -1,7 +1,8 @@
 (ns dinero.core-test
   (:require [dinero.core :as sut]
             [clojure.test :as t])
-  (:import [java.util Locale]))
+  (:import [java.text ParseException]
+           [java.util Locale]))
 
 ;;; Money creation
 
@@ -86,3 +87,12 @@
     (t/is (= "1,234.57 GBP" (sut/format-with-pattern money "#,##0.00 ¤¤" {:locale uk})))
     (t/is (= "1.234,57 €" (sut/format-with-pattern money "#,##0.00 ¤" {:locale germany :rounding-mode :half-up})))
     (t/is (= "1.234,56 €" (sut/format-with-pattern money "#,##0.00 ¤" {:locale germany :rounding-mode :down})))))
+
+;;; Parsing
+
+(t/deftest test-parse-iso-4217
+  (let [germany Locale/GERMANY
+        uk Locale/UK]
+    (t/is (= (sut/money-of 1234.56 :eur) (sut/parse-iso-4217 "1.234,56 €" {:locale germany})))
+    (t/is (= (sut/money-of 1234.56 :gbp) (sut/parse-iso-4217 "£1,234.56" {:locale uk})))
+    (t/is (thrown? ParseException (sut/parse-iso-4217 "£1,234.56" {:locale germany})))))

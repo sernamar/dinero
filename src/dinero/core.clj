@@ -136,3 +136,14 @@
         formatter (DecimalFormat. pattern symbols)]
     (.setRoundingMode formatter rounding-mode)
     (.format ^DecimalFormat formatter amount)))
+
+;;; Parsing
+
+(defn parse-iso-4217
+  "Parses the given string, which represents a monetary amount that uses a ISO 4217 currency."
+  [string & {:keys [locale] :as _options}]
+  (let [locale (or locale (Locale/getDefault))
+        formatter (DecimalFormat/getCurrencyInstance locale)
+        amount (.parse ^DecimalFormat formatter string)
+        currency (-> (.getCurrency formatter) str/lower-case keyword)]
+    (money-of amount currency)))
