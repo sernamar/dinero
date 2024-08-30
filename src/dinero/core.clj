@@ -2,9 +2,9 @@
   (:refer-clojure :exclude [format])
   (:require [clojure.edn :as edn]
             [clojure.java.io :as io]
-            [clojure.string :as str])
-  (:import [java.math RoundingMode]
-           [java.text DecimalFormat DecimalFormatSymbols]
+            [clojure.string :as str]
+            [dinero.utils :as utils])
+  (:import [java.text DecimalFormat DecimalFormatSymbols]
            [java.util Currency Locale]))
 
 (set! *warn-on-reflection* true)
@@ -94,7 +94,7 @@
   (let [amount (get-amount money)
         currency (get-currency money)
         locale (or locale (Locale/getDefault))
-        rounding-mode (or rounding-mode RoundingMode/HALF_EVEN)
+        rounding-mode (utils/keyword->rounding-mode (or rounding-mode :half-even))
         decimal-places (or decimal-places (minor-unit currency))
         formatter (make-formatter currency locale rounding-mode decimal-places)
         formatted-money (.format ^DecimalFormat formatter amount)]
@@ -107,7 +107,7 @@
   [money pattern & {:keys [locale rounding-mode] :as _options}]
   (let [amount (get-amount money)
         locale (or locale (Locale/getDefault))
-        rounding-mode (or rounding-mode RoundingMode/HALF_EVEN)
+        rounding-mode (utils/keyword->rounding-mode (or rounding-mode :half-even))
         symbols (DecimalFormatSymbols/getInstance locale)
         formatter (DecimalFormat. pattern symbols)]
     (.setRoundingMode formatter rounding-mode)

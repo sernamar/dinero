@@ -1,8 +1,7 @@
 (ns dinero.core-test
   (:require [dinero.core :as sut]
             [clojure.test :as t])
-  (:import [java.math RoundingMode]
-           [java.util Locale]))
+  (:import [java.util Locale]))
 
 ;;; Money creation
 
@@ -41,14 +40,15 @@
   (let [money (sut/money-of 1234.5678 :eur)
         germany Locale/GERMANY]
     (t/is (= "1.234,57 €" (sut/format money {:locale germany
-                                             :rounding-mode RoundingMode/HALF_UP
+                                             :rounding-mode :half-up
                                              :decimal-places 2})))
     (t/is (= "1.234,56 €" (sut/format money {:locale germany
-                                             :rounding-mode RoundingMode/DOWN
+                                             :rounding-mode :down
                                              :decimal-places 2})))
     (t/is (= "1.234 €" (sut/format money {:locale germany
-                                          :rounding-mode RoundingMode/DOWN
+                                          :rounding-mode :down
                                           :decimal-places 0})))))
+
 (t/deftest test-format-with-pattern
   (let [money (sut/money-of 1234.5678 :eur)
         germany Locale/GERMANY
@@ -59,5 +59,5 @@
     (t/is (= "1.234,568 €" (sut/format-with-pattern money "#,##0.000 ¤" {:locale germany})))
     (t/is (= "1,234.57 £" (sut/format-with-pattern money "#,##0.00 ¤" {:locale uk})))
     (t/is (= "1,234.57 GBP" (sut/format-with-pattern money "#,##0.00 ¤¤" {:locale uk})))
-    (t/is (= "1.234,57 €" (sut/format-with-pattern money "#,##0.00 ¤" {:locale germany :rounding-mode RoundingMode/HALF_EVEN})))
-    (t/is (= "1.234,56 €" (sut/format-with-pattern money "#,##0.00 ¤" {:locale germany :rounding-mode RoundingMode/DOWN})))))
+    (t/is (= "1.234,57 €" (sut/format-with-pattern money "#,##0.00 ¤" {:locale germany :rounding-mode :half-up})))
+    (t/is (= "1.234,56 €" (sut/format-with-pattern money "#,##0.00 ¤" {:locale germany :rounding-mode :down})))))
