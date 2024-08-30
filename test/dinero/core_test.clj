@@ -45,17 +45,34 @@
     (t/is (= "￥1" (sut/format m3 {:locale japan})))
     (t/is (= "₿1.00000000" (sut/format m4 {:locale japan}))))
   ;; different formatting options
-  (let [money (sut/money-of 1234.5678 :eur)
+  (let [m1 (sut/money-of 1234.5678 :eur)
+        m2 (sut/money-of 1 :btc)
         germany Locale/GERMANY]
-    (t/is (= "1.234,57 €" (sut/format money {:locale germany
-                                             :rounding-mode :half-up
-                                             :decimal-places 2})))
-    (t/is (= "1.234,56 €" (sut/format money {:locale germany
-                                             :rounding-mode :down
-                                             :decimal-places 2})))
-    (t/is (= "1.234 €" (sut/format money {:locale germany
+    (t/is (= "1.234,57 €" (sut/format m1 {:locale germany
+                                          :rounding-mode :half-up
+                                          :decimal-places 2})))
+    (t/is (= "1.234,56 €" (sut/format m1 {:locale germany
                                           :rounding-mode :down
-                                          :decimal-places 0})))))
+                                          :decimal-places 2})))
+    (t/is (= "1.234 €" (sut/format m1 {:locale germany
+                                       :rounding-mode :down
+                                       :decimal-places 0})))
+    (t/is (= "1.234,57 €" (sut/format m1 {:locale germany
+                                          :rounding-mode :half-up
+                                          :decimal-places 2
+                                          :symbol-style :symbol})))
+    (t/is (= "1.234,57 EUR" (sut/format m1 {:locale germany
+                                            :rounding-mode :half-up
+                                            :decimal-places 2
+                                            :symbol-style :code})))
+    (t/is (= "1,00 ₿" (sut/format m2 {:locale germany
+                                      :rounding-mode :half-up
+                                      :decimal-places 2
+                                      :symbol-style :symbol})))
+    (t/is (= "1,00 BTC" (sut/format m2 {:locale germany
+                                        :rounding-mode :half-up
+                                        :decimal-places 2
+                                        :symbol-style :code})))))
 
 (t/deftest test-format-with-pattern
   (let [money (sut/money-of 1234.5678 :eur)

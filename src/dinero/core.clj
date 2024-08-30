@@ -89,29 +89,42 @@
       (.setCurrency formatter (Currency/getInstance ^String (currency-code currency))))
     formatter))
 
-(defn- replace-currency-symbol
-  "Replaces the locale currency symbol with the currency symbol.
-
-  If the currency has no symbol, the currency code is used instead."
-  [string currency locale]
-  (let [locale-currency (Currency/getInstance ^Locale locale)
+(defn- format-amount
+  "Formats the given amount with the given formatter, locale, and symbol style."
+  [amount currency formatter locale symbol-style]
+  (let [formatted-money (.format ^DecimalFormat formatter amount)
+        locale-currency (Currency/getInstance ^Locale locale)
+        locale-code (.getCurrencyCode locale-currency)
         locale-symbol (.getSymbol locale-currency locale)
-        currency-symbol (or (currency-symbol currency) (currency-code currency))]
-    (str/replace string locale-symbol currency-symbol)))
+        currency-code (currency-code currency)
+        currency-symbol (or (currency-symbol currency) currency-code)] ; default to code if symbol is not available
+    (cond
+      ;; ISO 4217 currency with symbol-style :symbol
+      (and (iso-4217? currency) (= :symbol symbol-style))
+      formatted-money
+      ;; ISO 4217 currency with symbol-style :code
+      (and (iso-4217? currency) (= :code symbol-style))
+      (str/replace formatted-money locale-symbol locale-code)
+      ;; Non-ISO 4217 currency with symbol-style :symbol
+      (and (not (iso-4217? currency)) (= :symbol symbol-style))
+      (str/replace formatted-money locale-symbol currency-symbol)
+      ;; Non-ISO 4217 currency with symbol-style :code
+      (and (not (iso-4217? currency)) (= :code symbol-style))
+      (str/replace formatted-money locale-symbol currency-code)
+      ;; Invalid symbol style
+      :else(throw (ex-info "Invalid symbol style" {:symbol-style symbol-style})))))
 
 (defn format
   "Formats the given monetary amount with the given options."
-  [money & {:keys [locale rounding-mode decimal-places] :as _options}]
+  [money & {:keys [locale rounding-mode decimal-places symbol-style] :as _options}]
   (let [amount (get-amount money)
         currency (get-currency money)
         locale (or locale (Locale/getDefault))
         rounding-mode (utils/keyword->rounding-mode (or rounding-mode *default-rounding-mode* :half-even))
         decimal-places (or decimal-places (minor-unit currency))
-        formatter (make-formatter currency locale rounding-mode decimal-places)
-        formatted-money (.format ^DecimalFormat formatter amount)]
-    (if (iso-4217? currency)
-      formatted-money
-      (replace-currency-symbol formatted-money currency locale))))
+        symbol-style (or symbol-style :symbol)
+        formatter (make-formatter currency locale rounding-mode decimal-places)]
+    (format-amount amount currency formatter locale symbol-style)))
 
 (defn format-with-pattern
   "Formats the given monetary amount with the given pattern and options."
