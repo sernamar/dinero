@@ -1,7 +1,8 @@
 (ns dinero.core-test
   (:require [dinero.core :as sut]
             [clojure.test :as t])
-  (:import [java.text ParseException]
+  (:import [clojure.lang ExceptionInfo]
+           [java.text ParseException]
            [java.util Locale]))
 
 ;;; Money creation
@@ -19,8 +20,8 @@
     (t/is (= :eur (sut/get-currency m2)))
     (t/is (= :eur (sut/get-currency m3)))
     (t/is (= :eur (sut/get-currency m4))))
-  (t/is (thrown? Exception (sut/money-of 1 nil)))
-  (t/is (thrown? Exception (sut/money-of 1 :unknown-currency))))
+  (t/is (thrown? ExceptionInfo (sut/money-of 1 nil)))
+  (t/is (thrown? ExceptionInfo (sut/money-of 1 :unknown-currency))))
 
 ;;; Formatting
 
