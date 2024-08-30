@@ -20,22 +20,22 @@
 
 (defonce currencies (-> "currencies.edn" io/resource slurp edn/read-string))
 
-(defn- currency-code
+(defn- get-currency-code
   "Returns the currency code of the given currency."
   [currency]
   (get-in currencies [currency :currency-code]))
 
-(defn- currency-type
+(defn- get-type
   "Returns the type of the given currency."
   [currency]
   (get-in currencies [currency :type]))
 
-(defn- minor-unit
+(defn- get-minor-unit
   "Returns the minor unit of the given currency."
   [currency]
   (get-in currencies [currency :minor-unit]))
 
-(defn- currency-symbol
+(defn- get-symbol
   "Returns the currency symbol of the given currency."
   [currency]
   (get-in currencies [currency :symbol]))
@@ -43,7 +43,7 @@
 (defn- iso-4217?
   "Returns true if the given currency is an ISO 4217 currency."
   [currency]
-  (= :iso-4217 (currency-type currency)))
+  (= :iso-4217 (get-type currency)))
 
 (defn- assert-currency
   "Asserts that the given currency is a valid currency."
@@ -86,7 +86,7 @@
       (.setMinimumFractionDigits decimal-places)
       (.setMaximumFractionDigits decimal-places))
     (when (iso-4217? currency)
-      (.setCurrency formatter (Currency/getInstance ^String (currency-code currency))))
+      (.setCurrency formatter (Currency/getInstance ^String (get-currency-code currency))))
     formatter))
 
 (defn- format-amount
@@ -96,8 +96,8 @@
         locale-currency (Currency/getInstance ^Locale locale)
         locale-code (.getCurrencyCode locale-currency)
         locale-symbol (.getSymbol locale-currency locale)
-        currency-code (currency-code currency)
-        currency-symbol (or (currency-symbol currency) currency-code)] ; default to code if symbol is not available
+        currency-code (get-currency-code currency)
+        currency-symbol (or (get-symbol currency) currency-code)] ; default to code if symbol is not available
     (cond
       ;; ISO 4217 currency with symbol-style :symbol
       (and (iso-4217? currency) (= :symbol symbol-style))
@@ -121,7 +121,7 @@
         currency (get-currency money)
         locale (or locale (Locale/getDefault))
         rounding-mode (utils/keyword->rounding-mode (or rounding-mode *default-rounding-mode* :half-even))
-        decimal-places (or decimal-places (minor-unit currency))
+        decimal-places (or decimal-places (get-minor-unit currency))
         symbol-style (or symbol-style :symbol)
         formatter (make-formatter currency locale rounding-mode decimal-places)]
     (format-amount amount currency formatter locale symbol-style)))
