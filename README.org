@@ -5,6 +5,7 @@ A Clojure library for working with money
   - [[#configuration][Configuration]]
   - [[#usage][Usage]]
     - [[#create-monetary-amounts][Create monetary amounts]]
+    - [[#amount-and-currency][Amount and currency]]
   - [[#license][License]]
 
 ** Configuration
@@ -73,6 +74,16 @@ For convenience, you can use the =with-currency= macro to bind the =*default-cur
   (dinero/with-currency :gbp
     (dinero/money-of 1))
   ;; => {:amount 1M, :currency :gbp}
+#+end_src
+*** Amount and currency
+Given a monetary amount, you can get its amount and currency using the =get-amount= and =get-currency= functions:
+#+begin_src clojure
+  (let [money (dinero/money-of 1 :eur)]
+    (dinero/get-amount money))
+  ;; => 1M
+  (let [money (dinero/money-of 1 :eur)]
+    (dinero/get-currency money))
+  ;; => :eur
 #+end_src
 ** License
 Copyright © 2024 Sergio Navarro
