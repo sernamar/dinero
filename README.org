@@ -7,6 +7,7 @@ A Clojure library for working with money
     - [[#create-monetary-amounts][Create monetary amounts]]
     - [[#amount-and-currency][Amount and currency]]
     - [[#formatting][Formatting]]
+    - [[#parsing][Parsing]]
   - [[#license][License]]
 
 ** Configuration
@@ -126,6 +127,41 @@ For example:
   ;; 1.234,568 €
   ;; 1.235 €
   ;; 1.234 €
+#+end_src
+*** Parsing
+For now, this library only supports parsing strings that contain ISO 4217 currency symbols (like =€=) but does not support parsing strings with ISO 4217 currency codes (like =EUR=) or strings with non-ISO 4217 currency symbols or codes.
+
+So you can use the =parse-containing-iso-4217-symbol= function to parse a string that contains an ISO 4217 currency symbol:
+#+begin_src clojure
+  (dinero/parse-containing-iso-4217-symbol "1.234,56 €" {:locale java.util.Locale/GERMANY})
+  ;; => {:amount 1234.56M, :currency :eur}
+
+  (dinero/parse-containing-iso-4217-symbol "£1,234.56" {:locale java.util.Locale/UK})
+  ;; => {:amount 1234.56M, :currency :gbp}
+#+end_src
+But as mentioned, it doesn't support parsing strings with ISO 4217 currency codes (like =EUR=) or strings with non-ISO 4217 currency symbols or codes, throwing a =java.text.ParseException= exception in that case:
+#+begin_src clojure
+  (dinero/parse-containing-iso-4217-symbol "1.234,56 EUR" {:locale java.util.Locale/GERMANY})
+  ;; java.text.ParseException
+  ;; Unparseable number: "1.234,56 EUR"
+
+  (dinero/parse-containing-iso-4217-symbol "1,23456789 ₿" {:locale java.util.Locale/GERMANY})
+  ;; java.text.ParseException
+  ;; Unparseable number: "1,23456789 ₿"
+
+  (dinero/parse-containing-iso-4217-symbol "1,23456789 BTC" {:locale java.util.Locale/GERMANY})
+  ;; java.text.ParseException
+  ;; Unparseable number: "1,23456789 BTC"
+#+end_src
+The =parse-containing-iso-4217-symbol= function also throws a =java.text.ParseException= exception if the currency symbol is in the wrong position for the specified =locale=, or if the =locale= uses a different default currency:
+#+begin_src clojure
+  (dinero/parse-containing-iso-4217-symbol "€1.234,56" {:locale java.util.Locale/GERMANY})
+  ;; java.text.ParseException
+  ;; Unparseable number: "€1.234,56"
+
+  (dinero/parse-containing-iso-4217-symbol "1.234,56 £" {:locale java.util.Locale/GERMANY})
+  ;; java.text.ParseException
+  ;; Unparseable number: "1.234,56 £"
 #+end_src
 ** License
 Copyright © 2024 Sergio Navarro
