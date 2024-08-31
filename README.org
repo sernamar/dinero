@@ -68,6 +68,12 @@ So, for accurate numerical computations, especially in financial applications, d
   ;; => {:amount 0.123456789123456789123456789M, :currency :eur}
 #+end_src
 #+end_quote
+For convenience, you can use the =with-currency= macro to bind the =*default-currency*= variable, so if that variable isn't configured in the configuration file, you don't need to specify the currency when creating a monetary amount:
+#+begin_src clojure
+  (dinero/with-currency :gbp
+    (dinero/money-of 1))
+  ;; => {:amount 1M, :currency :gbp}
+#+end_src
 ** License
 Copyright © 2024 Sergio Navarro
 

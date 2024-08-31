@@ -75,6 +75,12 @@
   [money]
   (:currency money))
 
+(defmacro with-currency
+  "Evaluates the body with the given currency as the default currency."
+  [currency & body]
+  `(binding [*default-currency* ~currency]
+     ~@body))
+
 ;;; Formatting
 
 (defn- make-formatter
