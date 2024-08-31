@@ -3,6 +3,8 @@ A Clojure library for working with money
 ** Table of contents                                                  :TOC_3:
 - [[#dinero][dinero]]
   - [[#configuration][Configuration]]
+  - [[#usage][Usage]]
+    - [[#create-monetary-amounts][Create monetary amounts]]
   - [[#license][License]]
 
 ** Configuration
@@ -13,6 +15,59 @@ For example, for using /euros/ as the default currency, and the /half even/ meth
   {:default-currency :eur
    :default-rounding-mode :half-even}
 #+end_src
+** Usage
+You can try out the examples below in a REPL after the following =require=:
+#+begin_src clojure
+  (require '[dinero.core :as dinero])
+#+end_src
+*** Create monetary amounts
+Use =money-of= to create monetary amounts. It accepts two arguments:
+- =amount=, that can be either an integer, a floating-point number, a =BigDecimal= or a string.
+- =currency=, that must be a keyword.
+If the =currency= is not specified, it uses the default currency configured in the configuration file. Otherwise, it uses the given currency:
+#+begin_src clojure
+  (dinero/money-of 1)
+  ;; => {:amount 1M, :currency :eur}
+
+  (dinero/money-of 1 :gbp)
+  ;; => {:amount 1M, :currency :gbp}
+#+end_src
+If none the =amount= nor the =currency= is specified, it uses zero as the amount, and the default currency as the currency:
+#+begin_src clojure
+  (dinero/money-of)
+  ;; => {:amount 0M, :currency :eur}
+#+end_src
+Although you can use either an integer, a floating-point number, a =BigDecimal= or a string as the =amount= argument, they are parsed and stored as =BigDecimals=:
+#+begin_src clojure
+  (dinero/money-of 1 :eur)
+  ;; => {:amount 1M, :currency :eur}
+
+  (dinero/money-of 1.23 :eur)
+  ;; => {:amount 1.23M, :currency :eur}
+
+  (dinero/money-of 1.23M :eur)
+  ;; => {:amount 1.23M, :currency :eur}
+
+  (dinero/money-of "1.23" :eur)
+  ;; => {:amount 1.23M, :currency :eur}
+#+end_src
+/WARNING/:
+#+begin_quote
+Be aware that using floating-point numbers can lead to rounding errors in certain calculations, as Clojure reads them as =Doubles=, which are 64-bit IEEE 754 floating point numbers. This means you get double precision, with about 15-17 significant decimal digits of precision.
+
+So, for accurate numerical computations, especially in financial applications, don't use floating-point numbers; use =BigDecimals= or =Strings= instead, as they will be parsed accurately.
+#+begin_src clojure
+  ;;; Not safe, as it uses floating point arithmetic, losing precision when parsing
+  (dinero/money-of 0.123456789123456789123456789 :eur)
+  ;; => {:amount 0.12345678912345678M, :currency :eur}
+
+  ;;; Safe, as it uses BigDecimal or String
+  (dinero/money-of 0.123456789123456789123456789M :eur)
+  ;; => {:amount 0.123456789123456789123456789M, :currency :eur}
+  (dinero/money-of "0.123456789123456789123456789" :eur)
+  ;; => {:amount 0.123456789123456789123456789M, :currency :eur}
+#+end_src
+#+end_quote
 ** License
 Copyright © 2024 Sergio Navarro
 
