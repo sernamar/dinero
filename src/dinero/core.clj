@@ -30,10 +30,10 @@
   [currency]
   (get-in currencies [currency :type]))
 
-(defn- get-minor-unit
-  "Returns the minor unit of the given currency."
+(defn- get-minor-units
+  "Returns the minor units of the given currency."
   [currency]
-  (get-in currencies [currency :minor-unit]))
+  (get-in currencies [currency :minor-units]))
 
 (defn- get-symbol
   "Returns the currency symbol of the given currency."
@@ -121,7 +121,7 @@
         currency (get-currency money)
         locale (or locale (Locale/getDefault))
         rounding-mode (utils/keyword->rounding-mode (or rounding-mode *default-rounding-mode* :half-even))
-        decimal-places (or decimal-places (get-minor-unit currency))
+        decimal-places (or decimal-places (get-minor-units currency))
         symbol-style (or symbol-style :symbol)
         formatter (make-formatter currency locale rounding-mode decimal-places)]
     (format-amount amount currency formatter locale symbol-style)))
