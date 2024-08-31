@@ -145,8 +145,8 @@
 
 ;;; Parsing
 
-(defn parse-iso-4217
-  "Parses the given string, which represents a monetary amount that uses a ISO 4217 currency."
+(defn parse-containing-iso-4217-symbol
+  "Parses the given string containing an ISO 4217 currency symbol and returns a monetary amount."
   [string & {:keys [locale] :as _options}]
   (let [locale (or locale (Locale/getDefault))
         formatter (DecimalFormat/getCurrencyInstance locale)
