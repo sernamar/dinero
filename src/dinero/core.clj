@@ -147,9 +147,8 @@
 
 (defn parse-containing-iso-4217-symbol
   "Parses the given string containing an ISO 4217 currency symbol and returns a monetary amount."
-  [string & {:keys [locale] :as _options}]
-  (let [locale (or locale (Locale/getDefault))
-        formatter (DecimalFormat/getCurrencyInstance locale)
+  [string locale]
+  (let [formatter (DecimalFormat/getCurrencyInstance locale)
         amount (.parse ^DecimalFormat formatter string)
         currency (-> (.getCurrency formatter) str/lower-case keyword)]
     (money-of amount currency)))

@@ -94,7 +94,7 @@
 (t/deftest test-parse-containing-iso-4217-symbol
   (let [germany Locale/GERMANY
         uk Locale/UK]
-    (t/is (= (sut/money-of 1234.56 :eur) (sut/parse-containing-iso-4217-symbol "1.234,56 €" {:locale germany})))
-    (t/is (= (sut/money-of 1234.56 :gbp) (sut/parse-containing-iso-4217-symbol "£1,234.56" {:locale uk})))
-    (t/is (thrown? ParseException (sut/parse-containing-iso-4217-symbol "1.234,56 EUR" {:locale germany})))
-    (t/is (thrown? ParseException (sut/parse-containing-iso-4217-symbol "£1,234.56" {:locale germany})))))
+    (t/is (= (sut/money-of 1234.56 :eur) (sut/parse-containing-iso-4217-symbol "1.234,56 €" germany)))
+    (t/is (= (sut/money-of 1234.56 :gbp) (sut/parse-containing-iso-4217-symbol "£1,234.56" uk)))
+    (t/is (thrown? ParseException (sut/parse-containing-iso-4217-symbol "1.234,56 EUR" germany)))
+    (t/is (thrown? ParseException (sut/parse-containing-iso-4217-symbol "£1,234.56" germany)))))
