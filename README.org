@@ -6,6 +6,7 @@ A Clojure library for working with money
   - [[#usage][Usage]]
     - [[#create-monetary-amounts][Create monetary amounts]]
     - [[#amount-and-currency][Amount and currency]]
+    - [[#formatting][Formatting]]
   - [[#license][License]]
 
 ** Configuration
@@ -84,6 +85,47 @@ Given a monetary amount, you can get its amount and currency using the =get-amou
   (let [money (dinero/money-of 1 :eur)]
     (dinero/get-currency money))
   ;; => :eur
+#+end_src
+*** Formatting
+As already mentioned, amounts are stored internally with more decimal places than the smallest unit of the currency. Although this is crucial for accurate numerical computations, you might be interested in displaying amounts in a user-friendly format.
+
+To display monetary amounts in a user-friendly format, you can use the =format= function. This function will convert the internal representation of the monetary amount into a string with a more readable format.
+
+The =format= function accepts a map of configuration options as its second argument. The available options are:
+- locale
+- rounding-mode
+- decimal-places
+- symbol-style: could be =:symbol= or =:code= (=:symbol= is the default value)
+For example:
+#+begin_src clojure
+  (let [m1 (dinero/money-of 1234.5678 :eur)
+        germany java.util.Locale/GERMANY]
+    (println (dinero/format m1 {:locale germany}))
+    (println (dinero/format m1 {:locale germany :symbol-style :code}))
+    (println (dinero/format m1 {:locale germany :rounding-mode :down :symbol-style :code}))
+    (println (dinero/format m1 {:locale germany :rounding-mode :down :decimal-places 0 :symbol-style :code})))
+  ;; 1.234,57 €
+  ;; 1.234,57 EUR
+  ;; 1.234,56 EUR
+  ;; 1.234 EUR
+#+end_src
+You can also use the =format-with-pattern= function, which uses the given formatting pattern to format the monetary amount. This function also accepts a map of configuration options as its third argument, supporting these options:
+- locale
+- rounding-mode
+For example:
+#+begin_src clojure
+  (let [m1 (dinero/money-of 1234.5678 :eur)
+        germany java.util.Locale/GERMANY]
+    (println (dinero/format-with-pattern m1 "#,##0.00 ¤" {:locale germany}))
+    (println (dinero/format-with-pattern m1 "#,##0.00 ¤¤" {:locale germany}))
+    (println (dinero/format-with-pattern m1 "#,##0.000 ¤" {:locale germany}))
+    (println (dinero/format-with-pattern m1 "#,##0 ¤" {:locale germany}))
+    (println (dinero/format-with-pattern m1 "#,##0 ¤" {:locale germany :rounding-mode :down})))
+  ;; 1.234,57 €
+  ;; 1.234,57 EUR
+  ;; 1.234,568 €
+  ;; 1.235 €
+  ;; 1.234 €
 #+end_src
 ** License
 Copyright © 2024 Sergio Navarro
