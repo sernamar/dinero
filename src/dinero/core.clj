@@ -4,7 +4,8 @@
             [clojure.java.io :as io]
             [clojure.string :as str]
             [dinero.utils :as utils])
-  (:import [java.text DecimalFormat DecimalFormatSymbols]
+  (:import [java.math RoundingMode]
+           [java.text DecimalFormat DecimalFormatSymbols]
            [java.util Currency Locale]))
 
 (set! *warn-on-reflection* true)
@@ -193,3 +194,28 @@
         quotient (.divide ^BigDecimal amount (bigdec divisor))
         currency (get-currency money)]
     (money-of quotient currency)))
+
+;;; Rounding
+
+(defn create-rounding
+  "Creates a rounding function with the given rounding mode and decimal places."
+  ([]
+   (create-rounding (or *default-rounding-mode* :half-even) (get-minor-units *default-currency*)))
+  ([decimal-places]
+   (create-rounding (or *default-rounding-mode* :half-even) decimal-places))
+  ([rounding-mode decimal-places]
+   (fn [money]
+     (let [amount (get-amount money)
+           currency (get-currency money)
+           rounding-mode (utils/keyword->rounding-mode rounding-mode)
+           rounded (.setScale ^BigDecimal amount ^int decimal-places ^RoundingMode rounding-mode)]
+       (money-of rounded currency)))))
+
+(defn round
+  "Rounds the given monetary amount using the given rounding function."
+  ([money]
+   (let [decimal-places (get-minor-units (get-currency money))
+         rounding (create-rounding decimal-places)]
+     (round money rounding)))
+  ([money rounding]
+   (rounding money)))
