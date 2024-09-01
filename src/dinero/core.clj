@@ -211,6 +211,17 @@
            rounded (.setScale ^BigDecimal amount ^int decimal-places ^RoundingMode rounding-mode)]
        (money-of rounded currency)))))
 
+(defn chf-rounding
+  "Creates a rounding function for Swiss Francs."
+  []
+  (fn [money]
+    (let [amount (get-amount money)
+          currency (get-currency money)
+          scale 0
+          rounded (-> (.divide ^BigDecimal amount (bigdec 0.05) scale RoundingMode/HALF_UP)
+                      (.multiply (bigdec 0.05)))]
+      (money-of rounded currency))))
+
 (defn round
   "Rounds the given monetary amount using the given rounding function."
   ([money]
