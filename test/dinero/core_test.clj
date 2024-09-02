@@ -99,6 +99,39 @@
     (t/is (thrown? ParseException (sut/parse-containing-iso-4217-symbol "1.234,56 EUR" germany)))
     (t/is (thrown? ParseException (sut/parse-containing-iso-4217-symbol "£1,234.56" germany)))))
 
+;;; Equality and comparison
+
+(t/deftest test-equality
+  (let [m1 (sut/money-of 1 :eur)
+        m2 (sut/money-of 1 :eur)
+        m3 (sut/money-of 2 :eur)
+        m4 (sut/money-of 1 :gbp)]
+    (t/is (sut/money= m1 m2))
+    (t/is (sut/money-not= m1 m3))
+    (t/is (thrown? ExceptionInfo (sut/money= m1 m4)))))
+
+(t/deftest test-comparison
+  (let [m1 (sut/money-of 1 :eur)
+        m2 (sut/money-of 1 :eur)
+        m3 (sut/money-of 2 :eur)
+        m4 (sut/money-of 1 :gbp)]
+    (t/is (sut/money< m1 m3))
+    (t/is (sut/money<= m1 m2))
+    (t/is (sut/money> m3 m1))
+    (t/is (sut/money>= m3 m2))
+    (t/is (thrown? ExceptionInfo (sut/money< m1 m4)))
+    (t/is (thrown? ExceptionInfo (sut/money<= m1 m4)))
+    (t/is (thrown? ExceptionInfo (sut/money> m1 m4)))
+    (t/is (thrown? ExceptionInfo (sut/money>= m1 m4)))))
+
+(t/deftest test-sign-operations
+  (let [m1 (sut/money-of 0 :eur)
+        m2 (sut/money-of 1 :eur)
+        m3 (sut/money-of -1 :eur)]
+    (t/is (sut/money-zero? m1))
+    (t/is (sut/money-pos? m2))
+    (t/is (sut/money-neg? m3))))
+
 ;;; Arithmetic operations
 
 (t/deftest test-add

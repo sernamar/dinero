@@ -154,18 +154,80 @@
         currency (-> (.getCurrency formatter) str/lower-case keyword)]
     (money-of amount currency)))
 
-;;; Arithmetic operations
+;;; Equality and comparison
 
 (defn- same-currency?
   "Returns true if all the given monetary amounts have the same currency."
   [& moneis]
   (apply = (map get-currency moneis)))
 
+(defn- same-amount?
+  "Returns true if all the given monetary amounts have the same amount."
+  [money-1 money-2]
+  (= (get-amount money-1) (get-amount money-2)))
+
+(defn- assert-same-currency
+  "Asserts that all the given monetary amounts have the same currency."
+  [& moneis]
+  (when-not (apply same-currency? moneis)
+    (throw (ex-info "Currencies do not match" {:currencies (map get-currency moneis)}))))
+
+(defn money=
+  "Returns true if all the given monetary amounts have the same amount and currency."
+  [money-1 money-2]
+  (assert-same-currency money-1 money-2)
+  (same-amount? money-1 money-2))
+
+(defn money-not=
+  "Returns true if the given monetary amounts do not have the same amount and currency."
+  [money-1 money-2]
+  (not (money= money-1 money-2)))
+
+(defn money<
+  "Returns true if the first monetary amount is less than the second monetary amount."
+  [money-1 money-2]
+  (assert-same-currency money-1 money-2)
+  (= -1 (.compareTo ^BigDecimal (get-amount money-1) (get-amount money-2))))
+
+(defn money<=
+  "Returns true if the first monetary amount is less than or equal to the second monetary amount."
+  [money-1 money-2]
+  (assert-same-currency money-1 money-2)
+  (<= (.compareTo ^BigDecimal (get-amount money-1) (get-amount money-2)) 0))
+
+(defn money>
+  "Returns true if the first monetary amount is greater than the second monetary amount."
+  [money-1 money-2]
+  (assert-same-currency money-1 money-2)
+  (= 1 (.compareTo ^BigDecimal (get-amount money-1) (get-amount money-2))))
+
+(defn money>=
+  "Returns true if the first monetary amount is greater than or equal to the second monetary amount."
+  [money-1 money-2]
+  (assert-same-currency money-1 money-2)
+  (>= (.compareTo ^BigDecimal (get-amount money-1) (get-amount money-2)) 0))
+
+(defn money-zero?
+  "Returns true if the given monetary amount is zero."
+  [money]
+  (zero? (get-amount money)))
+
+(defn money-pos?
+  "Returns true if the given monetary amount is positive."
+  [money]
+  (pos? (get-amount money)))
+
+(defn money-neg?
+  "Returns true if the given monetary amount is negative."
+  [money]
+  (neg? (get-amount money)))
+
+;;; Arithmetic operations
+
 (defn add
   "Adds the given monetary amounts."
   [& moneis]
-  (when-not (apply same-currency? moneis)
-    (throw (ex-info "Currencies do not match" {:currencies (map get-currency moneis)})))
+  (apply assert-same-currency moneis)
   (let [amount (reduce #(.add ^BigDecimal %1 %2) (map get-amount moneis))
         currency (get-currency (first moneis))]
     (money-of amount currency)))
@@ -173,8 +235,7 @@
 (defn subtract
   "Subtracts the given monetary amounts."
   [& moneis]
-  (when-not (apply same-currency? moneis)
-    (throw (ex-info "Currencies do not match" {:currencies (map get-currency moneis)})))
+  (apply assert-same-currency moneis)
   (let [amount (reduce #(.subtract ^BigDecimal %1 %2) (map get-amount moneis))
         currency (get-currency (first moneis))]
     (money-of amount currency)))
