@@ -10,6 +10,7 @@ A Clojure library for working with money
     - [[#parsing][Parsing]]
     - [[#equality-and-comparison][Equality and comparison]]
     - [[#arithmetic-operations][Arithmetic operations]]
+    - [[#rounding][Rounding]]
   - [[#license][License]]
 
 ** Configuration
@@ -256,6 +257,65 @@ Adding or substracting monetary amounts with different currencies throws an =Exc
   ;; clojure.lang.ExceptionInfo
   ;; Currencies do not match
   ;; {:currencies (:eur :gbp)}
+#+end_src
+*** Rounding
+As previously mentioned, amounts are stored internally with more decimal places than the smallest unit of the currency. Although this is crucial for accurate numerical computations, some applications might require operations with amounts rounded to the smallest unit of currency. In such cases, you can use the =round= function to adjust the monetary amounts accordingly.
+
+By default, the =round= function rounds amounts to the smallest unit of the currency, using the default rounding mode specified in the configuration file (if no rounding mode is configured, it defaults to =:half-even=):
+#+begin_src clojure
+  (let [m1 (dinero/money-of 1.555 :eur)
+        m2 (dinero/money-of 1.555 :eur)]
+    (dinero/add m1 m2))
+  ;; => {:amount 3.110M, :currency :eur}
+
+  (let [m1 (dinero/money-of 1.555 :eur)
+        m2 (dinero/money-of 1.555 :eur)
+        m1-rounded (dinero/round m1)
+        m2-rounded (dinero/round m2)]
+    (dinero/add m1-rounded m2-rounded))
+  ;; => {:amount 3.12M, :currency :eur}
+#+end_src
+The =round= function also accepts an optional second argument, which is a custom rounding function. This allows you to specify different rounding rules for certain cases.
+
+For example, the Japanese Yen (=JPY=) does not use any decimal places because it does not have a smaller denomination like cents. To handle this, you can use the =create-rounding= function with =0= as the argument, indicating that =JPY= amounts should be rounded to =0= decimal places:
+#+begin_src clojure
+  (let [m1 (dinero/money-of 1.555 :jpy)
+        m2 (dinero/money-of 1.555 :jpy)]
+    (dinero/add m1 m2))
+  ;; => {:amount 3.110M, :currency :jpy}
+
+  (let [m1 (dinero/money-of 1.555 :jpy)
+        m2 (dinero/money-of 1.555 :jpy)
+        rounding (dinero/create-rounding 0)
+        m1-rounded (dinero/round m1 rounding)
+        m2-rounded (dinero/round m2 rounding)]
+    (dinero/add m1-rounded m2-rounded))
+  ;; => {:amount 4M, :currency :jpy}
+#+end_src
+Another use case of custom rounding is the Swiss Franc (=CHF=), which uses unique rounding rules because the smallest unit of currency in Switzerland is the 5-centime (=0.05 CHF=) coin. To handle the specific rounding requirements for Swiss Francs, you can use the =chf-rounding= function, which creates a rounding function tailored to =CHF=:
+#+begin_src clojure
+  (let [money (dinero/money-of 1.024 :chf)
+        rounding (dinero/chf-rounding)]
+    (dinero/round money rounding))
+  ;; => {:amount 1.00M, :currency :chf}
+
+  (let [money (dinero/money-of 1.025 :chf)
+        rounding (dinero/chf-rounding)]
+    (dinero/round money rounding))
+  ;; => {:amount 1.05M, :currency :chf}
+#+end_src
+This approach is also useful when formatting currencies with special rounding requirements. For instance, when formatting Swiss Francs, you might want to round the amount before using the =format= function to ensure the displayed value matches the currency's rounding conventions:
+#+begin_src clojure
+  (let [money (dinero/money-of 1.025 :chf)
+        rounding (dinero/chf-rounding)]
+    (dinero/format money {:locale (java.util.Locale. "de" "CH")}))
+  ;; => "CHF 1.02"
+
+  (let [money (dinero/money-of 1.025 :chf)
+        rounding (dinero/chf-rounding)
+        rounded-money (dinero/round money rounding)]
+    (dinero/format rounded-money {:locale (java.util.Locale. "de" "CH")}))
+  ;; => "CHF 1.05"
 #+end_src
 ** License
 Copyright © 2024 Sergio Navarro
