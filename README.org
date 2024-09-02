@@ -1,5 +1,5 @@
 * dinero
-A Clojure library for working with money
+A Clojure library for working with money.
 ** Table of contents                                                  :TOC_3:
 - [[#dinero][dinero]]
   - [[#configuration][Configuration]]
@@ -69,7 +69,7 @@ Be aware that using floating-point numbers can lead to rounding errors in certai
 
 So, for accurate numerical computations, especially in financial applications, don't use floating-point numbers; use =BigDecimals= or =Strings= instead, as they will be parsed accurately.
 #+begin_src clojure
-  ;;; Not safe, as it uses floating point arithmetic, losing precision when parsing
+  ;;; Not safe, as it uses floating-point number, losing precision when parsing
   (dinero/money-of 0.123456789123456789123456789 :eur)
   ;; => {:amount 0.12345678912345678M, :currency :eur}
 
@@ -132,7 +132,7 @@ For example:
   ;; 1.234 €
 #+end_src
 *** Parsing
-For now, this library only supports parsing strings that contain ISO 4217 currency symbols (like =€=) but does not support parsing strings with ISO 4217 currency codes (like =EUR=) or strings with non-ISO 4217 currency symbols or codes.
+For now, this library only supports parsing strings that contain ISO 4217 currency symbols (like =€=) but does not support parsing strings with ISO 4217 currency codes (like =EUR=) or strings with non-ISO 4217 currency symbols or codes (like =₿= or =BTC=).
 
 So you can use the =parse-containing-iso-4217-symbol= function to parse a string that contains an ISO 4217 currency symbol:
 #+begin_src clojure
@@ -142,7 +142,7 @@ So you can use the =parse-containing-iso-4217-symbol= function to parse a string
   (dinero/parse-containing-iso-4217-symbol "£1,234.56" java.util.Locale/UK)
   ;; => {:amount 1234.56M, :currency :gbp}
 #+end_src
-But as mentioned, it doesn't support parsing strings with ISO 4217 currency codes (like =EUR=) or strings with non-ISO 4217 currency symbols or codes, throwing a =java.text.ParseException= exception in that case:
+But as mentioned, it doesn't support parsing strings with ISO 4217 currency codes or strings with non-ISO 4217 currency symbols or codes, throwing a =java.text.ParseException= exception in that case:
 #+begin_src clojure
   (dinero/parse-containing-iso-4217-symbol "1.234,56 EUR" java.util.Locale/GERMANY)
   ;; java.text.ParseException
@@ -235,7 +235,7 @@ You can use =add=, =substract=, =multiply=, and =divide= to perform arithmetic o
     (dinero/divide money divisor))
   ;; => {:amount 1M, :currency :eur}
 #+end_src
-Note that =add= and =substract= can be used to add or substract more than two monetary amounts:
+Note that =add= and =substract= can be used to add and substract more than two monetary amounts:
 #+begin_src clojure
   (let [m1 (dinero/money-of 1 :eur)
         m2 (dinero/money-of 2 :eur)
