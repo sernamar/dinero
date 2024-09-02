@@ -8,6 +8,7 @@ A Clojure library for working with money
     - [[#amount-and-currency][Amount and currency]]
     - [[#formatting][Formatting]]
     - [[#parsing][Parsing]]
+    - [[#arithmetic-operations][Arithmetic operations]]
   - [[#license][License]]
 
 ** Configuration
@@ -162,6 +163,52 @@ The =parse-containing-iso-4217-symbol= function also throws a =java.text.ParseEx
   (dinero/parse-containing-iso-4217-symbol "1.234,56 £" java.util.Locale/GERMANY)
   ;; java.text.ParseException
   ;; Unparseable number: "1.234,56 £"
+#+end_src
+*** Arithmetic operations
+You can use =add=, =substract=, =multiply=, and =divide= to perform arithmetic operations on monetary amounts:
+#+begin_src clojure
+  (let [m1 (dinero/money-of 1 :eur)
+        m2 (dinero/money-of 1 :eur)]
+    (dinero/add m1 m2))
+  ;; => {:amount 2M, :currency :eur}
+
+  (let [m1 (dinero/money-of 1 :eur)
+        m2 (dinero/money-of 1 :eur)]
+    (dinero/subtract m1 m2))
+  ;; => {:amount 0M, :currency :eur}
+
+  (let [money (dinero/money-of 1 :eur)
+        factor 2]
+    (dinero/multiply money factor))
+  ;; => {:amount 2M, :currency :eur}
+
+  (let [money (dinero/money-of 2 :eur)
+        divisor 2]
+    (dinero/divide money divisor))
+  ;; => {:amount 1M, :currency :eur}
+#+end_src
+Note that =add= and =substract= can be used to add or substract more than two monetary amounts:
+#+begin_src clojure
+  (let [m1 (dinero/money-of 1 :eur)
+        m2 (dinero/money-of 2 :eur)
+        m3 (dinero/money-of 3 :eur)]
+    (dinero/add m1 m2 m3))
+  ;; => {:amount 6M, :currency :eur}
+
+  (let [m1 (dinero/money-of 3 :eur)
+        m2 (dinero/money-of 2 :eur)
+        m3 (dinero/money-of 1 :eur)]
+    (dinero/subtract m1 m2 m3))
+  ;; => {:amount 0M, :currency :eur}
+#+end_src
+Adding or substracting monetary amounts with different currencies throws an =ExceptionInfo= exception:
+#+begin_src clojure
+  (let [m1 (dinero/money-of 1 :eur)
+        m2 (dinero/money-of 1 :gbp)]
+    (dinero/add m1 m2))
+  ;; clojure.lang.ExceptionInfo
+  ;; Currencies do not match
+  ;; {:currencies (:eur :gbp)}
 #+end_src
 ** License
 Copyright © 2024 Sergio Navarro
