@@ -98,3 +98,31 @@
     (t/is (= (sut/money-of 1234.56 :gbp) (sut/parse-containing-iso-4217-symbol "£1,234.56" uk)))
     (t/is (thrown? ParseException (sut/parse-containing-iso-4217-symbol "1.234,56 EUR" germany)))
     (t/is (thrown? ParseException (sut/parse-containing-iso-4217-symbol "£1,234.56" germany)))))
+
+;;; Arithmetic operations
+
+(t/deftest test-add
+  (let [m1 (sut/money-of 1 :eur)
+        m2 (sut/money-of 2 :eur)
+        m3 (sut/money-of 3 :eur)]
+    (t/is (= (sut/money-of 3 :eur) (sut/add m1 m2)))
+    (t/is (= (sut/money-of 6 :eur) (sut/add m1 m2 m3)))
+    (t/is (thrown? ExceptionInfo (sut/add (sut/money-of 1 :eur) (sut/money-of 1 :gbp))))))
+
+(t/deftest test-subtract
+  (let [m1 (sut/money-of 3 :eur)
+        m2 (sut/money-of 2 :eur)
+        m3 (sut/money-of 1 :eur)]
+    (t/is (= (sut/money-of 1 :eur) (sut/subtract m1 m2)))
+    (t/is (= (sut/money-of 0 :eur) (sut/subtract m1 m2 m3)))
+    (t/is (thrown? ExceptionInfo (sut/subtract (sut/money-of 1 :eur) (sut/money-of 1 :gbp))))))
+
+(t/deftest test-multiply
+  (let [money (sut/money-of 1 :eur)
+        factor 2]
+    (t/is (= (sut/money-of 2 :eur) (sut/multiply money factor)))))
+
+(t/deftest test-divide
+  (let [money (sut/money-of 2 :eur)
+        divisor 2]
+    (t/is (= (sut/money-of 1 :eur) (sut/divide money divisor)))))

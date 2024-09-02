@@ -152,3 +152,44 @@
         amount (.parse ^DecimalFormat formatter string)
         currency (-> (.getCurrency formatter) str/lower-case keyword)]
     (money-of amount currency)))
+
+;;; Arithmetic operations
+
+(defn- same-currency?
+  "Returns true if all the given monetary amounts have the same currency."
+  [& moneis]
+  (apply = (map get-currency moneis)))
+
+(defn add
+  "Adds the given monetary amounts."
+  [& moneis]
+  (when-not (apply same-currency? moneis)
+    (throw (ex-info "Currencies do not match" {:currencies (map get-currency moneis)})))
+  (let [amount (reduce #(.add ^BigDecimal %1 %2) (map get-amount moneis))
+        currency (get-currency (first moneis))]
+    (money-of amount currency)))
+
+(defn subtract
+  "Subtracts the given monetary amounts."
+  [& moneis]
+  (when-not (apply same-currency? moneis)
+    (throw (ex-info "Currencies do not match" {:currencies (map get-currency moneis)})))
+  (let [amount (reduce #(.subtract ^BigDecimal %1 %2) (map get-amount moneis))
+        currency (get-currency (first moneis))]
+    (money-of amount currency)))
+
+(defn multiply
+  "Multiplies the given monetary amount by the given factor."
+  [money factor]
+  (let [amount (get-amount money)
+        product (.multiply ^BigDecimal amount (bigdec factor))
+        currency (get-currency money)]
+    (money-of product currency)))
+
+(defn divide
+  "Divides the given monetary amount by the given divisor."
+  [money divisor]
+  (let [amount (get-amount money)
+        quotient (.divide ^BigDecimal amount (bigdec divisor))
+        currency (get-currency money)]
+    (money-of quotient currency)))
