@@ -8,6 +8,7 @@ A Clojure library for working with money
     - [[#amount-and-currency][Amount and currency]]
     - [[#formatting][Formatting]]
     - [[#parsing][Parsing]]
+    - [[#equality-and-comparison][Equality and comparison]]
     - [[#arithmetic-operations][Arithmetic operations]]
   - [[#license][License]]
 
@@ -163,6 +164,52 @@ The =parse-containing-iso-4217-symbol= function also throws a =java.text.ParseEx
   (dinero/parse-containing-iso-4217-symbol "1.234,56 £" java.util.Locale/GERMANY)
   ;; java.text.ParseException
   ;; Unparseable number: "1.234,56 £"
+#+end_src
+*** Equality and comparison
+You could use the following functions to do equality and comparison operations on monetary amounts: ~money=~, =money-not==, =money<=, =money<==, =money>=, =money>==, =money-zero?=, =monmey-pos?=, and =money-neg?=.
+
+For example:
+#+begin_src clojure
+  (let [m1 (dinero/money-of 1 :eur)
+        m2 (dinero/money-of 1 :eur)]
+    (dinero/money= m1 m2))
+  ;; => true
+
+  (let [m1 (dinero/money-of 1 :eur)
+        m2 (dinero/money-of 2 :eur)]
+    (dinero/money-not= m1 m2))
+  ;; => true
+
+  (let [m1 (dinero/money-of 1 :eur)
+        m2 (dinero/money-of 2 :eur)]
+    (dinero/money< m1 m2))
+  ;; => true
+
+  (let [m1 (dinero/money-of 1 :eur)
+        m2 (dinero/money-of 2 :eur)]
+    (dinero/money> m1 m2))
+  ;; => false
+
+  (let [money (dinero/money-of 0 :eur)]
+    (dinero/money-zero? money))
+  ;; => true
+
+  (let [money (dinero/money-of -1 :eur)]
+    (dinero/money-pos? money))
+  ;; => false
+
+  (let [money (dinero/money-of -1 :eur)]
+    (dinero/money-neg? money))
+  ;; => true
+#+end_src
+When these operations involve more than one monetary amount, they throw an =ExceptionInfo= exception if currencies don't match:
+#+begin_src clojure
+  (let [m1 (dinero/money-of 1 :eur)
+        m2 (dinero/money-of 1 :gbp)]
+    (dinero/money= m1 m2))
+  ;; clojure.lang.ExceptionInfo
+  ;; Currencies do not match
+  ;; {:currencies (:eur :gbp)}
 #+end_src
 *** Arithmetic operations
 You can use =add=, =substract=, =multiply=, and =divide= to perform arithmetic operations on monetary amounts:
