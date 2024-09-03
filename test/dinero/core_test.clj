@@ -7,7 +7,7 @@
 
 ;;; Money creation
 
-(t/deftest test-money-of
+(t/deftest money-of
   (let [m1 (sut/money-of 1 :eur)
         m2 (sut/money-of 1.0 :eur)
         m3 (sut/money-of 1M :eur)
@@ -76,7 +76,7 @@
                                         :decimal-places 2
                                         :symbol-style :code})))))
 
-(t/deftest test-format-with-pattern
+(t/deftest format-with-pattern
   (let [money (sut/money-of 1234.5678 :eur)
         germany Locale/GERMANY
         uk Locale/UK]
@@ -91,7 +91,7 @@
 
 ;;; Parsing
 
-(t/deftest test-parse-containing-iso-4217-symbol
+(t/deftest parse-containing-iso-4217-symbol
   (let [germany Locale/GERMANY
         uk Locale/UK]
     (t/is (= (sut/money-of 1234.56 :eur) (sut/parse-containing-iso-4217-symbol "1.234,56 €" germany)))
@@ -101,7 +101,7 @@
 
 ;;; Equality and comparison
 
-(t/deftest test-equality
+(t/deftest equality
   (let [m1 (sut/money-of 1 :eur)
         m2 (sut/money-of 1 :eur)
         m3 (sut/money-of 2 :eur)
@@ -110,7 +110,7 @@
     (t/is (sut/money-not= m1 m3))
     (t/is (thrown? ExceptionInfo (sut/money= m1 m4)))))
 
-(t/deftest test-comparison
+(t/deftest comparison
   (let [m1 (sut/money-of 1 :eur)
         m2 (sut/money-of 1 :eur)
         m3 (sut/money-of 2 :eur)
@@ -124,7 +124,7 @@
     (t/is (thrown? ExceptionInfo (sut/money> m1 m4)))
     (t/is (thrown? ExceptionInfo (sut/money>= m1 m4)))))
 
-(t/deftest test-sign-operations
+(t/deftest sign-operations
   (let [m1 (sut/money-of 0 :eur)
         m2 (sut/money-of 1 :eur)
         m3 (sut/money-of -1 :eur)]
@@ -134,7 +134,7 @@
 
 ;;; Arithmetic operations
 
-(t/deftest test-add
+(t/deftest add
   (let [m1 (sut/money-of 1 :eur)
         m2 (sut/money-of 2 :eur)
         m3 (sut/money-of 3 :eur)]
@@ -142,7 +142,7 @@
     (t/is (= (sut/money-of 6 :eur) (sut/add m1 m2 m3)))
     (t/is (thrown? ExceptionInfo (sut/add (sut/money-of 1 :eur) (sut/money-of 1 :gbp))))))
 
-(t/deftest test-subtract
+(t/deftest subtract
   (let [m1 (sut/money-of 3 :eur)
         m2 (sut/money-of 2 :eur)
         m3 (sut/money-of 1 :eur)]
@@ -150,19 +150,19 @@
     (t/is (= (sut/money-of 0 :eur) (sut/subtract m1 m2 m3)))
     (t/is (thrown? ExceptionInfo (sut/subtract (sut/money-of 1 :eur) (sut/money-of 1 :gbp))))))
 
-(t/deftest test-multiply
+(t/deftest multiply
   (let [money (sut/money-of 1 :eur)
         factor 2]
     (t/is (= (sut/money-of 2 :eur) (sut/multiply money factor)))))
 
-(t/deftest test-divide
+(t/deftest divide
   (let [money (sut/money-of 2 :eur)
         divisor 2]
     (t/is (= (sut/money-of 1 :eur) (sut/divide money divisor)))))
 
 ;;; Rounding
 
-(t/deftest test-round
+(t/deftest round
   (let [money(sut/money-of 1234.5678 :eur)
         rounding-1 (sut/create-rounding :up 2)
         rounding-2 (sut/create-rounding :down 2)
@@ -173,7 +173,7 @@
     (t/is (= (sut/money-of 1235 :eur) (sut/round money rounding-3)))
     (t/is (= (sut/money-of 1234 :eur) (sut/round money rounding-4)))))
 
-(t/deftest test-round-chf
+(t/deftest round-chf
   (let [m1 (sut/money-of 0.975 :chf)
         m2 (sut/money-of 1.024 :chf)
         m3 (sut/money-of 1.025 :chf)
