@@ -121,7 +121,7 @@
 
 (defn- make-formatter
   "Creates a new formatter for the given currency, locale, rounding mode, and decimal places."
-  [currency locale rounding-mode decimal-places]
+  [currency locale decimal-places rounding-mode]
   (let [formatter (DecimalFormat/getCurrencyInstance locale)]
     (doto formatter
       (.setRoundingMode rounding-mode)
@@ -158,14 +158,14 @@
 
 (defn format
   "Formats the given monetary amount with the given options."
-  [money & {:keys [locale rounding-mode decimal-places symbol-style] :as _options}]
+  [money & {:keys [locale decimal-places rounding-mode symbol-style] :as _options}]
   (let [amount (get-amount money)
         currency (get-currency money)
         locale (or locale (Locale/getDefault))
-        rounding-mode (utils/keyword->rounding-mode (or rounding-mode *default-rounding-mode* :half-even))
         decimal-places (or decimal-places (get-minor-units currency))
+        rounding-mode (utils/keyword->rounding-mode (or rounding-mode *default-rounding-mode* :half-even))
         symbol-style (or symbol-style :symbol)
-        formatter (make-formatter currency locale rounding-mode decimal-places)]
+        formatter (make-formatter currency locale decimal-places rounding-mode)]
     (format-amount amount currency formatter locale symbol-style)))
 
 (defn format-with-pattern
@@ -396,10 +396,10 @@
 (defn create-rounding-fn
   "Creates a rounding function with the given rounding mode and decimal places."
   ([]
-   (create-rounding-fn (or *default-rounding-mode* :half-even) (get-minor-units *default-currency*)))
+   (create-rounding-fn (get-minor-units *default-currency*) (or *default-rounding-mode* :half-even)))
   ([decimal-places]
-   (create-rounding-fn (or *default-rounding-mode* :half-even) decimal-places))
-  ([rounding-mode decimal-places]
+   (create-rounding-fn decimal-places (or *default-rounding-mode* :half-even)))
+  ([decimal-places rounding-mode]
    (fn [money]
      (let [amount (get-amount money)
            currency (get-currency money)
