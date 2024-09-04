@@ -67,17 +67,23 @@
    {:amount (bigdec amount) :currency currency}))
 
 (defn rounded-money-of
-  "Creates a rounded monetary amount with the given amount, currency, and rounding context."
-  [amount currency & {:keys [scale rounding-mode] :as _rounding-context}]
-  (assert-currency currency)
-  (let [scale (or scale (get-minor-units currency))
-        rounding-mode (or rounding-mode *default-rounding-mode* :half-even)
-        rounding-mode-object (utils/keyword->rounding-mode rounding-mode)]
-    (when (neg? scale)
-      (throw (ex-info "Scale must be non-negative" {:scale scale})))
-    {:amount (.setScale ^BigDecimal (bigdec amount) ^int scale ^RoundingMode rounding-mode-object)
-       :currency currency
-       :rounding-context {:scale scale :rounding-mode rounding-mode}}))
+  "Creates a rounded monetary amount with the given amount, currency, scale, and rounding mode."
+  ([amount]
+   (rounded-money-of amount *default-currency*))
+  ([amount currency]
+   (rounded-money-of amount currency (get-minor-units currency) (or *default-rounding-mode* :half-even)))
+  ([amount currency rounding-context]
+   (rounded-money-of amount currency (:scale rounding-context) (:rounding-mode rounding-context)))
+  ([amount currency scale rounding-mode]
+   (assert-currency currency)
+   (let [scale (or scale (get-minor-units currency))
+         rounding-mode (or rounding-mode *default-rounding-mode* :half-even)
+         rounding-mode-object (utils/keyword->rounding-mode rounding-mode)]
+     (when (neg? scale)
+       (throw (ex-info "Scale must be non-negative" {:scale scale})))
+     {:amount (.setScale ^BigDecimal (bigdec amount) ^int scale ^RoundingMode rounding-mode-object)
+      :currency currency
+      :rounding-context {:scale scale :rounding-mode rounding-mode}})))
 
 (defn get-amount
   "Returns the amount of the given monetary amount."
