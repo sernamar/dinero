@@ -231,6 +231,12 @@
   (when-not (apply same-rounding-mode? rounded-moneis)
     (throw (ex-info "Rounding modes do not match" {:rounding-modes (map get-rounding-mode rounded-moneis)}))))
 
+(defn- assert-same-scale-and-rounding-mode
+  "Asserts that all the given rounded monetary amounts have the same scale and rounding mode."
+  [& rounded-moneis]
+  (or (apply assert-same-scale rounded-moneis)
+      (apply assert-same-rounding-mode rounded-moneis)))
+
 (defn money=
   "Returns true if all the given monetary amounts have the same amount and currency."
   [money-1 money-2]
@@ -290,7 +296,7 @@
   (let [sum (reduce #(.add ^BigDecimal %1 %2) (map get-amount moneis))
         currency (get-currency (first moneis))]
     (if (some rounded-money? moneis)
-      (when-not (and (apply assert-same-scale moneis) (apply assert-same-rounding-mode moneis))
+      (when-not (apply assert-same-scale-and-rounding-mode moneis)
         (let [scale (get-scale (first moneis))
               rounding-mode (get-rounding-mode (first moneis))]
           (rounded-money-of sum currency scale rounding-mode)))
@@ -303,7 +309,7 @@
   (let [difference (reduce #(.subtract ^BigDecimal %1 %2) (map get-amount moneis))
         currency (get-currency (first moneis))]
     (if (some rounded-money? moneis)
-      (when-not (and (apply assert-same-scale moneis) (apply assert-same-rounding-mode moneis))
+      (when-not (apply assert-same-scale-and-rounding-mode moneis)
         (let [scale (get-scale (first moneis))
               rounding-mode (get-rounding-mode (first moneis))]
           (rounded-money-of difference currency scale rounding-mode)))
@@ -365,7 +371,7 @@
         max-amount (apply max amounts)
         currency (get-currency (first moneis))]
     (if (some rounded-money? moneis)
-      (when-not (and (apply assert-same-scale moneis) (apply assert-same-rounding-mode moneis))
+      (when-not (apply assert-same-scale-and-rounding-mode moneis)
         (let [scale (get-scale (first moneis))
               rounding-mode (get-rounding-mode (first moneis))]
           (rounded-money-of max-amount currency scale rounding-mode)))
@@ -379,7 +385,7 @@
         min-amount (apply min amounts)
         currency (get-currency (first moneis))]
     (if (some rounded-money? moneis)
-      (when-not (and (apply assert-same-scale moneis) (apply assert-same-rounding-mode moneis))
+      (when-not (apply assert-same-scale-and-rounding-mode moneis)
         (let [scale (get-scale (first moneis))
               rounding-mode (get-rounding-mode (first moneis))]
           (rounded-money-of min-amount currency scale rounding-mode)))
