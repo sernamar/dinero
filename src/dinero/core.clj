@@ -66,6 +66,16 @@
    (assert-currency currency)
    {:amount (bigdec amount) :currency currency}))
 
+(defn rounded-money-of
+  "Creates a rounded monetary amount with the given amount, currency, and rounding context."
+  [amount currency & {:keys [scale rounding-mode] :as rounding-context}]
+  (assert-currency currency)
+  (when (neg? scale)
+    (throw (ex-info "Scale must be non-negative" {:scale scale})))
+  (let [rounding-mode (utils/keyword->rounding-mode (or rounding-mode *default-rounding-mode* :half-even))
+        amount (.setScale ^BigDecimal (bigdec amount) ^int scale ^RoundingMode rounding-mode)]
+    {:amount amount :currency currency :rounding-context rounding-context}))
+
 (defn get-amount
   "Returns the amount of the given monetary amount."
   [money]
@@ -75,6 +85,21 @@
   "Returns the currency of the given monetary amount."
   [money]
   (:currency money))
+
+(defn get-rounding-context
+  "Returns the rounding context of the given rounded monetary amount."
+  [money]
+  (:rounding-context money))
+
+(defn get-scale
+  "Returns the scale of the given rounded monetary amount."
+  [money]
+  (-> money get-rounding-context :scale))
+
+(defn get-rounding-mode
+  "Returns the rounding mode of the given rounded monetary amount."
+  [money]
+  (-> money get-rounding-context :rounding-mode))
 
 (defmacro with-currency
   "Evaluates the body with the given currency as the default currency."

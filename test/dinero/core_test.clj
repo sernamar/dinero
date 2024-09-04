@@ -23,6 +23,19 @@
   (t/is (thrown? ExceptionInfo (sut/money-of 1 nil)))
   (t/is (thrown? ExceptionInfo (sut/money-of 1 :unknown-currency))))
 
+(t/deftest rounded-money-of
+  (let [m1 (sut/rounded-money-of 1234.5678 :eur {:scale 2 :rounding-mode :down})
+        m2 (sut/rounded-money-of 1234.5678 :eur {:scale 0 :rounding-mode :down})]
+    (t/is (= 1234.56M (sut/get-amount m1)))
+    (t/is (= 1234M (sut/get-amount m2)))
+    (t/is (= :eur (sut/get-currency m1)))
+    (t/is (= :eur (sut/get-currency m2)))
+    (t/is (= {:scale 2 :rounding-mode :down} (sut/get-rounding-context m1)))
+    (t/is (= {:scale 0 :rounding-mode :down} (sut/get-rounding-context m2)))
+    (t/is (= 2 (sut/get-scale m1)))
+    (t/is (= 0 (sut/get-scale m2)))
+    (t/is (thrown? ExceptionInfo (sut/rounded-money-of 1234.5678 :eur {:scale -1 :rounding-mode :down})))))
+
 ;;; Formatting
 
 (t/deftest test-format
