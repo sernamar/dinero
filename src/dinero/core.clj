@@ -258,13 +258,24 @@
 
 ;;; Arithmetic operations
 
+(defn- assert-same-rounding-context
+  "Asserts that all the given monetary amounts have the same rounding context."
+  [& moneis]
+  (when-not (apply = (map get-rounding-context  moneis))
+    (throw (ex-info "Rounding contexts do not match" {:rounding-contexts (map get-rounding-context moneis)}))))
+
 (defn add
   "Adds the given monetary amounts."
   [& moneis]
   (apply assert-same-currency moneis)
   (let [amount (reduce #(.add ^BigDecimal %1 %2) (map get-amount moneis))
         currency (get-currency (first moneis))]
-    (money-of amount currency)))
+    (if-let [rounding-context (some get-rounding-context moneis)]
+      ;; rounded money case
+      (when-not (apply assert-same-rounding-context moneis)
+        (rounded-money-of amount currency rounding-context))
+      ;; money case
+      (money-of amount currency))))
 
 (defn subtract
   "Subtracts the given monetary amounts."
@@ -272,7 +283,12 @@
   (apply assert-same-currency moneis)
   (let [amount (reduce #(.subtract ^BigDecimal %1 %2) (map get-amount moneis))
         currency (get-currency (first moneis))]
-    (money-of amount currency)))
+    (if-let [rounding-context (some get-rounding-context moneis)]
+      ;; rounded money case
+      (when-not (apply assert-same-rounding-context moneis)
+        (rounded-money-of amount currency rounding-context))
+      ;; money case
+      (money-of amount currency))))
 
 (defn multiply
   "Multiplies the given monetary amount by the given factor."
@@ -280,7 +296,9 @@
   (let [amount (get-amount money)
         product (.multiply ^BigDecimal amount (bigdec factor))
         currency (get-currency money)]
-    (money-of product currency)))
+    (if-let [rounding-context (get-rounding-context money)]
+      (rounded-money-of product currency rounding-context)
+      (money-of product currency))))
 
 (defn divide
   "Divides the given monetary amount by the given divisor."
@@ -288,7 +306,9 @@
   (let [amount (get-amount money)
         quotient (.divide ^BigDecimal amount (bigdec divisor))
         currency (get-currency money)]
-    (money-of quotient currency)))
+    (if-let [rounding-context (get-rounding-context money)]
+      (rounded-money-of quotient currency rounding-context)
+      (money-of quotient currency))))
 
 ;;; Rounding
 

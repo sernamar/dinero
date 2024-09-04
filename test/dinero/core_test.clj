@@ -148,30 +148,60 @@
 ;;; Arithmetic operations
 
 (t/deftest add
+  ;; money
   (let [m1 (sut/money-of 1 :eur)
         m2 (sut/money-of 2 :eur)
         m3 (sut/money-of 3 :eur)]
     (t/is (= (sut/money-of 3 :eur) (sut/add m1 m2)))
     (t/is (= (sut/money-of 6 :eur) (sut/add m1 m2 m3)))
-    (t/is (thrown? ExceptionInfo (sut/add (sut/money-of 1 :eur) (sut/money-of 1 :gbp))))))
+    (t/is (thrown? ExceptionInfo (sut/add (sut/money-of 1 :eur) (sut/money-of 1 :gbp)))))
+  ;; rounded money
+  (let [rounding-context-1 {:scale 2 :rounding-mode :down}
+        rounding-context-2 {:scale 2 :rounding-mode :up}
+        m1 (sut/rounded-money-of 1.555 :eur rounding-context-1)
+        m2 (sut/rounded-money-of 1.555 :eur rounding-context-1)
+        m3 (sut/rounded-money-of 1.555 :eur rounding-context-2)]
+    (t/is (= (sut/rounded-money-of 3.1 :eur rounding-context-1) (sut/add m1 m2)))
+    (t/is (thrown? ExceptionInfo (sut/add m1 m3)))))
 
 (t/deftest subtract
+  ;; money
   (let [m1 (sut/money-of 3 :eur)
         m2 (sut/money-of 2 :eur)
         m3 (sut/money-of 1 :eur)]
     (t/is (= (sut/money-of 1 :eur) (sut/subtract m1 m2)))
     (t/is (= (sut/money-of 0 :eur) (sut/subtract m1 m2 m3)))
-    (t/is (thrown? ExceptionInfo (sut/subtract (sut/money-of 1 :eur) (sut/money-of 1 :gbp))))))
+    (t/is (thrown? ExceptionInfo (sut/subtract (sut/money-of 1 :eur) (sut/money-of 1 :gbp)))))
+  ;; rounded money
+  (let [rounding-context-1 {:scale 2 :rounding-mode :down}
+        rounding-context-2 {:scale 2 :rounding-mode :up}
+        m1 (sut/rounded-money-of 1.555 :eur rounding-context-1)
+        m2 (sut/rounded-money-of 1.555 :eur rounding-context-1)
+        m3 (sut/rounded-money-of 1.555 :eur rounding-context-2)]
+    (t/is (= (sut/rounded-money-of 0 :eur rounding-context-1) (sut/subtract m1 m2)))
+    (t/is (thrown? ExceptionInfo (sut/subtract m1 m3)))))
 
 (t/deftest multiply
+  ;; money
   (let [money (sut/money-of 1 :eur)
         factor 2]
-    (t/is (= (sut/money-of 2 :eur) (sut/multiply money factor)))))
+    (t/is (= (sut/money-of 2 :eur) (sut/multiply money factor))))
+  ;; rounded money
+  (let [rounding-context {:scale 2 :rounding-mode :down}
+        money (sut/rounded-money-of 1.555 :eur rounding-context)
+        factor 2]
+    (t/is (= (sut/rounded-money-of 3.1 :eur rounding-context) (sut/multiply money factor)))))
 
 (t/deftest divide
+  ;; money
   (let [money (sut/money-of 2 :eur)
         divisor 2]
-    (t/is (= (sut/money-of 1 :eur) (sut/divide money divisor)))))
+    (t/is (= (sut/money-of 1 :eur) (sut/divide money divisor))))
+  ;; rounded money
+  (let [rounding-context {:scale 2 :rounding-mode :down}
+        money (sut/rounded-money-of 1.555 :eur rounding-context)
+        divisor 2]
+    (t/is (= (sut/rounded-money-of 0.77 :eur rounding-context) (sut/divide money divisor)))))
 
 ;;; Rounding
 
