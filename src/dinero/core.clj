@@ -323,8 +323,8 @@
         currency (get-currency money)]
     (if (rounded-money? money)
       (let [scale (get-scale money)
-              rounding-mode (get-rounding-mode money)]
-          (rounded-money-of product currency scale rounding-mode))
+            rounding-mode (get-rounding-mode money)]
+        (rounded-money-of product currency scale rounding-mode))
       (money-of product currency))))
 
 (defn divide
@@ -335,8 +335,8 @@
         currency (get-currency money)]
     (if (rounded-money? money)
       (let [scale (get-scale money)
-              rounding-mode (get-rounding-mode money)]
-          (rounded-money-of quotient currency scale rounding-mode))
+            rounding-mode (get-rounding-mode money)]
+        (rounded-money-of quotient currency scale rounding-mode))
       (money-of quotient currency))))
 
 (defn negate
@@ -347,8 +347,8 @@
         currency (get-currency money)]
     (if (rounded-money? money)
       (let [scale (get-scale money)
-              rounding-mode (get-rounding-mode money)]
-          (rounded-money-of negated currency scale rounding-mode))
+            rounding-mode (get-rounding-mode money)]
+        (rounded-money-of negated currency scale rounding-mode))
       (money-of negated currency))))
 
 (defn money-abs
@@ -359,8 +359,8 @@
         currency (get-currency money)]
     (if (rounded-money? money)
       (let [scale (get-scale money)
-              rounding-mode (get-rounding-mode money)]
-          (rounded-money-of absolute currency scale rounding-mode))
+            rounding-mode (get-rounding-mode money)]
+        (rounded-money-of absolute currency scale rounding-mode))
       (money-of absolute currency))))
 
 (defn money-max
