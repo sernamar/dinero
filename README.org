@@ -4,8 +4,7 @@ A Clojure library for working with money.
 - [[#dinero][dinero]]
   - [[#configuration][Configuration]]
   - [[#usage][Usage]]
-    - [[#create-monetary-amounts][Create monetary amounts]]
-    - [[#amount-and-currency][Amount and currency]]
+    - [[#monetary-amounts][Monetary amounts]]
     - [[#formatting][Formatting]]
     - [[#parsing][Parsing]]
     - [[#equality-and-comparison][Equality and comparison]]
@@ -26,10 +25,14 @@ You can try out the examples below in a REPL after the following =require=:
 #+begin_src clojure
   (require '[dinero.core :as dinero])
 #+end_src
-*** Create monetary amounts
-Use =money-of= to create monetary amounts. It accepts two arguments:
-- =amount=, that can be either an integer, a floating-point number, a =BigDecimal= or a string.
-- =currency=, that must be a keyword.
+*** Monetary amounts
+This library support two types of monetary amounts:
+- =money=: represents monetary amounts with arbitrary precision and scale, ensuring accurate numerical computations during arithmetic operations.
+- =rounded money=: represents monetary amounts that are automatically rounded after each arithmetic operation.
+**** Creating monetary amounts of type =money=
+You can use =money-of= to create monetary amounts with arbitrary precision and scale. It accepts two arguments:
+- =amount=: can be either an integer, a floating-point number, a =BigDecimal= or a string.
+- =currency=: must be a keyword.
 If the =currency= is not specified, it uses the default currency configured in the configuration file. Otherwise, it uses the given currency:
 #+begin_src clojure
   (dinero/money-of 1)
@@ -80,7 +83,35 @@ So, for accurate numerical computations, especially in financial applications, d
   ;; => {:amount 0.123456789123456789123456789M, :currency :eur}
 #+end_src
 #+end_quote
-*** Amount and currency
+**** Creating monetary amounts of type =rounded-money=
+You can use =rounded-money-of= to create monetary amounts that are automatically rounded after each arithmetic operation. It could accept up to 4 arguments:
+- =amount=: can be an integer, a floating-point number, a =BigDecimal= or a string.
+- =currency=: must be a keyword.
+- =scale=: the number of decimal places to which the amount will be rounded.
+- =rounding-mode=: the rounding mode to use when rounding the amount.
+If the =currency= is not specified, the default currency configured in the configuration file will be used. If the =scale= is not specified, the minor units of the given currency will be used. If the =rounding-mode= is not specified, the default rounding mode (or /half even/ mode) will be applied:
+#+begin_src clojure
+  (dinero/rounded-money-of 1234.5678 :eur)
+  ;; => {:amount 1234.57M, :currency :eur, :rounding-context {:scale 2, :rounding-mode :half-even}}
+
+  (dinero/rounded-money-of 1234.5678 :eur 2 :down)
+  ;; => {:amount 1234.56M, :currency :eur, :rounding-context {:scale 2, :rounding-mode :down}}
+
+  (dinero/rounded-money-of 1234.5678 :eur 0 :down)
+  ;; => {:amount 1234M, :currency :eur, :rounding-context {:scale 0, :rounding-mode :down}}
+#+end_src
+As mentioned, =rounded-money-of= is a variadic function, so you might find it useful to use its 3-parameter version and pass a map specifying the =scale= and =rounding-mode=:
+#+begin_src clojure
+  (dinero/rounded-money-of 1234.5678 :eur)
+  ;; => {:amount 1234.57M, :currency :eur, :rounding-context {:scale 2, :rounding-mode :half-even}}
+
+  (dinero/rounded-money-of 1234.5678 :eur {:rounding-mode :down})
+  ;; => {:amount 1234.56M, :currency :eur, :rounding-context {:scale 2, :rounding-mode :down}}
+
+  (dinero/rounded-money-of 1234.5678 :eur {:scale 0 :rounding-mode :down})
+  ;; => {:amount 1234M, :currency :eur, :rounding-context {:scale 0, :rounding-mode :down}}
+#+end_src
+**** Getting the amount and currency of a monetary amount
 Given a monetary amount, you can get its amount and currency using the =get-amount= and =get-currency= functions:
 #+begin_src clojure
   (let [money (dinero/money-of 1 :eur)]
@@ -89,6 +120,12 @@ Given a monetary amount, you can get its amount and currency using the =get-amou
   (let [money (dinero/money-of 1 :eur)]
     (dinero/get-currency money))
   ;; => :eur
+#+end_src
+For rounded monetary amounts you can also use the =get-rounding-context= function to get the rounding context used for rounding its amount:
+#+begin_src clojure
+  (let [money (dinero/rounded-money-of 123.456 :eur {:scale 2 :rounding-context :half-even})]
+    (dinero/get-rounding-context money))
+  ;; => {:scale 2, :rounding-context :half-even}
 #+end_src
 *** Formatting
 As already mentioned, amounts are stored internally with more decimal places than the smallest unit of the currency. Although this is crucial for accurate numerical computations, you might be interested in displaying amounts in a user-friendly format.
