@@ -13,9 +13,9 @@ A Clojure library for working with money.
   - [[#license][License]]
 
 ** Configuration
-Before using this library, you can configure the variables =default-currency= and =default-rounding-mode= in a configuration file named =config.edn=, that should be located in the root directory of the project.
+For convenience, before using this library, you can configure the variables =default-currency= and =default-rounding-mode= in a configuration file named =config.edn=, which should be located in the root directory of the project.
 
-For example, for using /euros/ as the default currency, and the /half even/ method as the default rounding method, the content of the =config.edn= file should be:
+For example, to set /euros/ as the default currency and the /half even/ method as the default rounding method, the =config.edn= file should have the following content:
 #+begin_src clojure
   {:default-currency :eur
    :default-rounding-mode :half-even}
