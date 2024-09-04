@@ -24,17 +24,17 @@
   (t/is (thrown? ExceptionInfo (sut/money-of 1 :unknown-currency))))
 
 (t/deftest rounded-money-of
-  (let [m1 (sut/rounded-money-of 1234.5678 :eur {:scale 2 :rounding-mode :down})
-        m2 (sut/rounded-money-of 1234.5678 :eur {:scale 0 :rounding-mode :down})]
+  (let [m1 (sut/rounded-money-of 1234.5678 :eur 2 :down)
+        m2 (sut/rounded-money-of 1234.5678 :eur 0 :down)]
     (t/is (= 1234.56M (sut/get-amount m1)))
     (t/is (= 1234M (sut/get-amount m2)))
     (t/is (= :eur (sut/get-currency m1)))
     (t/is (= :eur (sut/get-currency m2)))
-    (t/is (= {:scale 2 :rounding-mode :down} (sut/get-rounding-context m1)))
-    (t/is (= {:scale 0 :rounding-mode :down} (sut/get-rounding-context m2)))
     (t/is (= 2 (sut/get-scale m1)))
     (t/is (= 0 (sut/get-scale m2)))
-    (t/is (thrown? ExceptionInfo (sut/rounded-money-of 1234.5678 :eur {:scale -1 :rounding-mode :down})))))
+    (t/is (= :down (sut/get-rounding-mode m1)))
+    (t/is (= :down (sut/get-rounding-mode m2)))
+    (t/is (thrown? ExceptionInfo (sut/rounded-money-of 1234.5678 :eur -1 :down)))))
 
 ;;; Formatting
 
@@ -156,12 +156,10 @@
     (t/is (= (sut/money-of 6 :eur) (sut/add m1 m2 m3)))
     (t/is (thrown? ExceptionInfo (sut/add (sut/money-of 1 :eur) (sut/money-of 1 :gbp)))))
   ;; rounded money
-  (let [rounding-context-1 {:scale 2 :rounding-mode :down}
-        rounding-context-2 {:scale 2 :rounding-mode :up}
-        m1 (sut/rounded-money-of 1.555 :eur rounding-context-1)
-        m2 (sut/rounded-money-of 1.555 :eur rounding-context-1)
-        m3 (sut/rounded-money-of 1.555 :eur rounding-context-2)]
-    (t/is (= (sut/rounded-money-of 3.1 :eur rounding-context-1) (sut/add m1 m2)))
+  (let [m1 (sut/rounded-money-of 1.555 :eur 2 :down)
+        m2 (sut/rounded-money-of 1.555 :eur 2 :down)
+        m3 (sut/rounded-money-of 1.555 :eur 2 :up)]
+    (t/is (= (sut/rounded-money-of 3.1 :eur 2 :down) (sut/add m1 m2)))
     (t/is (thrown? ExceptionInfo (sut/add m1 m3)))))
 
 (t/deftest subtract
@@ -173,12 +171,10 @@
     (t/is (= (sut/money-of 0 :eur) (sut/subtract m1 m2 m3)))
     (t/is (thrown? ExceptionInfo (sut/subtract (sut/money-of 1 :eur) (sut/money-of 1 :gbp)))))
   ;; rounded money
-  (let [rounding-context-1 {:scale 2 :rounding-mode :down}
-        rounding-context-2 {:scale 2 :rounding-mode :up}
-        m1 (sut/rounded-money-of 1.555 :eur rounding-context-1)
-        m2 (sut/rounded-money-of 1.555 :eur rounding-context-1)
-        m3 (sut/rounded-money-of 1.555 :eur rounding-context-2)]
-    (t/is (= (sut/rounded-money-of 0 :eur rounding-context-1) (sut/subtract m1 m2)))
+  (let [m1 (sut/rounded-money-of 1.555 :eur 2 :down)
+        m2 (sut/rounded-money-of 1.555 :eur 2 :down)
+        m3 (sut/rounded-money-of 1.555 :eur 2 :up)]
+    (t/is (= (sut/rounded-money-of 0 :eur 2 :down) (sut/subtract m1 m2)))
     (t/is (thrown? ExceptionInfo (sut/subtract m1 m3)))))
 
 (t/deftest multiply
@@ -187,10 +183,9 @@
         factor 2]
     (t/is (= (sut/money-of 2 :eur) (sut/multiply money factor))))
   ;; rounded money
-  (let [rounding-context {:scale 2 :rounding-mode :down}
-        money (sut/rounded-money-of 1.555 :eur rounding-context)
+  (let [money (sut/rounded-money-of 1.555 :eur 2 :down)
         factor 2]
-    (t/is (= (sut/rounded-money-of 3.1 :eur rounding-context) (sut/multiply money factor)))))
+    (t/is (= (sut/rounded-money-of 3.1 :eur 2 :down) (sut/multiply money factor)))))
 
 (t/deftest divide
   ;; money
@@ -198,10 +193,9 @@
         divisor 2]
     (t/is (= (sut/money-of 1 :eur) (sut/divide money divisor))))
   ;; rounded money
-  (let [rounding-context {:scale 2 :rounding-mode :down}
-        money (sut/rounded-money-of 1.555 :eur rounding-context)
+  (let [money (sut/rounded-money-of 1.555 :eur 2 :down)
         divisor 2]
-    (t/is (= (sut/rounded-money-of 0.77 :eur rounding-context) (sut/divide money divisor)))))
+    (t/is (= (sut/rounded-money-of 0.77 :eur 2 :down) (sut/divide money divisor)))))
 
 (t/deftest negate
   ;; money
@@ -209,9 +203,8 @@
         m2 (sut/money-of -1 :eur)]
     (t/is (= m2 (sut/negate m1))))
   ;; rounded money
-  (let [rounding-context {:scale 2 :rounding-mode :down}
-        m1 (sut/rounded-money-of 1.555 :eur rounding-context)
-        m2 (sut/rounded-money-of -1.555 :eur rounding-context)]
+  (let [m1 (sut/rounded-money-of 1.555 :eur 2 :down)
+        m2 (sut/rounded-money-of -1.555 :eur 2 :down)]
     (t/is (= m2 (sut/negate m1)))))
 
 (t/deftest money-abs
@@ -220,9 +213,8 @@
         m2 (sut/money-of -1 :eur)]
     (t/is (= m1 (sut/money-abs m2))))
   ;; rounded money
-  (let [rounding-context {:scale 2 :rounding-mode :down}
-        m1 (sut/rounded-money-of 1.555 :eur rounding-context)
-        m2 (sut/rounded-money-of -1.555 :eur rounding-context)]
+  (let [m1 (sut/rounded-money-of 1.555 :eur 2 :down)
+        m2 (sut/rounded-money-of -1.555 :eur 2 :down)]
     (t/is (= m1 (sut/money-abs m2)))))
 
 (t/deftest money-max
@@ -234,13 +226,11 @@
     (t/is (= m3 (sut/money-max m1 m2 m3)))
     (t/is (thrown? ExceptionInfo (sut/money-max m1 (sut/money-of 1 :gbp)))))
   ;; rounded money
-  (let [rounding-context-1 {:scale 2 :rounding-mode :down}
-        rounding-context-2 {:scale 2 :rounding-mode :up}
-        m1 (sut/rounded-money-of 1.555 :eur rounding-context-1)
-        m2 (sut/rounded-money-of 2.555 :eur rounding-context-1)
-        m3 (sut/rounded-money-of 3.555 :eur rounding-context-1)
-        m4 (sut/rounded-money-of 1.555 :eur rounding-context-2)
-        m5 (sut/rounded-money-of 1.555 :gbp rounding-context-1)]
+  (let [m1 (sut/rounded-money-of 1.555 :eur 2 :down)
+        m2 (sut/rounded-money-of 2.555 :eur 2 :down)
+        m3 (sut/rounded-money-of 3.555 :eur 2 :down)
+        m4 (sut/rounded-money-of 1.555 :eur 2 :up)
+        m5 (sut/rounded-money-of 1.555 :gbp 2 :down)]
     (t/is (= m2 (sut/money-max m1 m2)))
     (t/is (= m3 (sut/money-max m1 m2 m3)))
     (t/is (thrown? ExceptionInfo (sut/money-max m1 m4)))
@@ -255,13 +245,11 @@
     (t/is (= m1 (sut/money-min m1 m2 m3)))
     (t/is (thrown? ExceptionInfo (sut/money-min m1 (sut/money-of 1 :gbp)))))
   ;; rounded money
-  (let [rounding-context-1 {:scale 2 :rounding-mode :down}
-        rounding-context-2 {:scale 2 :rounding-mode :up}
-        m1 (sut/rounded-money-of 1.555 :eur rounding-context-1)
-        m2 (sut/rounded-money-of 2.555 :eur rounding-context-1)
-        m3 (sut/rounded-money-of 3.555 :eur rounding-context-1)
-        m4 (sut/rounded-money-of 1.555 :eur rounding-context-2)
-        m5 (sut/rounded-money-of 1.555 :gbp rounding-context-1)]
+  (let [m1 (sut/rounded-money-of 1.555 :eur 2 :down)
+        m2 (sut/rounded-money-of 2.555 :eur 2 :down)
+        m3 (sut/rounded-money-of 3.555 :eur 2 :down)
+        m4 (sut/rounded-money-of 1.555 :eur 2 :up)
+        m5 (sut/rounded-money-of 1.555 :gbp 2 :down)]
     (t/is (= m1 (sut/money-min m1 m2)))
     (t/is (= m1 (sut/money-min m1 m2 m3)))
     (t/is (thrown? ExceptionInfo (sut/money-min m1 m4)))

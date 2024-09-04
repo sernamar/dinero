@@ -71,9 +71,9 @@
   ([amount]
    (rounded-money-of amount *default-currency*))
   ([amount currency]
-   (rounded-money-of amount currency (get-minor-units currency) (or *default-rounding-mode* :half-even)))
-  ([amount currency rounding-context]
-   (rounded-money-of amount currency (:scale rounding-context) (:rounding-mode rounding-context)))
+   (rounded-money-of amount currency (get-minor-units currency) *default-rounding-mode*))
+  ([amount currency scale]
+   (rounded-money-of amount currency scale *default-rounding-mode*))
   ([amount currency scale rounding-mode]
    (assert-currency currency)
    (let [scale (or scale (get-minor-units currency))
@@ -83,7 +83,13 @@
        (throw (ex-info "Scale must be non-negative" {:scale scale})))
      {:amount (.setScale ^BigDecimal (bigdec amount) ^int scale ^RoundingMode rounding-mode-object)
       :currency currency
-      :rounding-context {:scale scale :rounding-mode rounding-mode}})))
+      :scale scale
+      :rounding-mode rounding-mode})))
+
+(defn- rounded-money?
+  "Returns true if the given monetary amount is rounded."
+  [money]
+  (and (contains? money :scale) (contains? money :rounding-mode)))
 
 (defn get-amount
   "Returns the amount of the given monetary amount."
@@ -95,20 +101,15 @@
   [money]
   (:currency money))
 
-(defn get-rounding-context
-  "Returns the rounding context of the given rounded monetary amount."
-  [money]
-  (:rounding-context money))
-
 (defn get-scale
   "Returns the scale of the given rounded monetary amount."
   [money]
-  (-> money get-rounding-context :scale))
+  (:scale money))
 
 (defn get-rounding-mode
   "Returns the rounding mode of the given rounded monetary amount."
   [money]
-  (-> money get-rounding-context :rounding-mode))
+  (:rounding-mode money))
 
 (defmacro with-currency
   "Evaluates the body with the given currency as the default currency."
@@ -190,21 +191,45 @@
 
 ;;; Equality and comparison
 
-(defn- same-currency?
-  "Returns true if all the given monetary amounts have the same currency."
-  [& moneis]
-  (apply = (map get-currency moneis)))
-
 (defn- same-amount?
   "Returns true if all the given monetary amounts have the same amount."
   [money-1 money-2]
   (= (get-amount money-1) (get-amount money-2)))
+
+(defn- same-currency?
+  "Returns true if all the given monetary amounts have the same currency."
+  [& moneis]
+  (apply = (map get-currency moneis)))
 
 (defn- assert-same-currency
   "Asserts that all the given monetary amounts have the same currency."
   [& moneis]
   (when-not (apply same-currency? moneis)
     (throw (ex-info "Currencies do not match" {:currencies (map get-currency moneis)}))))
+
+(defn- same-scale?
+  "Returns true if all the given rounded monetary amounts have the same scale."
+  [& rounded-moneis]
+  (when (some nil? rounded-moneis)
+    (throw (ex-info "Scale must be non-nil" {})))
+  (apply = (map get-scale rounded-moneis)))
+
+(defn- assert-same-scale
+  "Asserts that all the given rounded monetary amounts have the same scale."
+  [& rounded-moneis]
+  (when-not (apply same-scale? rounded-moneis)
+    (throw (ex-info "Scales do not match" {:scales (map get-scale rounded-moneis)}))))
+
+(defn- same-rounding-mode?
+  "Returns true if all the given rounded monetary amounts have the same rounding mode."
+  [& rounded-moneis]
+  (apply = (map get-rounding-mode rounded-moneis)))
+
+(defn- assert-same-rounding-mode
+  "Asserts that all the given rounded monetary amounts have the same rounding mode."
+  [& rounded-moneis]
+  (when-not (apply same-rounding-mode? rounded-moneis)
+    (throw (ex-info "Rounding modes do not match" {:rounding-modes (map get-rounding-mode rounded-moneis)}))))
 
 (defn money=
   "Returns true if all the given monetary amounts have the same amount and currency."
@@ -258,37 +283,31 @@
 
 ;;; Arithmetic operations
 
-(defn- assert-same-rounding-context
-  "Asserts that all the given monetary amounts have the same rounding context."
-  [& moneis]
-  (when-not (apply = (map get-rounding-context  moneis))
-    (throw (ex-info "Rounding contexts do not match" {:rounding-contexts (map get-rounding-context moneis)}))))
-
 (defn add
   "Adds the given monetary amounts."
   [& moneis]
   (apply assert-same-currency moneis)
-  (let [amount (reduce #(.add ^BigDecimal %1 %2) (map get-amount moneis))
+  (let [sum (reduce #(.add ^BigDecimal %1 %2) (map get-amount moneis))
         currency (get-currency (first moneis))]
-    (if-let [rounding-context (some get-rounding-context moneis)]
-      ;; rounded money case
-      (when-not (apply assert-same-rounding-context moneis)
-        (rounded-money-of amount currency rounding-context))
-      ;; money case
-      (money-of amount currency))))
+    (if (some rounded-money? moneis)
+      (when-not (and (apply assert-same-scale moneis) (apply assert-same-rounding-mode moneis))
+        (let [scale (get-scale (first moneis))
+              rounding-mode (get-rounding-mode (first moneis))]
+          (rounded-money-of sum currency scale rounding-mode)))
+      (money-of sum currency))))
 
 (defn subtract
   "Subtracts the given monetary amounts."
   [& moneis]
   (apply assert-same-currency moneis)
-  (let [amount (reduce #(.subtract ^BigDecimal %1 %2) (map get-amount moneis))
+  (let [difference (reduce #(.subtract ^BigDecimal %1 %2) (map get-amount moneis))
         currency (get-currency (first moneis))]
-    (if-let [rounding-context (some get-rounding-context moneis)]
-      ;; rounded money case
-      (when-not (apply assert-same-rounding-context moneis)
-        (rounded-money-of amount currency rounding-context))
-      ;; money case
-      (money-of amount currency))))
+    (if (some rounded-money? moneis)
+      (when-not (and (apply assert-same-scale moneis) (apply assert-same-rounding-mode moneis))
+        (let [scale (get-scale (first moneis))
+              rounding-mode (get-rounding-mode (first moneis))]
+          (rounded-money-of difference currency scale rounding-mode)))
+      (money-of difference currency))))
 
 (defn multiply
   "Multiplies the given monetary amount by the given factor."
@@ -296,8 +315,10 @@
   (let [amount (get-amount money)
         product (.multiply ^BigDecimal amount (bigdec factor))
         currency (get-currency money)]
-    (if-let [rounding-context (get-rounding-context money)]
-      (rounded-money-of product currency rounding-context)
+    (if (rounded-money? money)
+      (let [scale (get-scale money)
+              rounding-mode (get-rounding-mode money)]
+          (rounded-money-of product currency scale rounding-mode))
       (money-of product currency))))
 
 (defn divide
@@ -306,8 +327,10 @@
   (let [amount (get-amount money)
         quotient (.divide ^BigDecimal amount (bigdec divisor))
         currency (get-currency money)]
-    (if-let [rounding-context (get-rounding-context money)]
-      (rounded-money-of quotient currency rounding-context)
+    (if (rounded-money? money)
+      (let [scale (get-scale money)
+              rounding-mode (get-rounding-mode money)]
+          (rounded-money-of quotient currency scale rounding-mode))
       (money-of quotient currency))))
 
 (defn negate
@@ -316,8 +339,10 @@
   (let [amount (get-amount money)
         negated (.negate ^BigDecimal amount)
         currency (get-currency money)]
-    (if-let [rounding-context (get-rounding-context money)]
-      (rounded-money-of negated currency rounding-context)
+    (if (rounded-money? money)
+      (let [scale (get-scale money)
+              rounding-mode (get-rounding-mode money)]
+          (rounded-money-of negated currency scale rounding-mode))
       (money-of negated currency))))
 
 (defn money-abs
@@ -326,8 +351,10 @@
   (let [amount (get-amount money)
         absolute (.abs ^BigDecimal amount)
         currency (get-currency money)]
-    (if-let [rounding-context (get-rounding-context money)]
-      (rounded-money-of absolute currency rounding-context)
+    (if (rounded-money? money)
+      (let [scale (get-scale money)
+              rounding-mode (get-rounding-mode money)]
+          (rounded-money-of absolute currency scale rounding-mode))
       (money-of absolute currency))))
 
 (defn money-max
@@ -337,11 +364,11 @@
   (let [amounts (map get-amount moneis)
         max-amount (apply max amounts)
         currency (get-currency (first moneis))]
-    (if-let [rounding-context (some get-rounding-context moneis)]
-      ;; rounded money case
-      (when-not (apply assert-same-rounding-context moneis)
-        (rounded-money-of max-amount currency rounding-context))
-      ;; money case
+    (if (some rounded-money? moneis)
+      (when-not (and (apply assert-same-scale moneis) (apply assert-same-rounding-mode moneis))
+        (let [scale (get-scale (first moneis))
+              rounding-mode (get-rounding-mode (first moneis))]
+          (rounded-money-of max-amount currency scale rounding-mode)))
       (money-of max-amount currency))))
 
 (defn money-min
@@ -351,11 +378,11 @@
   (let [amounts (map get-amount moneis)
         min-amount (apply min amounts)
         currency (get-currency (first moneis))]
-    (if-let [rounding-context (some get-rounding-context moneis)]
-      ;; rounded money case
-      (when-not (apply assert-same-rounding-context moneis)
-        (rounded-money-of min-amount currency rounding-context))
-      ;; money case
+    (if (some rounded-money? moneis)
+      (when-not (and (apply assert-same-scale moneis) (apply assert-same-rounding-mode moneis))
+        (let [scale (get-scale (first moneis))
+              rounding-mode (get-rounding-mode (first moneis))]
+          (rounded-money-of min-amount currency scale rounding-mode)))
       (money-of min-amount currency))))
 
 ;;; Rounding
