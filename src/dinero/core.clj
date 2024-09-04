@@ -310,6 +310,54 @@
       (rounded-money-of quotient currency rounding-context)
       (money-of quotient currency))))
 
+(defn negate
+  "Negates the given monetary amount."
+  [money]
+  (let [amount (get-amount money)
+        negated (.negate ^BigDecimal amount)
+        currency (get-currency money)]
+    (if-let [rounding-context (get-rounding-context money)]
+      (rounded-money-of negated currency rounding-context)
+      (money-of negated currency))))
+
+(defn money-abs
+  "Returns the absolute value of the given monetary amount."
+  [money]
+  (let [amount (get-amount money)
+        absolute (.abs ^BigDecimal amount)
+        currency (get-currency money)]
+    (if-let [rounding-context (get-rounding-context money)]
+      (rounded-money-of absolute currency rounding-context)
+      (money-of absolute currency))))
+
+(defn money-max
+  "Returns the maximum of the given monetary amounts."
+  [& moneis]
+  (apply assert-same-currency moneis)
+  (let [amounts (map get-amount moneis)
+        max-amount (apply max amounts)
+        currency (get-currency (first moneis))]
+    (if-let [rounding-context (some get-rounding-context moneis)]
+      ;; rounded money case
+      (when-not (apply assert-same-rounding-context moneis)
+        (rounded-money-of max-amount currency rounding-context))
+      ;; money case
+      (money-of max-amount currency))))
+
+(defn money-min
+  "Returns the minimum of the given monetary amounts."
+  [& moneis]
+  (apply assert-same-currency moneis)
+  (let [amounts (map get-amount moneis)
+        min-amount (apply min amounts)
+        currency (get-currency (first moneis))]
+    (if-let [rounding-context (some get-rounding-context moneis)]
+      ;; rounded money case
+      (when-not (apply assert-same-rounding-context moneis)
+        (rounded-money-of min-amount currency rounding-context))
+      ;; money case
+      (money-of min-amount currency))))
+
 ;;; Rounding
 
 (defn create-rounding-fn
