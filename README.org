@@ -323,34 +323,30 @@ For example, the Japanese Yen (=JPY=) does not use any decimal places because it
 
   (let [m1 (dinero/money-of 1.555 :jpy)
         m2 (dinero/money-of 1.555 :jpy)
-        rounding (dinero/create-rounding 0)
+        rounding (dinero/create-rounding-fn 0)
         m1-rounded (dinero/round m1 rounding)
         m2-rounded (dinero/round m2 rounding)]
     (dinero/add m1-rounded m2-rounded))
   ;; => {:amount 4M, :currency :jpy}
 #+end_src
-Another use case of custom rounding is the Swiss Franc (=CHF=), which uses unique rounding rules because the smallest unit of currency in Switzerland is the 5-centime (=0.05 CHF=) coin. To handle the specific rounding requirements for Swiss Francs, you can use the =chf-rounding= function, which creates a rounding function tailored to =CHF=:
+Another use case of custom rounding is the Swiss Franc (=CHF=), which uses unique rounding rules because the smallest unit of currency in Switzerland is the 5-centime (=0.05 CHF=) coin. To handle the specific rounding requirements for Swiss Francs, you can use the =chf-rounding-fn= variable, which containins a rounding function tailored to =CHF=:
 #+begin_src clojure
-  (let [money (dinero/money-of 1.024 :chf)
-        rounding (dinero/chf-rounding)]
-    (dinero/round money rounding))
+  (let [money (dinero/money-of 1.024 :chf)]
+    (dinero/round money dinero/chf-rounding-fn))
   ;; => {:amount 1.00M, :currency :chf}
 
-  (let [money (dinero/money-of 1.025 :chf)
-        rounding (dinero/chf-rounding)]
-    (dinero/round money rounding))
+  (let [money (dinero/money-of 1.025 :chf)]
+    (dinero/round money dinero/chf-rounding-fn))
   ;; => {:amount 1.05M, :currency :chf}
 #+end_src
 This approach is also useful when formatting currencies with special rounding requirements. For instance, when formatting Swiss Francs, you might want to round the amount before using the =format= function to ensure the displayed value matches the currency's rounding conventions:
 #+begin_src clojure
-  (let [money (dinero/money-of 1.025 :chf)
-        rounding (dinero/chf-rounding)]
+  (let [money (dinero/money-of 1.025 :chf)]
     (dinero/format money {:locale (java.util.Locale. "de" "CH")}))
   ;; => "CHF 1.02"
 
   (let [money (dinero/money-of 1.025 :chf)
-        rounding (dinero/chf-rounding)
-        rounded-money (dinero/round money rounding)]
+        rounded-money (dinero/round money dinero/chf-rounding-fn)]
     (dinero/format rounded-money {:locale (java.util.Locale. "de" "CH")}))
   ;; => "CHF 1.05"
 #+end_src
