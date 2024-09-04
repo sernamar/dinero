@@ -258,15 +258,11 @@
 ;;; Rounding
 
 (t/deftest round
-  (let [money(sut/money-of 1234.5678 :eur)
-        rounding-1 (sut/create-rounding-fn 2 :up)
-        rounding-2 (sut/create-rounding-fn 2 :down)
-        rounding-3 (sut/create-rounding-fn 0 :up)
-        rounding-4 (sut/create-rounding-fn 0 :down)]
-    (t/is (= (sut/money-of 1234.57 :eur) (sut/round money rounding-1)))
-    (t/is (= (sut/money-of 1234.56 :eur) (sut/round money rounding-2)))
-    (t/is (= (sut/money-of 1235 :eur) (sut/round money rounding-3)))
-    (t/is (= (sut/money-of 1234 :eur) (sut/round money rounding-4)))))
+  (let [money(sut/money-of 1234.5678 :eur)]
+    (t/is (= (sut/money-of 1234.57 :eur) (sut/round money 2 :up)))
+    (t/is (= (sut/money-of 1234.56 :eur) (sut/round money 2 :down)))
+    (t/is (= (sut/money-of 1235 :eur) (sut/round money 0 :up)))
+    (t/is (= (sut/money-of 1234 :eur) (sut/round money 0 :down)))))
 
 (t/deftest round-chf
   (let [m1 (sut/money-of 0.975 :chf)

@@ -393,19 +393,18 @@
 
 ;;; Rounding
 
-(defn create-rounding-fn
-  "Creates a rounding function with the given rounding mode and decimal places."
-  ([]
-   (create-rounding-fn (get-minor-units *default-currency*) (or *default-rounding-mode* :half-even)))
-  ([decimal-places]
-   (create-rounding-fn decimal-places (or *default-rounding-mode* :half-even)))
-  ([decimal-places rounding-mode]
-   (fn [money]
-     (let [amount (get-amount money)
-           currency (get-currency money)
-           rounding-mode (utils/keyword->rounding-mode rounding-mode)
-           rounded (.setScale ^BigDecimal amount ^int decimal-places ^RoundingMode rounding-mode)]
-       (money-of rounded currency)))))
+(defn round
+  "Rounds the given monetary amount"
+  ([money]
+   (round money (get-minor-units (get-currency money)) (or *default-rounding-mode* :half-even)))
+  ([money rounding-fn]
+   (rounding-fn money))
+  ([money decimal-places rounding-mode]
+   (let [amount (get-amount money)
+         currency (get-currency money)
+         rounding-mode (utils/keyword->rounding-mode rounding-mode)
+         rounded (.setScale ^BigDecimal amount ^int decimal-places ^RoundingMode rounding-mode)]
+     (money-of rounded currency))))
 
 (def chf-rounding-fn
   "Creates a rounding function for Swiss Francs."
@@ -416,11 +415,3 @@
           rounded (-> (.divide ^BigDecimal amount (bigdec 0.05) scale RoundingMode/HALF_UP)
                       (.multiply (bigdec 0.05)))]
       (money-of rounded currency))))
-
-(defn round
-  "Rounds the given monetary amount using the given rounding function."
-  ([money]
-   (let [rounding (create-rounding-fn)]
-     (round money rounding)))
-  ([money rounding-fn]
-   (rounding-fn money)))
