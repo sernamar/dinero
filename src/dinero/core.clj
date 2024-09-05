@@ -294,107 +294,195 @@
 
 ;;; Arithmetic operations
 
-(defn add
+(defmulti add
   "Adds the given monetary amounts."
+  (fn [& moneis]
+    (if (some money? moneis)
+      :money
+      :rounded-money)))
+
+(defmulti subtract
+  "Subtracts the given monetary amounts."
+  (fn [& moneis]
+    (if (some money? moneis)
+      :money
+      :rounded-money)))
+
+(defmulti multiply
+  "Multiplies the given monetary amount by the given factor."
+  (fn [money factor]
+    (if (money? money)
+      :money
+      :rounded-money)))
+
+(defmulti divide
+  "Divides the given monetary amount by the given divisor."
+  (fn [money divisor]
+    (if (money? money)
+      :money
+      :rounded-money)))
+
+(defmulti negate
+  "Negates the given monetary amount."
+  (fn [money]
+    (if (money? money)
+      :money
+      :rounded-money)))
+
+(defmulti money-abs
+  "Returns the absolute value of the given monetary amount."
+  (fn [money]
+    (if (money? money)
+      :money
+      :rounded-money)))
+
+(defmulti money-max
+  "Returns the maximum of the given monetary amounts."
+  (fn [& moneis]
+    (if (some money? moneis)
+      :money
+      :rounded-money)))
+
+(defmulti money-min
+  "Returns the minimum of the given monetary amounts."
+  (fn [& moneis]
+    (if (some money? moneis)
+      :money
+      :rounded-money)))
+
+(defmethod add :money
   [& moneis]
   (apply assert-same-currency moneis)
   (let [sum (reduce #(.add ^BigDecimal %1 %2) (map get-amount moneis))
         currency (get-currency (first moneis))]
-    (if (some rounded-money? moneis)
-      (when-not (apply assert-same-scale-and-rounding-mode moneis)
-        (let [scale (get-scale (first moneis))
-              rounding-mode (get-rounding-mode (first moneis))]
-          (rounded-money-of sum currency scale rounding-mode)))
-      (money-of sum currency))))
+    (money-of sum currency)))
 
-(defn subtract
-  "Subtracts the given monetary amounts."
+(defmethod add :rounded-money
+  [& moneis]
+  (apply assert-same-currency-scale-and-rounding-mode moneis)
+  (when-not (apply assert-same-scale-and-rounding-mode moneis)
+    (let [sum (reduce #(.add ^BigDecimal %1 %2) (map get-amount moneis))
+          currency (get-currency (first moneis))
+          scale (get-scale (first moneis))
+          rounding-mode (get-rounding-mode (first moneis))]
+      (rounded-money-of sum currency scale rounding-mode))))
+
+(defmethod subtract :money
   [& moneis]
   (apply assert-same-currency moneis)
   (let [difference (reduce #(.subtract ^BigDecimal %1 %2) (map get-amount moneis))
         currency (get-currency (first moneis))]
-    (if (some rounded-money? moneis)
-      (when-not (apply assert-same-scale-and-rounding-mode moneis)
-        (let [scale (get-scale (first moneis))
-              rounding-mode (get-rounding-mode (first moneis))]
-          (rounded-money-of difference currency scale rounding-mode)))
-      (money-of difference currency))))
+    (money-of difference currency)))
 
-(defn multiply
-  "Multiplies the given monetary amount by the given factor."
+(defmethod subtract :rounded-money
+  [& moneis]
+  (apply assert-same-currency-scale-and-rounding-mode moneis)
+  (when-not (apply assert-same-scale-and-rounding-mode moneis)
+    (let [difference (reduce #(.subtract ^BigDecimal %1 %2) (map get-amount moneis))
+          currency (get-currency (first moneis))
+          scale (get-scale (first moneis))
+          rounding-mode (get-rounding-mode (first moneis))]
+      (rounded-money-of difference currency scale rounding-mode))))
+
+(defmethod multiply :money
   [money factor]
   (let [amount (get-amount money)
         product (.multiply ^BigDecimal amount (bigdec factor))
         currency (get-currency money)]
-    (if (rounded-money? money)
-      (let [scale (get-scale money)
-            rounding-mode (get-rounding-mode money)]
-        (rounded-money-of product currency scale rounding-mode))
-      (money-of product currency))))
+    (money-of product currency)))
 
-(defn divide
-  "Divides the given monetary amount by the given divisor."
+(defmethod multiply :rounded-money
+  [money factor]
+  (let [amount (get-amount money)
+        product (.multiply ^BigDecimal amount (bigdec factor))
+        currency (get-currency money)
+        scale (get-scale money)
+        rounding-mode (get-rounding-mode money)]
+    (rounded-money-of product currency scale rounding-mode)))
+
+(defmethod divide :money
   [money divisor]
   (let [amount (get-amount money)
         quotient (.divide ^BigDecimal amount (bigdec divisor))
         currency (get-currency money)]
-    (if (rounded-money? money)
-      (let [scale (get-scale money)
-            rounding-mode (get-rounding-mode money)]
-        (rounded-money-of quotient currency scale rounding-mode))
-      (money-of quotient currency))))
+    (money-of quotient currency)))
 
-(defn negate
-  "Negates the given monetary amount."
+(defmethod divide :rounded-money
+  [money divisor]
+  (let [amount (get-amount money)
+        quotient (.divide ^BigDecimal amount (bigdec divisor))
+        currency (get-currency money)
+        scale (get-scale money)
+        rounding-mode (get-rounding-mode money)]
+    (rounded-money-of quotient currency scale rounding-mode)))
+
+(defmethod negate :money
   [money]
   (let [amount (get-amount money)
         negated (.negate ^BigDecimal amount)
         currency (get-currency money)]
-    (if (rounded-money? money)
-      (let [scale (get-scale money)
-            rounding-mode (get-rounding-mode money)]
-        (rounded-money-of negated currency scale rounding-mode))
-      (money-of negated currency))))
+    (money-of negated currency)))
 
-(defn money-abs
-  "Returns the absolute value of the given monetary amount."
+(defmethod negate :rounded-money
+  [money]
+  (let [amount (get-amount money)
+        negated (.negate ^BigDecimal amount)
+        currency (get-currency money)
+        scale (get-scale money)
+        rounding-mode (get-rounding-mode money)]
+    (rounded-money-of negated currency scale rounding-mode)))
+
+(defmethod money-abs :money
   [money]
   (let [amount (get-amount money)
         absolute (.abs ^BigDecimal amount)
         currency (get-currency money)]
-    (if (rounded-money? money)
-      (let [scale (get-scale money)
-            rounding-mode (get-rounding-mode money)]
-        (rounded-money-of absolute currency scale rounding-mode))
-      (money-of absolute currency))))
+    (money-of absolute currency)))
 
-(defn money-max
-  "Returns the maximum of the given monetary amounts."
+(defmethod money-abs :rounded-money
+  [money]
+  (let [amount (get-amount money)
+        absolute (.abs ^BigDecimal amount)
+        currency (get-currency money)
+        scale (get-scale money)
+        rounding-mode (get-rounding-mode money)]
+    (rounded-money-of absolute currency scale rounding-mode)))
+
+(defmethod money-max :money
   [& moneis]
   (apply assert-same-currency moneis)
   (let [amounts (map get-amount moneis)
         max-amount (apply max amounts)
         currency (get-currency (first moneis))]
-    (if (some rounded-money? moneis)
-      (when-not (apply assert-same-scale-and-rounding-mode moneis)
-        (let [scale (get-scale (first moneis))
-              rounding-mode (get-rounding-mode (first moneis))]
-          (rounded-money-of max-amount currency scale rounding-mode)))
-      (money-of max-amount currency))))
+    (money-of max-amount currency)))
 
-(defn money-min
-  "Returns the minimum of the given monetary amounts."
+(defmethod money-max :rounded-money
+  [& moneis]
+  (apply assert-same-currency-scale-and-rounding-mode moneis)
+  (let [amounts (map get-amount moneis)
+          max-amount (apply max amounts)
+          currency (get-currency (first moneis))
+          scale (get-scale (first moneis))
+          rounding-mode (get-rounding-mode (first moneis))]
+      (rounded-money-of max-amount currency scale rounding-mode)))
+
+(defmethod money-min :money
   [& moneis]
   (apply assert-same-currency moneis)
   (let [amounts (map get-amount moneis)
         min-amount (apply min amounts)
         currency (get-currency (first moneis))]
-    (if (some rounded-money? moneis)
-      (when-not (apply assert-same-scale-and-rounding-mode moneis)
-        (let [scale (get-scale (first moneis))
-              rounding-mode (get-rounding-mode (first moneis))]
-          (rounded-money-of min-amount currency scale rounding-mode)))
-      (money-of min-amount currency))))
+    (money-of min-amount currency)))
+
+(defmethod money-min :rounded-money
+  [& moneis]
+  (apply assert-same-currency-scale-and-rounding-mode moneis)
+  (let [amounts (map get-amount moneis)
+        min-amount (apply min amounts)
+        currency (get-currency (first moneis))
+        scale (get-scale (first moneis))
+        rounding-mode (get-rounding-mode (first moneis))]
+    (rounded-money-of min-amount currency scale rounding-mode)))
 
 ;;; Rounding
 
