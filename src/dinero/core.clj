@@ -54,7 +54,17 @@
   (when-not (contains? currencies currency)
     (throw (ex-info (str "Unknown currency") {:currency currency}))))
 
-;;; Money creation
+;;; Monetary amounts
+
+(defrecord Money [amount currency]
+  Object
+  (toString [_this]
+    (str "Money{amount=" amount ", currency=" currency )))
+
+(defrecord RoundedMoney [amount currency scale rounding-mode]
+  Object
+  (toString [_this]
+    (str "RoundedMoney{amount=" amount ", currency=" currency ", scale=" scale ", rounding-mode=" rounding-mode)))
 
 (defn money-of
   "Creates a monetary amount with the given amount and currency."
@@ -64,7 +74,7 @@
    (money-of amount *default-currency*))
   ([amount currency]
    (assert-currency currency)
-   {:amount (bigdec amount) :currency currency}))
+   (Money. (bigdec amount) currency)))
 
 (defn rounded-money-of
   "Creates a rounded monetary amount with the given amount, currency, scale, and rounding mode."
@@ -81,15 +91,20 @@
          rounding-mode-object (utils/keyword->rounding-mode rounding-mode)]
      (when (neg? scale)
        (throw (ex-info "Scale must be non-negative" {:scale scale})))
-     {:amount (.setScale ^BigDecimal (bigdec amount) ^int scale ^RoundingMode rounding-mode-object)
-      :currency currency
-      :scale scale
-      :rounding-mode rounding-mode})))
+     (RoundedMoney. (.setScale ^BigDecimal (bigdec amount) ^int scale ^RoundingMode rounding-mode-object)
+                    currency
+                    scale
+                    rounding-mode))))
 
-(defn- rounded-money?
-  "Returns true if the given monetary amount is a rounded monetary amount."
+(defn money?
+  "Returns true if the given value is a monetary amount of type `Money`."
   [money]
-  (and (contains? money :scale) (contains? money :rounding-mode)))
+  (instance? Money money))
+
+(defn rounded-money?
+  "Returns true if the given value is a monetary amount of type `RoundedMoney`."
+  [money]
+  (instance? RoundedMoney money))
 
 (defn get-amount
   "Returns the amount of the given monetary amount."
@@ -182,7 +197,7 @@
 ;;; Parsing
 
 (defn parse-containing-iso-4217-symbol
-  "Parses the given string containing an ISO 4217 currency symbol and returns a monetary amount."
+  "Parses the given string containing an ISO 4217 currency symbol and returns a monetary amount of type `Money`."
   [string locale]
   (let [formatter (DecimalFormat/getCurrencyInstance locale)
         amount (.parse ^DecimalFormat formatter string)
@@ -190,11 +205,6 @@
     (money-of amount currency)))
 
 ;;; Equality and comparison
-
-(defn- same-amount?
-  "Returns true if all the given monetary amounts have the same amount."
-  [money-1 money-2]
-  (= (get-amount money-1) (get-amount money-2)))
 
 (defn- same-currency?
   "Returns true if all the given monetary amounts have the same currency."
@@ -237,16 +247,11 @@
   (or (apply assert-same-scale rounded-moneis)
       (apply assert-same-rounding-mode rounded-moneis)))
 
-(defn money=
-  "Returns true if all the given monetary amounts have the same amount and currency."
-  [money-1 money-2]
-  (assert-same-currency money-1 money-2)
-  (same-amount? money-1 money-2))
-
-(defn money-not=
-  "Returns true if the given monetary amounts do not have the same amount and currency."
-  [money-1 money-2]
-  (not (money= money-1 money-2)))
+(defn- assert-same-currency-scale-and-rounding-mode
+  "Asserts that all the given monetary amounts have the same currency, scale, and rounding mode."
+  [& moneis]
+  (or (apply assert-same-currency moneis)
+      (apply assert-same-scale-and-rounding-mode moneis)))
 
 (defn money<
   "Returns true if the first monetary amount is less than the second monetary amount."

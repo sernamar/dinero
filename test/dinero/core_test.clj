@@ -114,15 +114,6 @@
 
 ;;; Equality and comparison
 
-(t/deftest equality
-  (let [m1 (sut/money-of 1 :eur)
-        m2 (sut/money-of 1 :eur)
-        m3 (sut/money-of 2 :eur)
-        m4 (sut/money-of 1 :gbp)]
-    (t/is (sut/money= m1 m2))
-    (t/is (sut/money-not= m1 m3))
-    (t/is (thrown? ExceptionInfo (sut/money= m1 m4)))))
-
 (t/deftest comparison
   (let [m1 (sut/money-of 1 :eur)
         m2 (sut/money-of 1 :eur)
