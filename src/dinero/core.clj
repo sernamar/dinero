@@ -87,7 +87,7 @@
       :rounding-mode rounding-mode})))
 
 (defn- rounded-money?
-  "Returns true if the given monetary amount is rounded."
+  "Returns true if the given monetary amount is a rounded monetary amount."
   [money]
   (and (contains? money :scale) (contains? money :rounding-mode)))
 
