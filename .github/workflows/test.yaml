@@ -1,0 +1,40 @@
+name: test
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  test:
+    name: Test on Java 21
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up the JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: "21"
+
+      - name: Set up Clojure CLI
+        uses: DeLaGuardo/setup-clojure@master
+        with:
+          cli: latest
+
+      - name: Cache Clojure dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.m2/repository
+            ~/.gitlibs
+            ~/.clojure
+            ~/.cpcache
+          key: ${{ runner.os }}-${{ hashFiles('**/deps.edn') }}
+
+      - name: Run the tests
+        run: clojure -X:test
