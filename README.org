@@ -193,11 +193,11 @@ But as mentioned, it doesn't support parsing strings with ISO 4217 currency code
 #+end_src
 The =parse-containing-iso-4217-symbol= function also throws a =java.text.ParseException= exception if the currency symbol is in the wrong position for the specified =locale=, or if the =locale= uses a different default currency:
 #+begin_src clojure
-  (dinero/parse-containing-iso-4217-symbol "€1.234,56" java.util.Locale/GERMANY)
+  (parsing/parse-containing-iso-4217-symbol "€1.234,56" java.util.Locale/GERMANY)
   ;; java.text.ParseException
   ;; Unparseable number: "€1.234,56"
 
-  (dinero/parse-containing-iso-4217-symbol "1.234,56 £" java.util.Locale/GERMANY)
+  (parsing/parse-containing-iso-4217-symbol "1.234,56 £" java.util.Locale/GERMANY)
   ;; java.text.ParseException
   ;; Unparseable number: "1.234,56 £"
 #+end_src
