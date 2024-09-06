@@ -316,7 +316,7 @@ But you can also speficy the number of decimal places and the rounding mode you 
 #+end_src
 If necessary, you can also call =round= with two arguments, which are the monetary amount and a custom rounding funtion to use to round the monetary amount. This allows you to specify different rounding rules for certain cases.
 
-For example, the Swiss Franc (=CHF=) uses unique rounding rules because the smallest unit of currency in Switzerland is the 5-centime (=0.05 CHF=) coin. To handle the specific rounding requirements for Swiss Francs, you can use the =chf-rounding-fn= variable, which containins a rounding function tailored to =CHF=:
+For example, the Swiss Franc (=CHF=) uses unique rounding rules because the smallest unit of currency in Switzerland is the 5-centime (=0.05 CHF=) coin. To handle the specific rounding requirements for Swiss Francs, you can use the =chf-rounding-fn= function, which containins a rounding function tailored to =CHF=:
 #+begin_src clojure
   (let [money (dinero/money-of 1.024 :chf)]
     (dinero/round money dinero/chf-rounding-fn))

@@ -545,14 +545,14 @@
        (money-of rounded currency)
        (rounded-money-of rounded currency decimal-places rounding-mode)))))
 
-(def chf-rounding-fn
+(defn chf-rounding-fn
   "Creates a rounding function for Swiss Francs."
-  (fn [money]
-    (let [amount (get-amount money)
-          currency (get-currency money)
-          scale 0
-          rounded (-> (.divide ^BigDecimal amount (bigdec 0.05) scale RoundingMode/HALF_UP)
-                      (.multiply (bigdec 0.05)))]
-      (if (money? money)
-        (money-of rounded currency)
-        (rounded-money-of rounded currency 2 :half-up)))))
+  [money]
+  (let [amount (get-amount money)
+        currency (get-currency money)
+        scale 0
+        rounded (-> (.divide ^BigDecimal amount (bigdec 0.05) scale RoundingMode/HALF_UP)
+                    (.multiply (bigdec 0.05)))]
+    (if (money? money)
+      (money-of rounded currency)
+      (rounded-money-of rounded currency 2 :half-up))))
