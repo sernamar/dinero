@@ -1,6 +1,6 @@
-(ns dinero.parsing-test
+(ns dinero.parse-test
   (:require [dinero.core :as core]
-            [dinero.parsing :as sut]
+            [dinero.parse :as sut]
             [clojure.test :as t])
   (:import [java.text ParseException]
            [java.util Locale]))

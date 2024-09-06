@@ -1,4 +1,4 @@
-(ns dinero.parsing
+(ns dinero.parse
   (:require [dinero.core :as core]
             [clojure.string :as str])
   (:import [java.text DecimalFormat]))
@@ -10,4 +10,3 @@
         amount (DecimalFormat/.parse ^DecimalFormat formatter string)
         currency (-> (DecimalFormat/.getCurrency formatter) str/lower-case keyword)]
     (core/money-of amount currency)))
-

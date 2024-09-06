@@ -1,4 +1,4 @@
-(ns dinero.formatting
+(ns dinero.text-format
   (:refer-clojure :exclude [format])
   (:require [dinero.core :as core]
             [dinero.currency :as currency]
