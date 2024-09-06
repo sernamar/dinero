@@ -248,8 +248,10 @@
 
 ;;; Rounding
 
+
 (t/deftest round
   (let [money(sut/money-of 1234.5678 :eur)]
+    (t/is (= (sut/money-of 1234.57 :eur) (sut/round money)))
     (t/is (= (sut/money-of 1234.57 :eur) (sut/round money 2 :up)))
     (t/is (= (sut/money-of 1234.56 :eur) (sut/round money 2 :down)))
     (t/is (= (sut/money-of 1235 :eur) (sut/round money 0 :up)))
