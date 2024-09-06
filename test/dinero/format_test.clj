@@ -1,6 +1,6 @@
-(ns dinero.text-format-test
+(ns dinero.format-test
   (:require [dinero.core :as core]
-            [dinero.text-format :as sut]
+            [dinero.format :as sut]
             [clojure.test :as t])
   (:import [java.util Locale]))
 

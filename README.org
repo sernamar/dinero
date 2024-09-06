@@ -26,7 +26,7 @@ You can try out the examples below in a REPL after the following =requires=:
   (require '[dinero.core :as dinero]
            '[dinero.parse :as parse]
            '[dinero.rounding :as rounding]
-           '[dinero.text-format :as text-format])
+           '[dinero.format :as format])
 #+end_src
 *** Monetary amounts
 This library support two types of monetary amounts:
@@ -137,10 +137,10 @@ For example:
 #+begin_src clojure
   (let [m1 (dinero/money-of 1234.5678 :eur)
         germany java.util.Locale/GERMANY]
-    (println (text-format/format m1 {:locale germany}))
-    (println (text-format/format m1 {:locale germany :symbol-style :code}))
-    (println (text-format/format m1 {:locale germany :rounding-mode :down :symbol-style :code}))
-    (println (text-format/format m1 {:locale germany :rounding-mode :down :decimal-places 0 :symbol-style :code})))
+    (println (format/format m1 {:locale germany}))
+    (println (format/format m1 {:locale germany :symbol-style :code}))
+    (println (format/format m1 {:locale germany :rounding-mode :down :symbol-style :code}))
+    (println (format/format m1 {:locale germany :rounding-mode :down :decimal-places 0 :symbol-style :code})))
   ;; 1.234,57 €
   ;; 1.234,57 EUR
   ;; 1.234,56 EUR
@@ -153,11 +153,11 @@ For example:
 #+begin_src clojure
   (let [m1 (dinero/money-of 1234.5678 :eur)
         germany java.util.Locale/GERMANY]
-    (println (text-format/format-with-pattern m1 "#,##0.00 ¤" {:locale germany}))
-    (println (text-format/format-with-pattern m1 "#,##0.00 ¤¤" {:locale germany}))
-    (println (text-format/format-with-pattern m1 "#,##0.000 ¤" {:locale germany}))
-    (println (text-format/format-with-pattern m1 "#,##0 ¤" {:locale germany}))
-    (println (text-format/format-with-pattern m1 "#,##0 ¤" {:locale germany :rounding-mode :down})))
+    (println (format/format-with-pattern m1 "#,##0.00 ¤" {:locale germany}))
+    (println (format/format-with-pattern m1 "#,##0.00 ¤¤" {:locale germany}))
+    (println (format/format-with-pattern m1 "#,##0.000 ¤" {:locale germany}))
+    (println (format/format-with-pattern m1 "#,##0 ¤" {:locale germany}))
+    (println (format/format-with-pattern m1 "#,##0 ¤" {:locale germany :rounding-mode :down})))
   ;; 1.234,57 €
   ;; 1.234,57 EUR
   ;; 1.234,568 €
@@ -328,12 +328,12 @@ For example, the Swiss Franc (=CHF=) uses unique rounding rules because the smal
 This approach is also useful when formatting currencies with special rounding requirements. For instance, when formatting Swiss Francs, you might want to round the amount before using the =format= function to ensure the displayed value matches the currency's rounding conventions:
 #+begin_src clojure
   (let [money (dinero/money-of 1.025 :chf)]
-    (text-format/format money {:locale (java.util.Locale. "de" "CH")}))
+    (format/format money {:locale (java.util.Locale. "de" "CH")}))
   ;; => "CHF 1.02"
 
   (let [money (dinero/money-of 1.025 :chf)
         rounded-money (rounding/round money rounding/chf-rounding-fn)]
-    (text-format/format rounded-money {:locale (java.util.Locale. "de" "CH")}))
+    (format/format rounded-money {:locale (java.util.Locale. "de" "CH")}))
   ;; => "CHF 1.05"
 #+end_src
 ** License
