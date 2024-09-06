@@ -130,7 +130,8 @@
   "Evaluates the body with the given currency as the default currency."
   [currency & body]
   `(binding [*default-currency* ~currency]
-     ~@body))
+     (let [rest# (do ~@body)]
+       rest#)))
 
 ;;; Formatting
 
