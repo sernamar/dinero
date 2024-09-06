@@ -21,9 +21,14 @@ For example, to set /euros/ as the default currency and the /half even/ method a
    :default-rounding-mode :half-even}
 #+end_src
 ** Usage
-You can try out the examples below in a REPL after the following =require=:
+You can try out the examples below in a REPL after the following =requires=:
 #+begin_src clojure
-  (require '[dinero.core :as dinero])
+  (require '[dinero.core :as dinero]
+           '[dinero.comparison :as comparison]
+           '[dinero.formatting :as formatting]
+           '[dinero.math :as math]
+           '[dinero.parsing :as parsing]
+           '[dinero.rounding :as rounding])
 #+end_src
 *** Monetary amounts
 This library support two types of monetary amounts:
@@ -134,10 +139,10 @@ For example:
 #+begin_src clojure
   (let [m1 (dinero/money-of 1234.5678 :eur)
         germany java.util.Locale/GERMANY]
-    (println (dinero/format m1 {:locale germany}))
-    (println (dinero/format m1 {:locale germany :symbol-style :code}))
-    (println (dinero/format m1 {:locale germany :rounding-mode :down :symbol-style :code}))
-    (println (dinero/format m1 {:locale germany :rounding-mode :down :decimal-places 0 :symbol-style :code})))
+    (println (formatting/format m1 {:locale germany}))
+    (println (formatting/format m1 {:locale germany :symbol-style :code}))
+    (println (formatting/format m1 {:locale germany :rounding-mode :down :symbol-style :code}))
+    (println (formatting/format m1 {:locale germany :rounding-mode :down :decimal-places 0 :symbol-style :code})))
   ;; 1.234,57 €
   ;; 1.234,57 EUR
   ;; 1.234,56 EUR
@@ -150,11 +155,11 @@ For example:
 #+begin_src clojure
   (let [m1 (dinero/money-of 1234.5678 :eur)
         germany java.util.Locale/GERMANY]
-    (println (dinero/format-with-pattern m1 "#,##0.00 ¤" {:locale germany}))
-    (println (dinero/format-with-pattern m1 "#,##0.00 ¤¤" {:locale germany}))
-    (println (dinero/format-with-pattern m1 "#,##0.000 ¤" {:locale germany}))
-    (println (dinero/format-with-pattern m1 "#,##0 ¤" {:locale germany}))
-    (println (dinero/format-with-pattern m1 "#,##0 ¤" {:locale germany :rounding-mode :down})))
+    (println (formatting/format-with-pattern m1 "#,##0.00 ¤" {:locale germany}))
+    (println (formatting/format-with-pattern m1 "#,##0.00 ¤¤" {:locale germany}))
+    (println (formatting/format-with-pattern m1 "#,##0.000 ¤" {:locale germany}))
+    (println (formatting/format-with-pattern m1 "#,##0 ¤" {:locale germany}))
+    (println (formatting/format-with-pattern m1 "#,##0 ¤" {:locale germany :rounding-mode :down})))
   ;; 1.234,57 €
   ;; 1.234,57 EUR
   ;; 1.234,568 €
@@ -166,23 +171,23 @@ For now, this library only supports parsing strings that contain ISO 4217 curren
 
 So you can use the =parse-containing-iso-4217-symbol= function to parse a string that contains an ISO 4217 currency symbol:
 #+begin_src clojure
-  (dinero/parse-containing-iso-4217-symbol "1.234,56 €" java.util.Locale/GERMANY)
+  (parsing/parse-containing-iso-4217-symbol "1.234,56 €" java.util.Locale/GERMANY)
   ;; => {:amount 1234.56M, :currency :eur}
 
-  (dinero/parse-containing-iso-4217-symbol "£1,234.56" java.util.Locale/UK)
+  (parsing/parse-containing-iso-4217-symbol "£1,234.56" java.util.Locale/UK)
   ;; => {:amount 1234.56M, :currency :gbp}
 #+end_src
 But as mentioned, it doesn't support parsing strings with ISO 4217 currency codes or strings with non-ISO 4217 currency symbols or codes, throwing a =java.text.ParseException= exception in that case:
 #+begin_src clojure
-  (dinero/parse-containing-iso-4217-symbol "1.234,56 EUR" java.util.Locale/GERMANY)
+  (parsing/parse-containing-iso-4217-symbol "1.234,56 EUR" java.util.Locale/GERMANY)
   ;; java.text.ParseException
   ;; Unparseable number: "1.234,56 EUR"
 
-  (dinero/parse-containing-iso-4217-symbol "1,23456789 ₿" java.util.Locale/GERMANY)
+  (parsing/parse-containing-iso-4217-symbol "1,23456789 ₿" java.util.Locale/GERMANY)
   ;; java.text.ParseException
   ;; Unparseable number: "1,23456789 ₿"
 
-  (dinero/parse-containing-iso-4217-symbol "1,23456789 BTC" java.util.Locale/GERMANY)
+  (parsing/parse-containing-iso-4217-symbol "1,23456789 BTC" java.util.Locale/GERMANY)
   ;; java.text.ParseException
   ;; Unparseable number: "1,23456789 BTC"
 #+end_src
@@ -197,72 +202,68 @@ The =parse-containing-iso-4217-symbol= function also throws a =java.text.ParseEx
   ;; Unparseable number: "1.234,56 £"
 #+end_src
 *** Equality and comparison
-You could use the following functions to do equality and comparison operations on monetary amounts: ~money=~, =money-not==, =money<=, =money<==, =money>=, =money>==, =money-zero?=, =monmey-pos?=, and =money-neg?=.
+You could use the following functions to do equality and comparison operations on monetary amounts: ~=~, =not==, =money<=, =money<==, =money>=, =money>==, =money-zero?=, =monmey-pos?=, and =money-neg?=.
 
 For example:
 #+begin_src clojure
   (let [m1 (dinero/money-of 1 :eur)
         m2 (dinero/money-of 1 :eur)]
-    (dinero/money= m1 m2))
+    (= m1 m2))
+  ;; => true
+
+  (let [m1 (dinero/money-of 1 :eur)
+        m2 (dinero/money-of 1 :gbp)]
+    (= m1 m2))
+    ;; => false
+
+  (let [m1 (dinero/money-of 1 :eur)
+        m2 (dinero/money-of 2 :eur)]
+    (not= m1 m2))
   ;; => true
 
   (let [m1 (dinero/money-of 1 :eur)
         m2 (dinero/money-of 2 :eur)]
-    (dinero/money-not= m1 m2))
+    (comparison/money< m1 m2))
   ;; => true
 
   (let [m1 (dinero/money-of 1 :eur)
         m2 (dinero/money-of 2 :eur)]
-    (dinero/money< m1 m2))
-  ;; => true
-
-  (let [m1 (dinero/money-of 1 :eur)
-        m2 (dinero/money-of 2 :eur)]
-    (dinero/money> m1 m2))
+    (comparison/money> m1 m2))
   ;; => false
 
   (let [money (dinero/money-of 0 :eur)]
-    (dinero/money-zero? money))
+    (comparison/money-zero? money))
   ;; => true
 
   (let [money (dinero/money-of -1 :eur)]
-    (dinero/money-pos? money))
+    (comparison/money-pos? money))
   ;; => false
 
   (let [money (dinero/money-of -1 :eur)]
-    (dinero/money-neg? money))
+    (comparison/money-neg? money))
   ;; => true
-#+end_src
-When these operations involve more than one monetary amount, they throw an =ExceptionInfo= exception if currencies don't match:
-#+begin_src clojure
-  (let [m1 (dinero/money-of 1 :eur)
-        m2 (dinero/money-of 1 :gbp)]
-    (dinero/money= m1 m2))
-  ;; clojure.lang.ExceptionInfo
-  ;; Currencies do not match
-  ;; {:currencies (:eur :gbp)}
 #+end_src
 *** Arithmetic operations
 You can use =add=, =substract=, =multiply=, and =divide= to perform arithmetic operations on monetary amounts:
 #+begin_src clojure
   (let [m1 (dinero/money-of 1 :eur)
         m2 (dinero/money-of 1 :eur)]
-    (dinero/add m1 m2))
+    (math/add m1 m2))
   ;; => {:amount 2M, :currency :eur}
 
   (let [m1 (dinero/money-of 1 :eur)
         m2 (dinero/money-of 1 :eur)]
-    (dinero/subtract m1 m2))
+    (math/subtract m1 m2))
   ;; => {:amount 0M, :currency :eur}
 
   (let [money (dinero/money-of 1 :eur)
         factor 2]
-    (dinero/multiply money factor))
+    (math/multiply money factor))
   ;; => {:amount 2M, :currency :eur}
 
   (let [money (dinero/money-of 2 :eur)
         divisor 2]
-    (dinero/divide money divisor))
+    (math/divide money divisor))
   ;; => {:amount 1M, :currency :eur}
 #+end_src
 Note that =add= and =substract= can be used to add and substract more than two monetary amounts:
@@ -270,20 +271,20 @@ Note that =add= and =substract= can be used to add and substract more than two m
   (let [m1 (dinero/money-of 1 :eur)
         m2 (dinero/money-of 2 :eur)
         m3 (dinero/money-of 3 :eur)]
-    (dinero/add m1 m2 m3))
+    (math/add m1 m2 m3))
   ;; => {:amount 6M, :currency :eur}
 
   (let [m1 (dinero/money-of 3 :eur)
         m2 (dinero/money-of 2 :eur)
         m3 (dinero/money-of 1 :eur)]
-    (dinero/subtract m1 m2 m3))
+    (math/subtract m1 m2 m3))
   ;; => {:amount 0M, :currency :eur}
 #+end_src
 Adding or substracting monetary amounts with different currencies throws an =ExceptionInfo= exception:
 #+begin_src clojure
   (let [m1 (dinero/money-of 1 :eur)
         m2 (dinero/money-of 1 :gbp)]
-    (dinero/add m1 m2))
+    (math/add m1 m2))
   ;; clojure.lang.ExceptionInfo
   ;; Currencies do not match
   ;; {:currencies (:eur :gbp)}
@@ -295,23 +296,23 @@ By default, the =round= function rounds amounts to the smallest unit of the curr
 #+begin_src clojure
   (let [m1 (dinero/money-of 1.555 :eur)
         m2 (dinero/money-of 1.555 :eur)]
-    (dinero/add m1 m2))
+    (math/add m1 m2))
   ;; => {:amount 3.110M, :currency :eur}
 
   (let [m1 (dinero/money-of 1.555 :eur)
         m2 (dinero/money-of 1.555 :eur)
-        m1-rounded (dinero/round m1)
-        m2-rounded (dinero/round m2)]
-    (dinero/add m1-rounded m2-rounded))
+        m1-rounded (rounding/round m1)
+        m2-rounded (rounding/round m2)]
+    (math/add m1-rounded m2-rounded))
   ;; => {:amount 3.12M, :currency :eur}
 #+end_src
 But you can also speficy the number of decimal places and the rounding mode you want to use when rounding. For example:
 #+begin_src clojure
   (let [m1 (dinero/money-of 1.555 :eur)
         m2 (dinero/money-of 1.555 :eur)
-        m1-rounded (dinero/round m1 0 :half-even)
-        m2-rounded (dinero/round m2 0 :half-even)]
-    (dinero/add m1-rounded m2-rounded))
+        m1-rounded (rounding/round m1 0 :half-even)
+        m2-rounded (rounding/round m2 0 :half-even)]
+    (math/add m1-rounded m2-rounded))
   ;; => {:amount 4M, :currency :eur}
 #+end_src
 If necessary, you can also call =round= with two arguments, which are the monetary amount and a custom rounding funtion to use to round the monetary amount. This allows you to specify different rounding rules for certain cases.
@@ -319,22 +320,22 @@ If necessary, you can also call =round= with two arguments, which are the moneta
 For example, the Swiss Franc (=CHF=) uses unique rounding rules because the smallest unit of currency in Switzerland is the 5-centime (=0.05 CHF=) coin. To handle the specific rounding requirements for Swiss Francs, you can use the =chf-rounding-fn= function, which containins a rounding function tailored to =CHF=:
 #+begin_src clojure
   (let [money (dinero/money-of 1.024 :chf)]
-    (dinero/round money dinero/chf-rounding-fn))
+    (rounding/round money rounding/chf-rounding-fn))
   ;; => {:amount 1.00M, :currency :chf}
 
   (let [money (dinero/money-of 1.025 :chf)]
-    (dinero/round money dinero/chf-rounding-fn))
+    (rounding/round money rounding/chf-rounding-fn))
   ;; => {:amount 1.05M, :currency :chf}
 #+end_src
 This approach is also useful when formatting currencies with special rounding requirements. For instance, when formatting Swiss Francs, you might want to round the amount before using the =format= function to ensure the displayed value matches the currency's rounding conventions:
 #+begin_src clojure
   (let [money (dinero/money-of 1.025 :chf)]
-    (dinero/format money {:locale (java.util.Locale. "de" "CH")}))
+    (formatting/format money {:locale (java.util.Locale. "de" "CH")}))
   ;; => "CHF 1.02"
 
   (let [money (dinero/money-of 1.025 :chf)
-        rounded-money (dinero/round money dinero/chf-rounding-fn)]
-    (dinero/format rounded-money {:locale (java.util.Locale. "de" "CH")}))
+        rounded-money (rounding/round money rounding/chf-rounding-fn)]
+    (formatting/format rounded-money {:locale (java.util.Locale. "de" "CH")}))
   ;; => "CHF 1.05"
 #+end_src
 ** License
