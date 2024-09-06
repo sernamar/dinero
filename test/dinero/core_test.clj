@@ -115,6 +115,7 @@
 ;;; Equality and comparison
 
 (t/deftest comparison
+  ;; money
   (let [m1 (sut/money-of 1 :eur)
         m2 (sut/money-of 1 :eur)
         m3 (sut/money-of 2 :eur)
@@ -126,7 +127,27 @@
     (t/is (thrown? ExceptionInfo (sut/money< m1 m4)))
     (t/is (thrown? ExceptionInfo (sut/money<= m1 m4)))
     (t/is (thrown? ExceptionInfo (sut/money> m1 m4)))
-    (t/is (thrown? ExceptionInfo (sut/money>= m1 m4)))))
+    (t/is (thrown? ExceptionInfo (sut/money>= m1 m4))))
+  ;; rounded money
+  (let [m1 (sut/rounded-money-of 1 :eur)
+        m2 (sut/rounded-money-of 1 :eur)
+        m3 (sut/rounded-money-of 2 :eur)
+        m4 (sut/rounded-money-of 1 :gbp)]
+    (t/is (sut/money< m1 m3))
+    (t/is (sut/money<= m1 m2))
+    (t/is (sut/money> m3 m1))
+    (t/is (sut/money>= m3 m2))
+    (t/is (thrown? ExceptionInfo (sut/money< m1 m4)))
+    (t/is (thrown? ExceptionInfo (sut/money<= m1 m4)))
+    (t/is (thrown? ExceptionInfo (sut/money> m1 m4)))
+    (t/is (thrown? ExceptionInfo (sut/money>= m1 m4))))
+  ;; mixed money and rounded money
+  (let [m1 (sut/money-of 1 :eur)
+        m2 (sut/rounded-money-of 1 :eur)]
+    (t/is (thrown? ExceptionInfo (sut/money< m1 m2)))
+    (t/is (thrown? ExceptionInfo (sut/money<= m1 m2)))
+    (t/is (thrown? ExceptionInfo (sut/money> m1 m2)))
+    (t/is (thrown? ExceptionInfo (sut/money>= m1 m2)))))
 
 (t/deftest sign-operations
   (let [m1 (sut/money-of 0 :eur)
@@ -151,7 +172,11 @@
         m2 (sut/rounded-money-of 1.555 :eur 2 :down)
         m3 (sut/rounded-money-of 1.555 :eur 2 :up)]
     (t/is (= (sut/rounded-money-of 3.1 :eur 2 :down) (sut/add m1 m2)))
-    (t/is (thrown? ExceptionInfo (sut/add m1 m3)))))
+    (t/is (thrown? ExceptionInfo (sut/add m1 m3))))
+  ;; mixed money and rounded money
+  (let [m1 (sut/money-of 1 :eur)
+        m2 (sut/rounded-money-of 1 :eur)]
+    (t/is (= (sut/money-of 2 :eur) (sut/add m1 m2)))))
 
 (t/deftest subtract
   ;; money
@@ -166,7 +191,11 @@
         m2 (sut/rounded-money-of 1.555 :eur 2 :down)
         m3 (sut/rounded-money-of 1.555 :eur 2 :up)]
     (t/is (= (sut/rounded-money-of 0 :eur 2 :down) (sut/subtract m1 m2)))
-    (t/is (thrown? ExceptionInfo (sut/subtract m1 m3)))))
+    (t/is (thrown? ExceptionInfo (sut/subtract m1 m3))))
+  ;; mixed money and rounded money
+  (let [m1 (sut/money-of 1 :eur)
+        m2 (sut/rounded-money-of 1 :eur)]
+    (t/is (= (sut/money-of 0 :eur) (sut/subtract m1 m2)))))
 
 (t/deftest multiply
   ;; money
@@ -225,7 +254,15 @@
     (t/is (= m2 (sut/money-max m1 m2)))
     (t/is (= m3 (sut/money-max m1 m2 m3)))
     (t/is (thrown? ExceptionInfo (sut/money-max m1 m4)))
-    (t/is (thrown? ExceptionInfo (sut/money-max m1 m5)))))
+    (t/is (thrown? ExceptionInfo (sut/money-max m1 m5))))
+  ;; mixed money and rounded money
+  (let [m1 (sut/money-of 1 :eur)
+        m2 (sut/rounded-money-of 1 :eur)
+        m3 (sut/rounded-money-of 2 :eur)]
+    (t/is (= m1 (sut/money-max m1 m2)))
+    (t/is (= m1 (sut/money-max m2 m1)))
+    (t/is (= (sut/money-of 2 :eur) (sut/money-max m1 m3)))
+    (t/is (= (sut/money-of 2 :eur) (sut/money-max m3 m1)))))
 
 (t/deftest money-min
   ;; money
@@ -244,20 +281,37 @@
     (t/is (= m1 (sut/money-min m1 m2)))
     (t/is (= m1 (sut/money-min m1 m2 m3)))
     (t/is (thrown? ExceptionInfo (sut/money-min m1 m4)))
-    (t/is (thrown? ExceptionInfo (sut/money-min m1 m5)))))
+    (t/is (thrown? ExceptionInfo (sut/money-min m1 m5))))
+  ;; mixed money and rounded money
+  (let [m1 (sut/money-of 1 :eur)
+        m2 (sut/rounded-money-of 1 :eur)
+        m3 (sut/rounded-money-of 2 :eur)]
+    (t/is (= m1 (sut/money-min m1 m2)))
+    (t/is (= m1 (sut/money-min m2 m1)))
+    (t/is (= (sut/money-of 1 :eur) (sut/money-min m1 m3)))
+    (t/is (= (sut/money-of 1 :eur) (sut/money-min m3 m1)))))
 
 ;;; Rounding
 
 
 (t/deftest round
+  ;; money
   (let [money(sut/money-of 1234.5678 :eur)]
     (t/is (= (sut/money-of 1234.57 :eur) (sut/round money)))
     (t/is (= (sut/money-of 1234.57 :eur) (sut/round money 2 :up)))
     (t/is (= (sut/money-of 1234.56 :eur) (sut/round money 2 :down)))
     (t/is (= (sut/money-of 1235 :eur) (sut/round money 0 :up)))
-    (t/is (= (sut/money-of 1234 :eur) (sut/round money 0 :down)))))
+    (t/is (= (sut/money-of 1234 :eur) (sut/round money 0 :down))))
+  ;; rounded money
+  (let [money(sut/rounded-money-of 1234.5678 :eur)]
+    (t/is (= (sut/rounded-money-of 1234.57 :eur) (sut/round money)))
+    (t/is (= (sut/rounded-money-of 1234.57 :eur 2 :up) (sut/round money 2 :up)))
+    (t/is (= (sut/rounded-money-of 1234.57 :eur 2 :down) (sut/round money 2 :down)))
+    (t/is (= (sut/rounded-money-of 1235 :eur 0 :up) (sut/round money 0 :up)))
+    (t/is (= (sut/rounded-money-of 1234 :eur 0 :down) (sut/round money 0 :down)))))
 
 (t/deftest round-chf
+  ;; money
   (let [m1 (sut/money-of 0.975 :chf)
         m2 (sut/money-of 1.024 :chf)
         m3 (sut/money-of 1.025 :chf)
@@ -269,4 +323,17 @@
     (t/is (= (sut/money-of 1.05 :chf) (sut/round m3 sut/chf-rounding-fn)))
     (t/is (= (sut/money-of 1.05 :chf) (sut/round m4 sut/chf-rounding-fn)))
     (t/is (= (sut/money-of 1.10 :chf) (sut/round m5 sut/chf-rounding-fn)))
-    (t/is (= (sut/money-of 1.10 :chf) (sut/round m6 sut/chf-rounding-fn)))))
+    (t/is (= (sut/money-of 1.10 :chf) (sut/round m6 sut/chf-rounding-fn))))
+  ;; rounded money
+  (let [m1 (sut/rounded-money-of 0.975 :chf)
+        m2 (sut/rounded-money-of 1.024 :chf)
+        m3 (sut/rounded-money-of 1.025 :chf)
+        m4 (sut/rounded-money-of 1.074 :chf)
+        m5 (sut/rounded-money-of 1.075 :chf)
+        m6 (sut/rounded-money-of 1.124 :chf)]
+    (t/is (= (sut/rounded-money-of 1 :chf 2 :half-up) (sut/round m1 sut/chf-rounding-fn)))
+    (t/is (= (sut/rounded-money-of 1 :chf 2 :half-up) (sut/round m2 sut/chf-rounding-fn)))
+    (t/is (= (sut/rounded-money-of 1 :chf 2 :half-up) (sut/round m3 sut/chf-rounding-fn)))
+    (t/is (= (sut/rounded-money-of 1.05 :chf 2 :half-up) (sut/round m4 sut/chf-rounding-fn)))
+    (t/is (= (sut/rounded-money-of 1.10 :chf 2 :half-up) (sut/round m5 sut/chf-rounding-fn)))
+    (t/is (= (sut/rounded-money-of 1.10 :chf 2 :half-up) (sut/round m6 sut/chf-rounding-fn)))))
