@@ -1,7 +1,7 @@
-(ns dev
+(ns dev.parse-iso-currencies
   (:require [clojure.xml :as xml]
             [clojure.java.io :as io]
-            [clojure.pprint :as pprint]
+            [clojure.pprint :as pp]
             [clojure.string :as str]))
 
 (defn- currency->map
@@ -25,7 +25,7 @@
 
   The source can be a File, InputStream or String naming a URI."
   [source]
-  (let [doc (-> source xml/parse)]
+  (let [doc (xml/parse source)]
     (->> doc
          xml-seq
          (filter (comp #{:CcyNtry} :tag))
@@ -42,7 +42,7 @@
         parsed (parse-currency-xml file)]
     (with-open [writer (io/writer edn-filepath)]
       (binding [*out* writer]
-        (pprint/pprint parsed)))))
+        (pp/pprint parsed)))))
 
 (defn currency-xml->edn
   "Parses a ISO 4217 XML data source from its URI and writes the currencies to an EDN file."
@@ -51,10 +51,9 @@
         parsed (parse-currency-xml uri)]
     (with-open [writer (io/writer edn-filepath)]
       (binding [*out* writer]
-        (pprint/pprint parsed)))))
+        (pp/pprint parsed)))))
 
 (comment
   (currency-xml-file->edn "iso-4217.xml" "resources/currencies.edn")
   (currency-xml->edn "resources/currencies.edn")
   )
-

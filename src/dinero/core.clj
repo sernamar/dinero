@@ -52,7 +52,7 @@
   (when-not currency
     (throw (ex-info "No currency provided" {})))
   (when-not (contains? currencies currency)
-    (throw (ex-info (str "Unknown currency") {:currency currency}))))
+    (throw (ex-info "Unknown currency" {:currency currency}))))
 
 ;;; Monetary amounts
 
@@ -551,8 +551,9 @@
   (let [amount (get-amount money)
         currency (get-currency money)
         scale 0
-        rounded (-> (.divide ^BigDecimal amount (bigdec 0.05) scale RoundingMode/HALF_UP)
-                    (.multiply (bigdec 0.05)))]
+        rounded (.multiply
+                 (.divide ^BigDecimal amount (bigdec 0.05) scale RoundingMode/HALF_UP)
+                 (bigdec 0.05))]
     (if (money? money)
       (money-of rounded currency)
       (rounded-money-of rounded currency 2 :half-up))))

@@ -31,7 +31,7 @@
     (t/is (= :eur (sut/get-currency m1)))
     (t/is (= :eur (sut/get-currency m2)))
     (t/is (= 2 (sut/get-scale m1)))
-    (t/is (= 0 (sut/get-scale m2)))
+    (t/is (zero? (sut/get-scale m2)))
     (t/is (= :down (sut/get-rounding-mode m1)))
     (t/is (= :down (sut/get-rounding-mode m2)))
     (t/is (thrown? ExceptionInfo (sut/rounded-money-of 1234.5678 :eur -1 :down)))))
