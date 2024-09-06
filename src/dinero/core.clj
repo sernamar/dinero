@@ -253,30 +253,73 @@
   (or (apply assert-same-currency moneis)
       (apply assert-same-scale-and-rounding-mode moneis)))
 
-(defn money<
+(defmulti money<
   "Returns true if the first monetary amount is less than the second monetary amount."
+  (fn [money-1 money-2]
+    (if (and (money? money-1) (money? money-2))
+      :money
+      :rounded-money)))
+
+(defmulti money<=
+  "Returns true if the first monetary amount is less than or equal to the second monetary amount."
+  (fn [money-1 money-2]
+    (if (and (money? money-1) (money? money-2))
+      :money
+      :rounded-money)))
+
+(defmulti money>
+  "Returns true if the first monetary amount is greater than the second monetary amount."
+  (fn [money-1 money-2]
+    (if (and (money? money-1) (money? money-2))
+      :money
+      :rounded-money)))
+
+(defmulti money>=
+  "Returns true if the first monetary amount is greater than or equal to the second monetary amount."
+  (fn [money-1 money-2]
+    (if (and (money? money-1) (money? money-2))
+      :money
+      :rounded-money)))
+
+(defmethod money< :money
   [money-1 money-2]
   (assert-same-currency money-1 money-2)
-  (= -1 (.compareTo ^BigDecimal (get-amount money-1) (get-amount money-2))))
+  (< (.compareTo ^BigDecimal (get-amount money-1) (get-amount money-2)) 0))
 
-(defn money<=
-  "Returns true if the first monetary amount is less than or equal to the second monetary amount."
+(defmethod money< :rounded-money
+  [money-1 money-2]
+  (assert-same-currency-scale-and-rounding-mode money-1 money-2)
+  (< (.compareTo ^BigDecimal (get-amount money-1) (get-amount money-2)) 0))
+
+(defmethod money<= :money
   [money-1 money-2]
   (assert-same-currency money-1 money-2)
   (<= (.compareTo ^BigDecimal (get-amount money-1) (get-amount money-2)) 0))
 
-(defn money>
-  "Returns true if the first monetary amount is greater than the second monetary amount."
+(defmethod money<= :rounded-money
+  [money-1 money-2]
+  (assert-same-currency-scale-and-rounding-mode money-1 money-2)
+  (<= (.compareTo ^BigDecimal (get-amount money-1) (get-amount money-2)) 0))
+
+(defmethod money> :money
   [money-1 money-2]
   (assert-same-currency money-1 money-2)
-  (= 1 (.compareTo ^BigDecimal (get-amount money-1) (get-amount money-2))))
+  (> (.compareTo ^BigDecimal (get-amount money-1) (get-amount money-2)) 0))
 
-(defn money>=
-  "Returns true if the first monetary amount is greater than or equal to the second monetary amount."
+(defmethod money> :rounded-money
+  [money-1 money-2]
+  (assert-same-currency-scale-and-rounding-mode money-1 money-2)
+  (> (.compareTo ^BigDecimal (get-amount money-1) (get-amount money-2)) 0))
+
+(defmethod money>= :money
   [money-1 money-2]
   (assert-same-currency money-1 money-2)
   (>= (.compareTo ^BigDecimal (get-amount money-1) (get-amount money-2)) 0))
 
+(defmethod money>= :rounded-money
+  [money-1 money-2]
+  (assert-same-currency-scale-and-rounding-mode money-1 money-2)
+  (>= (.compareTo ^BigDecimal (get-amount money-1) (get-amount money-2)) 0))
 (defn money-zero?
   "Returns true if the given monetary amount is zero."
   [money]
