@@ -398,7 +398,7 @@
 (defmethod add :money
   [& moneis]
   (apply assert-same-currency moneis)
-  (let [sum (reduce #(.add ^BigDecimal %1 %2) (map get-amount moneis))
+  (let [sum (reduce + (map get-amount moneis))
         currency (get-currency (first moneis))]
     (money-of sum currency)))
 
@@ -406,7 +406,7 @@
   [& moneis]
   (apply assert-same-currency-scale-and-rounding-mode moneis)
   (when-not (apply assert-same-scale-and-rounding-mode moneis)
-    (let [sum (reduce #(.add ^BigDecimal %1 %2) (map get-amount moneis))
+    (let [sum (reduce + (map get-amount moneis))
           currency (get-currency (first moneis))
           scale (get-scale (first moneis))
           rounding-mode (get-rounding-mode (first moneis))]
@@ -415,7 +415,7 @@
 (defmethod subtract :money
   [& moneis]
   (apply assert-same-currency moneis)
-  (let [difference (reduce #(.subtract ^BigDecimal %1 %2) (map get-amount moneis))
+  (let [difference (reduce - (map get-amount moneis))
         currency (get-currency (first moneis))]
     (money-of difference currency)))
 
@@ -423,7 +423,7 @@
   [& moneis]
   (apply assert-same-currency-scale-and-rounding-mode moneis)
   (when-not (apply assert-same-scale-and-rounding-mode moneis)
-    (let [difference (reduce #(.subtract ^BigDecimal %1 %2) (map get-amount moneis))
+    (let [difference (reduce - (map get-amount moneis))
           currency (get-currency (first moneis))
           scale (get-scale (first moneis))
           rounding-mode (get-rounding-mode (first moneis))]
@@ -432,14 +432,14 @@
 (defmethod multiply :money
   [money factor]
   (let [amount (get-amount money)
-        product (.multiply ^BigDecimal amount (bigdec factor))
+        product (* amount (bigdec factor))
         currency (get-currency money)]
     (money-of product currency)))
 
 (defmethod multiply :rounded-money
   [money factor]
   (let [amount (get-amount money)
-        product (.multiply ^BigDecimal amount (bigdec factor))
+        product (* amount (bigdec factor))
         currency (get-currency money)
         scale (get-scale money)
         rounding-mode (get-rounding-mode money)]
@@ -448,14 +448,14 @@
 (defmethod divide :money
   [money divisor]
   (let [amount (get-amount money)
-        quotient (.divide ^BigDecimal amount (bigdec divisor))
+        quotient (/ amount (bigdec divisor))
         currency (get-currency money)]
     (money-of quotient currency)))
 
 (defmethod divide :rounded-money
   [money divisor]
   (let [amount (get-amount money)
-        quotient (.divide ^BigDecimal amount (bigdec divisor))
+        quotient (/ amount (bigdec divisor))
         currency (get-currency money)
         scale (get-scale money)
         rounding-mode (get-rounding-mode money)]
@@ -480,14 +480,14 @@
 (defmethod money-abs :money
   [money]
   (let [amount (get-amount money)
-        absolute (.abs ^BigDecimal amount)
+        absolute (abs amount)
         currency (get-currency money)]
     (money-of absolute currency)))
 
 (defmethod money-abs :rounded-money
   [money]
   (let [amount (get-amount money)
-        absolute (.abs ^BigDecimal amount)
+        absolute (abs amount)
         currency (get-currency money)
         scale (get-scale money)
         rounding-mode (get-rounding-mode money)]
