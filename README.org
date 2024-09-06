@@ -13,7 +13,7 @@ A Clojure library for working with money.
   - [[#license][License]]
 
 ** Configuration
-For convenience, before using this library, you can configure the variables =default-currency= and =default-rounding-mode= in a configuration file named =config.edn=, which should be located in the root directory of the project.
+For convenience, before using this library, you can configure the default currency and default rounding mode using a configuration file named =config.edn=, which should be located in the root directory of the project.
 
 For example, to set /euros/ as the default currency and the /half even/ method as the default rounding method, the =config.edn= file should have the following content:
 #+begin_src clojure
@@ -24,17 +24,17 @@ For example, to set /euros/ as the default currency and the /half even/ method a
 You can try out the examples below in a REPL after the following =requires=:
 #+begin_src clojure
   (require '[dinero.core :as dinero]
+           '[dinero.format :as format]
            '[dinero.parse :as parse]
-           '[dinero.rounding :as rounding]
-           '[dinero.format :as format])
+           '[dinero.rounding :as rounding])
 #+end_src
 *** Monetary amounts
 This library support two types of monetary amounts:
 - =money=: represents monetary amounts with arbitrary precision and scale, ensuring accurate numerical computations during arithmetic operations.
 - =rounded money=: represents monetary amounts that are automatically rounded after each arithmetic operation.
-**** Creating monetary amounts of type =money=
+**** Monetary amounts of type =money=
 You can use =money-of= to create monetary amounts with arbitrary precision and scale. It accepts two arguments:
-- =amount=: can be either an integer, a floating-point number, a =BigDecimal= or a string.
+- =amount=: can be either an integer, a floating-point number, a =BigDecimal= or a =String=.
 - =currency=: must be a keyword.
 If the =currency= is not specified, the =money-of= function will use the default currency set in the configuration file. If a currency is provided, it will override the default and use the specified currency instead:
 #+begin_src clojure
@@ -44,18 +44,18 @@ If the =currency= is not specified, the =money-of= function will use the default
   (dinero/money-of 1 :gbp)
   ;; => {:amount 1M, :currency :gbp}
 #+end_src
-For convenience, you can use the =with-currency= macro to bind the =*default-currency*= variable. This way, if the variable isn’t set in the configuration file, you won’t need to specify the currency when creating monetary amounts:
+For convenience, you can use the =with-currency= macro to bind the default currency in the macro's body. This way, if the default currency isn’t set in the configuration file, you won’t need to specify the currency when creating monetary amounts:
 #+begin_src clojure
   (dinero/with-currency :gbp
     (dinero/money-of 1))
   ;; => {:amount 1M, :currency :gbp}
 #+end_src
-If none the =amount= nor the =currency= is specified, it uses zero as the amount, and the default currency as the currency:
+If none the =amount= nor the =currency= is specified, it uses =0= as the amount, and the default currency as the currency:
 #+begin_src clojure
   (dinero/money-of)
   ;; => {:amount 0M, :currency :eur}
 #+end_src
-Although you can use either an integer, a floating-point number, a =BigDecimal= or a string as the =amount= argument, they are parsed and stored as =BigDecimals=:
+Although you can use either an integer, a floating-point number, a =BigDecimal= or a =String= as the =amount= argument, they are all parsed and stored as =BigDecimals=:
 #+begin_src clojure
   (dinero/money-of 1 :eur)
   ;; => {:amount 1M, :currency :eur}
@@ -73,7 +73,7 @@ Although you can use either an integer, a floating-point number, a =BigDecimal= 
 #+begin_quote
 Be aware that using floating-point numbers can lead to rounding errors in certain calculations, as Clojure reads them as =Doubles=, which are 64-bit IEEE 754 floating point numbers. This means you get double precision, with about 15-17 significant decimal digits of precision.
 
-So, for accurate numerical computations, especially in financial applications, don't use floating-point numbers; use =BigDecimals= or =Strings= instead, as they will be parsed accurately.
+So for accurate numerical computations, especially in financial applications, don't use floating-point numbers; use =BigDecimals= or =Strings= instead, as they will be parsed accurately.
 #+begin_src clojure
   ;;; Not safe, as it uses a floating-point number, losing precision when parsing
   (dinero/money-of 0.123456789123456789123456789 :eur)
@@ -86,9 +86,9 @@ So, for accurate numerical computations, especially in financial applications, d
   ;; => {:amount 0.123456789123456789123456789M, :currency :eur}
 #+end_src
 #+end_quote
-**** Creating monetary amounts of type =rounded-money=
-You can use =rounded-money-of= to create monetary amounts that are automatically rounded after each arithmetic operation. It accepts up to 4 arguments:
-- =amount=: can be an integer, a floating-point number, a =BigDecimal= or a string.
+**** Monetary amounts of type =rounded-money=
+You can use =rounded-money-of= to create monetary amounts that are automatically rounded after each arithmetic operation. This function accepts up to 4 arguments:
+- =amount=: can be an integer, a floating-point number, a =BigDecimal= or a =String=.
 - =currency=: must be a keyword.
 - =scale=: the number of decimal places to which the amount will be rounded.
 - =rounding-mode=: the rounding mode to use when rounding the amount.
@@ -103,7 +103,7 @@ If =currency= is not specified, the =rounded-money-of= function will use the def
   (dinero/rounded-money-of 1234.5678 :eur 0 :down)
   ;; => {:amount 1234M, :currency :eur, :scale 0, :rounding-mode :down}
 #+end_src
-**** Getting the amount, currency, and rounding information
+**** Amount, currency, and rounding information
 Given a monetary amount, you can get its amount and currency using the =get-amount= and =get-currency= functions:
 #+begin_src clojure
   (let [money (dinero/money-of 1 :eur)]
@@ -155,11 +155,13 @@ For example:
         germany java.util.Locale/GERMANY]
     (println (format/format-with-pattern m1 "#,##0.00 ¤" {:locale germany}))
     (println (format/format-with-pattern m1 "#,##0.00 ¤¤" {:locale germany}))
+    (println (format/format-with-pattern m1 "#,##0.00 euros" {:locale germany}))
     (println (format/format-with-pattern m1 "#,##0.000 ¤" {:locale germany}))
     (println (format/format-with-pattern m1 "#,##0 ¤" {:locale germany}))
     (println (format/format-with-pattern m1 "#,##0 ¤" {:locale germany :rounding-mode :down})))
   ;; 1.234,57 €
   ;; 1.234,57 EUR
+  ;; 1.234,57 euros
   ;; 1.234,568 €
   ;; 1.235 €
   ;; 1.234 €
@@ -175,7 +177,7 @@ So you can use the =parse-containing-iso-4217-symbol= function to parse a string
   (parse/parse-containing-iso-4217-symbol "£1,234.56" java.util.Locale/UK)
   ;; => {:amount 1234.56M, :currency :gbp}
 #+end_src
-But as mentioned, it doesn't support parsing strings with ISO 4217 currency codes or strings with non-ISO 4217 currency symbols or codes, throwing a =java.text.ParseException= exception in that case:
+But it doesn't support parsing strings with ISO 4217 currency codes or strings with non-ISO 4217 currency symbols or codes, throwing a =java.text.ParseException= exception in that case:
 #+begin_src clojure
   (parse/parse-containing-iso-4217-symbol "1.234,56 EUR" java.util.Locale/GERMANY)
   ;; java.text.ParseException
@@ -200,7 +202,7 @@ The =parse-containing-iso-4217-symbol= function also throws a =java.text.ParseEx
   ;; Unparseable number: "1.234,56 £"
 #+end_src
 *** Equality and comparison
-You could use the following functions to do equality and comparison operations on monetary amounts: ~=~, =not==, =money<=, =money<==, =money>=, =money>==, =money-zero?=, =monmey-pos?=, and =money-neg?=.
+You could use the following functions to do equality and comparison operations on monetary amounts: ~=~, =not==, =money<=, =money<==, =money>=, =money>==, =money-zero?=, =money-pos?=, and =money-neg?=.
 
 For example:
 #+begin_src clojure
@@ -288,7 +290,7 @@ Adding or substracting monetary amounts with different currencies throws an =Exc
   ;; {:currencies (:eur :gbp)}
 #+end_src
 *** Rounding
-As previously mentioned, money amounts could be stored internally with more decimal places than the smallest unit of the currency. But some applications might require operating with amounts rounded to the smallest unit of currency. In such cases, you can use the =round= function to adjust the monetary amounts accordingly.
+As previously mentioned, money amounts could be stored internally with more decimal places than the smallest unit of the currency. But some applications might require operating with amounts rounded to the smallest unit of currency. In such cases, you can use a monetary amount of type rounded, but you can also use the =round= function to adjust the monetary amount accordingly.
 
 By default, the =round= function rounds amounts to the smallest unit of the currency, using the default rounding mode specified in the configuration file (if no rounding mode is configured, it defaults to =:half-even=):
 #+begin_src clojure
