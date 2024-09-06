@@ -91,7 +91,7 @@
          rounding-mode-object (utils/keyword->rounding-mode rounding-mode)]
      (when (neg? scale)
        (throw (ex-info "Scale must be non-negative" {:scale scale})))
-     (RoundedMoney. (.setScale ^BigDecimal (bigdec amount) ^int scale ^RoundingMode rounding-mode-object)
+     (RoundedMoney. (BigDecimal/.setScale ^BigDecimal (bigdec amount) ^int scale ^RoundingMode rounding-mode-object)
                     currency
                     scale
                     rounding-mode))))
@@ -140,20 +140,20 @@
   [currency locale decimal-places rounding-mode]
   (let [formatter (DecimalFormat/getCurrencyInstance locale)]
     (doto formatter
-      (.setRoundingMode rounding-mode)
-      (.setMinimumFractionDigits decimal-places)
-      (.setMaximumFractionDigits decimal-places))
+      (DecimalFormat/.setRoundingMode rounding-mode)
+      (DecimalFormat/.setMinimumFractionDigits decimal-places)
+      (DecimalFormat/.setMaximumFractionDigits decimal-places))
     (when (iso-4217? currency)
-      (.setCurrency formatter (Currency/getInstance ^String (get-currency-code currency))))
+      (DecimalFormat/.setCurrency formatter (Currency/getInstance ^String (get-currency-code currency))))
     formatter))
 
 (defn- format-amount
   "Formats the given amount with the given formatter, locale, and symbol style."
   [amount currency formatter locale symbol-style]
-  (let [formatted-money (.format ^DecimalFormat formatter amount)
+  (let [formatted-money (DecimalFormat/.format ^DecimalFormat formatter amount)
         locale-currency (Currency/getInstance ^Locale locale)
-        locale-code (.getCurrencyCode locale-currency)
-        locale-symbol (.getSymbol locale-currency locale)
+        locale-code (Currency/.getCurrencyCode locale-currency)
+        locale-symbol (Currency/.getSymbol locale-currency locale)
         currency-code (get-currency-code currency)
         currency-symbol (or (get-symbol currency) currency-code)] ; default to code if symbol is not available
     (cond
@@ -192,8 +192,8 @@
         rounding-mode (utils/keyword->rounding-mode (or rounding-mode *default-rounding-mode* :half-even))
         symbols (DecimalFormatSymbols/getInstance locale)
         formatter (DecimalFormat. pattern symbols)]
-    (.setRoundingMode formatter rounding-mode)
-    (.format ^DecimalFormat formatter amount)))
+    (DecimalFormat/.setRoundingMode formatter rounding-mode)
+    (DecimalFormat/.format ^DecimalFormat formatter amount)))
 
 ;;; Parsing
 
@@ -201,8 +201,8 @@
   "Parses the given string containing an ISO 4217 currency symbol and returns a monetary amount of type `Money`."
   [string locale]
   (let [formatter (DecimalFormat/getCurrencyInstance locale)
-        amount (.parse ^DecimalFormat formatter string)
-        currency (-> (.getCurrency formatter) str/lower-case keyword)]
+        amount (DecimalFormat/.parse ^DecimalFormat formatter string)
+        currency (-> (DecimalFormat/.getCurrency formatter) str/lower-case keyword)]
     (money-of amount currency)))
 
 ;;; Equality and comparison
@@ -464,14 +464,14 @@
 (defmethod negate :money
   [money]
   (let [amount (get-amount money)
-        negated (.negate ^BigDecimal amount)
+        negated (BigDecimal/.negate amount)
         currency (get-currency money)]
     (money-of negated currency)))
 
 (defmethod negate :rounded-money
   [money]
   (let [amount (get-amount money)
-        negated (.negate ^BigDecimal amount)
+        negated (BigDecimal/.negate amount)
         currency (get-currency money)
         scale (get-scale money)
         rounding-mode (get-rounding-mode money)]
@@ -541,7 +541,7 @@
    (let [amount (get-amount money)
          currency (get-currency money)
          rounding-mode-object (utils/keyword->rounding-mode rounding-mode)
-         rounded (.setScale ^BigDecimal amount ^int decimal-places ^RoundingMode rounding-mode-object)]
+         rounded (BigDecimal/.setScale ^BigDecimal amount ^int decimal-places ^RoundingMode rounding-mode-object)]
      (if (money? money)
        (money-of rounded currency)
        (rounded-money-of rounded currency decimal-places rounding-mode)))))
@@ -552,8 +552,8 @@
   (let [amount (get-amount money)
         currency (get-currency money)
         scale 0
-        rounded (.multiply
-                 (.divide ^BigDecimal amount (bigdec 0.05) scale RoundingMode/HALF_UP)
+        rounded (BigDecimal/.multiply
+                 (BigDecimal/.divide ^BigDecimal amount (bigdec 0.05) scale RoundingMode/HALF_UP)
                  (bigdec 0.05))]
     (if (money? money)
       (money-of rounded currency)

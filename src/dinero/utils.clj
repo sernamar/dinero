@@ -20,7 +20,7 @@
 (defn read-config
   "Reads the configuration from the given pathname."
   [pathname]
-  (when (.exists (File. ^String pathname))
+  (when (File/.exists (File. ^String pathname))
       (-> pathname
           slurp
           edn/read-string)))
