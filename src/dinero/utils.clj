@@ -1,5 +1,6 @@
 (ns dinero.utils
-  (:require [clojure.edn :as edn])
+  (:require [clojure.edn :as edn]
+            [clojure.string :as str])
   (:import [java.io File]
            [java.math RoundingMode]))
 
@@ -24,3 +25,13 @@
       (-> pathname
           slurp
           edn/read-string)))
+
+(defn to-uppercase-string
+  "Returns the upper-case string representation of the given argument."
+  [arg]
+  (str/upper-case
+   (cond
+     (string? arg) arg
+     (keyword? arg) (name arg)
+     (symbol? arg) (name arg)
+     :else (throw (ex-info "Invalid argument" {:arg arg})))))
