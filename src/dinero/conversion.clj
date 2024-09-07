@@ -21,3 +21,9 @@
         decimal-places (core/get-scale money)
         rounding-mode (core/get-rounding-mode money)]
     (core/rounded-money-of term-amount term-currency decimal-places rounding-mode)))
+
+(defn convert
+  "Converts the given monetary amount to the term currency using the given exchange rate provider function."
+  [money term-currency rate-provider-fn]
+    (let [exchange-rate (rate-provider-fn (core/get-currency money) term-currency)]
+      (convert-with-exchange-rate money term-currency exchange-rate)))
