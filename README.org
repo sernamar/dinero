@@ -86,7 +86,7 @@ So for accurate numerical computations, especially in financial applications, do
   ;; => {:amount 0.123456789123456789123456789M, :currency :eur}
 #+end_src
 #+end_quote
-**** Monetary amounts of type =rounded-money=
+**** Monetary amounts of type =rounded money=
 You can use =rounded-money-of= to create monetary amounts that are automatically rounded after each arithmetic operation. This function accepts up to 4 arguments:
 - =amount=: can be an integer, a floating-point number, a =BigDecimal= or a =String=.
 - =currency=: must be a keyword.
