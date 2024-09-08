@@ -28,11 +28,17 @@
 (defn convert
   "Converts the given monetary amount to the term currency using the given exchange rate provider function."
   ([money term-currency rate-provider-fn]
-   (let [exchange-rate (rate-provider-fn (core/get-currency money) term-currency)]
-     (convert-with-exchange-rate money term-currency exchange-rate)))
+   (let [base-currency (core/get-currency money)]
+     (if (= base-currency term-currency)
+       money
+       (let [exchange-rate (rate-provider-fn base-currency term-currency)]
+         (convert-with-exchange-rate money term-currency exchange-rate)))))
   ([money term-currency date rate-provider-fn]
-   (let [exchange-rate (rate-provider-fn (core/get-currency money) term-currency date)]
-     (convert-with-exchange-rate money term-currency exchange-rate))))
+   (let [base-currency (core/get-currency money)]
+     (if (= base-currency term-currency)
+       money
+       (let [exchange-rate (rate-provider-fn base-currency term-currency date)]
+         (convert-with-exchange-rate money term-currency exchange-rate))))))
 
 (defn create-rate-provider-fn-from-db
   "Creates a function to fetch currency conversion rates from a database."

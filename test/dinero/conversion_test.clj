@@ -29,11 +29,14 @@
         m2 (core/money-of 0.8M :gbp)
         rate-provider-fn (sut/create-rate-provider-fn-from-db db "exchange_rate" "from_currency" "to_currency" "rate")
         m1-converted (sut/convert m1 :gbp rate-provider-fn)
-        m2-converted (sut/convert m2 :eur rate-provider-fn)]
+        m2-converted (sut/convert m2 :eur rate-provider-fn)
+        m3-converted (sut/convert m1 :eur rate-provider-fn)] ; same currency
     (t/is (= 0.80M (core/get-amount m1-converted)))
     (t/is (= :gbp (core/get-currency m1-converted)))
     (t/is (= 1M (core/get-amount m2-converted)))
     (t/is (= :eur (core/get-currency m2-converted)))
+    (t/is (= 1M (core/get-amount m3-converted)))
+    (t/is (= :eur (core/get-currency m3-converted)))
     (t/is (thrown? ExceptionInfo (sut/convert m1 :jpy rate-provider-fn))))
   (let [money (core/money-of 1M :eur)
         date (LocalDate/of 2024 9 8)
