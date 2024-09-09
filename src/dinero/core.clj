@@ -142,68 +142,72 @@
 
 (defmulti money<
   "Returns true if the first monetary amount is less than the second monetary amount."
+  {:arglists '([money-1 money-2])}
   (fn [money-1 money-2]
     (if (and (money? money-1) (money? money-2))
-      :money
-      :rounded-money)))
+      Money
+      RoundedMoney)))
 
 (defmulti money<=
   "Returns true if the first monetary amount is less than or equal to the second monetary amount."
+  {:arglists '([money-1 money-2])}
   (fn [money-1 money-2]
     (if (and (money? money-1) (money? money-2))
-      :money
-      :rounded-money)))
+      Money
+      RoundedMoney)))
 
 (defmulti money>
   "Returns true if the first monetary amount is greater than the second monetary amount."
+  {:arglists '([money-1 money-2])}
   (fn [money-1 money-2]
     (if (and (money? money-1) (money? money-2))
-      :money
-      :rounded-money)))
+      Money
+      RoundedMoney)))
 
 (defmulti money>=
   "Returns true if the first monetary amount is greater than or equal to the second monetary amount."
+  {:arglists '([money-1 money-2])}
   (fn [money-1 money-2]
     (if (and (money? money-1) (money? money-2))
-      :money
-      :rounded-money)))
+      Money
+      RoundedMoney)))
 
-(defmethod money< :money
+(defmethod money< Money
   [money-1 money-2]
   (assert-same-currency money-1 money-2)
   (< (get-amount money-1) (get-amount money-2)))
 
-(defmethod money< :rounded-money
+(defmethod money< RoundedMoney
   [money-1 money-2]
   (assert-same-currency-scale-and-rounding-mode money-1 money-2)
   (< (get-amount money-1) (get-amount money-2)))
 
-(defmethod money<= :money
+(defmethod money<= Money
   [money-1 money-2]
   (assert-same-currency money-1 money-2)
   (<= (get-amount money-1) (get-amount money-2)))
 
-(defmethod money<= :rounded-money
+(defmethod money<= RoundedMoney
   [money-1 money-2]
   (assert-same-currency-scale-and-rounding-mode money-1 money-2)
   (<= (get-amount money-1) (get-amount money-2)))
 
-(defmethod money> :money
+(defmethod money> Money
   [money-1 money-2]
   (assert-same-currency money-1 money-2)
   (> (get-amount money-1) (get-amount money-2)))
 
-(defmethod money> :rounded-money
+(defmethod money> RoundedMoney
   [money-1 money-2]
   (assert-same-currency-scale-and-rounding-mode money-1 money-2)
   (> (get-amount money-1) (get-amount money-2)))
 
-(defmethod money>= :money
+(defmethod money>= Money
   [money-1 money-2]
   (assert-same-currency money-1 money-2)
   (>= (get-amount money-1) (get-amount money-2)))
 
-(defmethod money>= :rounded-money
+(defmethod money>= RoundedMoney
   [money-1 money-2]
   (assert-same-currency-scale-and-rounding-mode money-1 money-2)
   (>= (get-amount money-1) (get-amount money-2)))
@@ -227,68 +231,66 @@
 
 (defmulti add
   "Adds the given monetary amounts."
+  {:arglists '([& moneis])}
   (fn [& moneis]
     (if (some money? moneis)
-      :money
-      :rounded-money)))
+      Money
+      RoundedMoney)))
 
 (defmulti subtract
   "Subtracts the given monetary amounts."
+  {:arglists '([& moneis])}
   (fn [& moneis]
     (if (some money? moneis)
-      :money
-      :rounded-money)))
+      Money
+      RoundedMoney)))
 
 (defmulti multiply
   "Multiplies the given monetary amount by the given factor."
-  (fn [money factor]
-    (if (money? money)
-      :money
-      :rounded-money)))
+  {:arglists '([money factor])}
+  (fn [money _factor]
+    (class money)))
 
 (defmulti divide
   "Divides the given monetary amount by the given divisor."
-  (fn [money divisor]
-    (if (money? money)
-      :money
-      :rounded-money)))
+  {:arglists '([moeny divisor])}
+  (fn [money _divisor]
+    (class money)))
 
 (defmulti negate
   "Negates the given monetary amount."
-  (fn [money]
-    (if (money? money)
-      :money
-      :rounded-money)))
+  {:arglists '([money])}
+  class)
 
 (defmulti money-abs
   "Returns the absolute value of the given monetary amount."
-  (fn [money]
-    (if (money? money)
-      :money
-      :rounded-money)))
+  {:arglists '([money])}
+  class)
 
 (defmulti money-max
   "Returns the maximum of the given monetary amounts."
+  {:arglists '([& moneis])}
   (fn [& moneis]
     (if (some money? moneis)
-      :money
-      :rounded-money)))
+      Money
+      RoundedMoney)))
 
 (defmulti money-min
   "Returns the minimum of the given monetary amounts."
+  {:arglists '([& moneis])}
   (fn [& moneis]
     (if (some money? moneis)
-      :money
-      :rounded-money)))
+      Money
+      RoundedMoney)))
 
-(defmethod add :money
+(defmethod add Money
   [& moneis]
   (apply assert-same-currency moneis)
   (let [sum (reduce + (map get-amount moneis))
         currency (get-currency (first moneis))]
     (money-of sum currency)))
 
-(defmethod add :rounded-money
+(defmethod add RoundedMoney
   [& moneis]
   (apply assert-same-currency-scale-and-rounding-mode moneis)
   (when-not (apply assert-same-scale-and-rounding-mode moneis)
@@ -298,14 +300,14 @@
           rounding-mode (get-rounding-mode (first moneis))]
       (rounded-money-of sum currency scale rounding-mode))))
 
-(defmethod subtract :money
+(defmethod subtract Money
   [& moneis]
   (apply assert-same-currency moneis)
   (let [difference (reduce - (map get-amount moneis))
         currency (get-currency (first moneis))]
     (money-of difference currency)))
 
-(defmethod subtract :rounded-money
+(defmethod subtract RoundedMoney
   [& moneis]
   (apply assert-same-currency-scale-and-rounding-mode moneis)
   (when-not (apply assert-same-scale-and-rounding-mode moneis)
@@ -315,14 +317,14 @@
           rounding-mode (get-rounding-mode (first moneis))]
       (rounded-money-of difference currency scale rounding-mode))))
 
-(defmethod multiply :money
+(defmethod multiply Money
   [money factor]
   (let [amount (get-amount money)
         product (* amount factor)
         currency (get-currency money)]
     (money-of product currency)))
 
-(defmethod multiply :rounded-money
+(defmethod multiply RoundedMoney
   [money factor]
   (let [amount (get-amount money)
         product (* amount factor)
@@ -331,14 +333,14 @@
         rounding-mode (get-rounding-mode money)]
     (rounded-money-of product currency scale rounding-mode)))
 
-(defmethod divide :money
+(defmethod divide Money
   [money divisor]
   (let [amount (get-amount money)
         quotient (/ amount divisor)
         currency (get-currency money)]
     (money-of quotient currency)))
 
-(defmethod divide :rounded-money
+(defmethod divide RoundedMoney
   [money divisor]
   (let [amount (get-amount money)
         quotient (/ amount divisor)
@@ -347,14 +349,14 @@
         rounding-mode (get-rounding-mode money)]
     (rounded-money-of quotient currency scale rounding-mode)))
 
-(defmethod negate :money
+(defmethod negate Money
   [money]
   (let [amount (get-amount money)
         negated (BigDecimal/.negate amount)
         currency (get-currency money)]
     (money-of negated currency)))
 
-(defmethod negate :rounded-money
+(defmethod negate RoundedMoney
   [money]
   (let [amount (get-amount money)
         negated (BigDecimal/.negate amount)
@@ -363,14 +365,14 @@
         rounding-mode (get-rounding-mode money)]
     (rounded-money-of negated currency scale rounding-mode)))
 
-(defmethod money-abs :money
+(defmethod money-abs Money
   [money]
   (let [amount (get-amount money)
         absolute (abs amount)
         currency (get-currency money)]
     (money-of absolute currency)))
 
-(defmethod money-abs :rounded-money
+(defmethod money-abs RoundedMoney
   [money]
   (let [amount (get-amount money)
         absolute (abs amount)
@@ -379,7 +381,7 @@
         rounding-mode (get-rounding-mode money)]
     (rounded-money-of absolute currency scale rounding-mode)))
 
-(defmethod money-max :money
+(defmethod money-max Money
   [& moneis]
   (apply assert-same-currency moneis)
   (let [amounts (map get-amount moneis)
@@ -387,7 +389,7 @@
         currency (get-currency (first moneis))]
     (money-of max-amount currency)))
 
-(defmethod money-max :rounded-money
+(defmethod money-max RoundedMoney
   [& moneis]
   (apply assert-same-currency-scale-and-rounding-mode moneis)
   (let [amounts (map get-amount moneis)
@@ -397,7 +399,7 @@
           rounding-mode (get-rounding-mode (first moneis))]
       (rounded-money-of max-amount currency scale rounding-mode)))
 
-(defmethod money-min :money
+(defmethod money-min Money
   [& moneis]
   (apply assert-same-currency moneis)
   (let [amounts (map get-amount moneis)
@@ -405,7 +407,7 @@
         currency (get-currency (first moneis))]
     (money-of min-amount currency)))
 
-(defmethod money-min :rounded-money
+(defmethod money-min RoundedMoney
   [& moneis]
   (apply assert-same-currency-scale-and-rounding-mode moneis)
   (let [amounts (map get-amount moneis)
