@@ -65,11 +65,11 @@
     (t/is (thrown? ExceptionInfo (sut/money>= m1 m4))))
   ;; mixed money and rounded money
   (let [m1 (sut/money-of 1 :eur)
-        m2 (sut/rounded-money-of 1 :eur)]
-    (t/is (thrown? ExceptionInfo (sut/money< m1 m2)))
-    (t/is (thrown? ExceptionInfo (sut/money<= m1 m2)))
-    (t/is (thrown? ExceptionInfo (sut/money> m1 m2)))
-    (t/is (thrown? ExceptionInfo (sut/money>= m1 m2)))))
+        m2 (sut/rounded-money-of 2 :eur)]
+    (t/is (sut/money< m1 m2))
+    (t/is (sut/money<= m1 m2))
+    (t/is (sut/money> m2 m1))
+    (t/is (sut/money>= m2 m1))))
 
 (t/deftest sign-operations
   (let [m1 (sut/money-of 0 :eur)

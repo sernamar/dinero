@@ -140,76 +140,28 @@
   (or (apply assert-same-currency moneis)
       (apply assert-same-scale-and-rounding-mode moneis)))
 
-(defmulti money<
+(defn money<
   "Returns true if the first monetary amount is less than the second monetary amount."
-  {:arglists '([money-1 money-2])}
-  (fn [money-1 money-2]
-    (if (and (money? money-1) (money? money-2))
-      Money
-      RoundedMoney)))
+  [money-1 money-2]
+  (assert-same-currency money-1 money-2)
+  (< (get-amount money-1) (get-amount money-2)))
 
-(defmulti money<=
+(defn money<=
   "Returns true if the first monetary amount is less than or equal to the second monetary amount."
-  {:arglists '([money-1 money-2])}
-  (fn [money-1 money-2]
-    (if (and (money? money-1) (money? money-2))
-      Money
-      RoundedMoney)))
+  [money-1 money-2]
+  (assert-same-currency money-1 money-2)
+  (<= (get-amount money-1) (get-amount money-2)))
 
-(defmulti money>
+(defn money>
   "Returns true if the first monetary amount is greater than the second monetary amount."
-  {:arglists '([money-1 money-2])}
-  (fn [money-1 money-2]
-    (if (and (money? money-1) (money? money-2))
-      Money
-      RoundedMoney)))
+  [money-1 money-2]
+  (assert-same-currency money-1 money-2)
+  (> (get-amount money-1) (get-amount money-2)))
 
-(defmulti money>=
+(defn money>=
   "Returns true if the first monetary amount is greater than or equal to the second monetary amount."
-  {:arglists '([money-1 money-2])}
-  (fn [money-1 money-2]
-    (if (and (money? money-1) (money? money-2))
-      Money
-      RoundedMoney)))
-
-(defmethod money< Money
   [money-1 money-2]
   (assert-same-currency money-1 money-2)
-  (< (get-amount money-1) (get-amount money-2)))
-
-(defmethod money< RoundedMoney
-  [money-1 money-2]
-  (assert-same-currency-scale-and-rounding-mode money-1 money-2)
-  (< (get-amount money-1) (get-amount money-2)))
-
-(defmethod money<= Money
-  [money-1 money-2]
-  (assert-same-currency money-1 money-2)
-  (<= (get-amount money-1) (get-amount money-2)))
-
-(defmethod money<= RoundedMoney
-  [money-1 money-2]
-  (assert-same-currency-scale-and-rounding-mode money-1 money-2)
-  (<= (get-amount money-1) (get-amount money-2)))
-
-(defmethod money> Money
-  [money-1 money-2]
-  (assert-same-currency money-1 money-2)
-  (> (get-amount money-1) (get-amount money-2)))
-
-(defmethod money> RoundedMoney
-  [money-1 money-2]
-  (assert-same-currency-scale-and-rounding-mode money-1 money-2)
-  (> (get-amount money-1) (get-amount money-2)))
-
-(defmethod money>= Money
-  [money-1 money-2]
-  (assert-same-currency money-1 money-2)
-  (>= (get-amount money-1) (get-amount money-2)))
-
-(defmethod money>= RoundedMoney
-  [money-1 money-2]
-  (assert-same-currency-scale-and-rounding-mode money-1 money-2)
   (>= (get-amount money-1) (get-amount money-2)))
 
 (defn money-zero?
