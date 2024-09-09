@@ -1,5 +1,6 @@
-(ns dinero.conversion-test
-  (:require [dinero.conversion :as sut]
+(ns dinero.conversion.core-test
+  (:require [dinero.conversion.core :as sut]
+            [dinero.conversion.db-provider :as db-provider]
             [dinero.core :as core]
             [clojure.test :as t]
             [next.jdbc :as jdbc])
@@ -27,7 +28,7 @@
   ;; using a database
   (let [m1 (core/money-of 1M :eur)
         m2 (core/money-of 0.8M :gbp)
-        rate-provider-fn (sut/create-rate-provider-fn-from-db db "exchange_rate" "from_currency" "to_currency" "rate")
+        rate-provider-fn (db-provider/create-db-provider-fn db "exchange_rate" "from_currency" "to_currency" "rate")
         m1-converted (sut/convert m1 :gbp rate-provider-fn)
         m2-converted (sut/convert m2 :eur rate-provider-fn)
         m3-converted (sut/convert m1 :eur rate-provider-fn)] ; same currency
@@ -40,7 +41,7 @@
     (t/is (thrown? ExceptionInfo (sut/convert m1 :jpy rate-provider-fn))))
   (let [money (core/money-of 1M :eur)
         date (LocalDate/of 2024 9 8)
-        rate-provider-fn (sut/create-rate-provider-fn-from-db db "exchange_rate" "from_currency" "to_currency" "rate" "date")
+        rate-provider-fn (db-provider/create-db-provider-fn db "exchange_rate" "from_currency" "to_currency" "rate" "date")
         converted (sut/convert money :gbp date rate-provider-fn)]
     (t/is (= 0.80M (core/get-amount converted)))
     (t/is (= :gbp (core/get-currency converted)))
