@@ -1,4 +1,4 @@
-(ns dinero.conversion.db-provider
+(ns dinero.conversion.db
   (:require [dinero.utils :as utils]
             [next.jdbc :as jdbc]
             [next.jdbc.result-set :as rs]))
