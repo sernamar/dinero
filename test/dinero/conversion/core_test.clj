@@ -29,24 +29,24 @@
 (t/deftest convert-using-db-provider
   (let [m1 (core/money-of 1M :eur)
         m2 (core/money-of 0.8M :gbp)
-        rate-provider-fn (db/create-db-provider-fn db "exchange_rate" "from_currency" "to_currency" "rate")
-        m1-converted (sut/convert m1 :gbp rate-provider-fn)
-        m2-converted (sut/convert m2 :eur rate-provider-fn)
-        m3-converted (sut/convert m1 :eur rate-provider-fn)] ; same currency
+        db-rate-provider (db/create-db-rate-provider db "exchange_rate" "from_currency" "to_currency" "rate")
+        m1-converted (sut/convert m1 :gbp db-rate-provider)
+        m2-converted (sut/convert m2 :eur db-rate-provider)
+        m3-converted (sut/convert m1 :eur db-rate-provider)] ; same currency
     (t/is (= 0.80M (core/get-amount m1-converted)))
     (t/is (= :gbp (core/get-currency m1-converted)))
     (t/is (= 1M (core/get-amount m2-converted)))
     (t/is (= :eur (core/get-currency m2-converted)))
     (t/is (= 1M (core/get-amount m3-converted)))
     (t/is (= :eur (core/get-currency m3-converted)))
-    (t/is (thrown? ExceptionInfo (sut/convert m1 :jpy rate-provider-fn))))
+    (t/is (thrown? ExceptionInfo (sut/convert m1 :jpy db-rate-provider))))
   (let [money (core/money-of 1M :eur)
         date (LocalDate/of 2024 9 8)
-        rate-provider-fn (db/create-db-provider-fn db "exchange_rate" "from_currency" "to_currency" "rate" "date")
-        converted (sut/convert money :gbp date rate-provider-fn)]
+        db-rate-provider (db/create-db-rate-provider db "exchange_rate" "from_currency" "to_currency" "rate" "date")
+        converted (sut/convert money :gbp date db-rate-provider)]
     (t/is (= 0.80M (core/get-amount converted)))
     (t/is (= :gbp (core/get-currency converted)))
-    (t/is (thrown? ExceptionInfo (sut/convert money :gbp (LocalDate/of 2024 1 1) rate-provider-fn)))))
+    (t/is (thrown? ExceptionInfo (sut/convert money :gbp (LocalDate/of 2024 1 1) db-rate-provider)))))
 
 (t/deftest convert-using-ecb-provider
   (let [m1 (core/money-of 1M :eur)

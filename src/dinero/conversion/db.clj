@@ -3,7 +3,7 @@
             [next.jdbc :as jdbc]
             [next.jdbc.result-set :as rs]))
 
-(defn create-db-provider-fn
+(defn create-db-rate-provider
   "Creates a function to fetch currency conversion rates from a database."
   ([db table from-field to-field rate-field]
    (fn [from-currency to-currency]
