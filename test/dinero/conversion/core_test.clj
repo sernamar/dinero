@@ -1,5 +1,6 @@
 (ns dinero.conversion.core-test
   (:require [dinero.conversion.core :as sut]
+            [dinero.conversion.coinbase :as coinbase]
             [dinero.conversion.db :as db]
             [dinero.conversion.ecb :as ecb]
             [dinero.core :as core]
@@ -81,3 +82,15 @@
     (t/is (thrown? ExceptionInfo (sut/convert (core/money-of 1 :gbp) :jpy query-date ecb/historical-rates-provider)))
     (t/is (thrown? ExceptionInfo (sut/convert m1 :gbp (LocalDate/.minusDays query-date 1) ecb/historical-rates-provider)))
     (t/is (thrown? ExceptionInfo (sut/convert m1 :invalid query-date ecb/historical-rates-provider)))))
+
+(t/deftest convert-using-coinbase-provider
+  (let [m1 (core/money-of 1M :btc)
+        m2 (core/money-of 1M :eur)
+        m1-converted (sut/convert m1 :btc coinbase/bitcoin-rate-provider)
+        m2-converted (sut/convert m1 :eur coinbase/bitcoin-rate-provider)]
+    (t/is (= 1M (core/get-amount m1-converted)))
+    (t/is (= :btc (core/get-currency m1-converted)))
+    (t/is (< 1M (core/get-amount m2-converted)))
+    (t/is (= :eur (core/get-currency m2-converted)))
+    (t/is (thrown? ExceptionInfo (sut/convert m2 :gbp coinbase/bitcoin-rate-provider)))
+    (t/is (thrown? ExceptionInfo (sut/convert m1 :invalid coinbase/bitcoin-rate-provider)))))
