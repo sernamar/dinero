@@ -10,6 +10,7 @@ A Clojure library for working with money.
     - [[#equality-and-comparison][Equality and comparison]]
     - [[#arithmetic-operations][Arithmetic operations]]
     - [[#rounding][Rounding]]
+    - [[#currency-conversion][Currency conversion]]
   - [[#license][License]]
 
 ** Configuration
@@ -26,7 +27,8 @@ You can try out the examples below in a REPL after the following =requires=:
   (require '[dinero.core :as dinero]
            '[dinero.format :as format]
            '[dinero.parse :as parse]
-           '[dinero.rounding :as rounding])
+           '[dinero.rounding :as rounding]
+           '[dinero.conversion.core :as conversion])
 #+end_src
 *** Monetary amounts
 This library support two types of monetary amounts:
@@ -337,6 +339,45 @@ This approach is also useful when formatting currencies with special rounding re
         rounded-money (rounding/round money rounding/chf-rounding-fn)]
     (format/format rounded-money {:locale (java.util.Locale. "de" "CH")}))
   ;; => "CHF 1.05"
+#+end_src
+*** Currency conversion
+This library provides several functions to convert monetary amounts between currencies using various sources for exchange rates.
+
+The simplest function is =convert-using-exchange-rate=, where you provide the exchange rate for the conversion:
+#+begin_src clojure
+  (let [money (dinero/money-of 1 :eur)]
+    (conversion/convert-using-exchange-rate money :gbp 0.8))
+  ;; => #dinero.core.Money{:amount 0.8M, :currency :gbp}
+#+end_src
+In addition to this, you can use other functions designed for specific use cases, whether you're retrieving exchange rates from external providers or custom databases.
+
+For example, to perform currency conversion using a database, use =convert-using-db=. This function requires, besides the monetary amount and target currency for the conversion (and optionally, the date), a database connection along with schema details (such as the table name, fields for the base and target currencies, the exchange rate field, and the date field if needed):
+#+begin_src clojure
+  (require '[next.jdbc :as jdbc])
+
+  (defonce db (jdbc/get-datasource {:dbtype "h2:mem" :dbname "readme-db"}))
+  (jdbc/execute-one! db ["CREATE TABLE exchange_rate (from_currency VARCHAR(3), to_currency VARCHAR(3), rate DOUBLE, date DATE)"])
+  (jdbc/execute-one! db ["INSERT INTO exchange_rate (from_currency, to_currency, rate, date) VALUES ('EUR', 'GBP', 0.80, '2024-09-08')"])
+
+  (let [money (dinero/money-of 1 :eur)]
+      (conversion/convert-using-db money :gbp db "exchange_rate" "from_currency" "to_currency" "rate"))
+  ;; => #dinero.core.Money{:amount 0.8M, :currency :gbp}
+
+  (let [money (dinero/money-of 1 :eur)
+        date (java.time.LocalDate/parse "2024-09-08")]
+      (conversion/convert-using-db money :gbp date db "exchange_rate" "from_currency" "to_currency" "rate" "date"))
+  ;; => #dinero.core.Money{:amount 0.8M, :currency :gbp}
+#+end_src
+Additionally, you can retrieve exchange rates from external providers. Currently, the library supports exchange rates from the European Central Bank (ECB) for both current and historical (up to 90 days) data, as well as from Coinbase for current Bitcoin exchange rates:
+#+begin_src clojure
+  (let [money (dinero/money-of 1 :eur)
+        date (java.time.LocalDate/of 2024 9 11)]
+    (conversion/convert-using-ecb money :gbp date))
+  ;; => #dinero.core.Money{:amount 0.84375M, :currency :gbp}
+
+  (let [money (dinero/money-of 1 :btc)]
+    (conversion/convert-using-coinbase money :eur))
+  ;; => #dinero.core.Money{:amount 52394.05M, :currency :eur}
 #+end_src
 ** License
 Copyright © 2024 Sergio Navarro
