@@ -1,7 +1,5 @@
 (ns dinero.conversion.core-test
   (:require [dinero.conversion.core :as sut]
-            [dinero.conversion.coinbase :as coinbase]
-            [dinero.conversion.db :as db]
             [dinero.conversion.ecb :as ecb]
             [dinero.core :as core]
             [clojure.test :as t]
@@ -10,11 +8,11 @@
            [java.time LocalDate]
            [java.time.format DateTimeFormatter]))
 
-(t/deftest convert-with-exchange-rate
+(t/deftest convert-using-exchange-rate
   (let [money (core/money-of 1M :eur)
         term-currency :gbp
         exchange-rate 0.80
-        converted (sut/convert-with-exchange-rate money term-currency exchange-rate)]
+        converted (sut/convert-using-exchange-rate money term-currency exchange-rate)]
     (t/is (= 0.80M (core/get-amount converted)))
     (t/is (= :gbp (core/get-currency converted)))))
 
@@ -27,70 +25,66 @@
 
 (defonce db (create-db-for-testing))
 
-(t/deftest convert-using-db-provider
+(t/deftest convert-using-db
   (let [m1 (core/money-of 1M :eur)
-        m2 (core/money-of 0.8M :gbp)
-        db-rate-provider (db/create-db-rate-provider db "exchange_rate" "from_currency" "to_currency" "rate")
-        m1-converted (sut/convert m1 :gbp db-rate-provider)
-        m2-converted (sut/convert m2 :eur db-rate-provider)
-        m3-converted (sut/convert m1 :eur db-rate-provider)] ; same currency
-    (t/is (= 0.80M (core/get-amount m1-converted)))
-    (t/is (= :gbp (core/get-currency m1-converted)))
-    (t/is (= 1M (core/get-amount m2-converted)))
-    (t/is (= :eur (core/get-currency m2-converted)))
-    (t/is (= 1M (core/get-amount m3-converted)))
-    (t/is (= :eur (core/get-currency m3-converted)))
-    (t/is (thrown? ExceptionInfo (sut/convert m1 :jpy db-rate-provider))))
-  (let [money (core/money-of 1M :eur)
-        date (LocalDate/of 2024 9 8)
-        db-rate-provider (db/create-db-rate-provider db "exchange_rate" "from_currency" "to_currency" "rate" "date")
-        converted (sut/convert money :gbp date db-rate-provider)]
+        converted (sut/convert-using-db m1 :gbp db "exchange_rate" "from_currency" "to_currency" "rate")
+        converted-back (sut/convert-using-db converted :eur db "exchange_rate" "from_currency" "to_currency" "rate") ; round trip
+        m1-again (sut/convert-using-db m1 :eur db "exchange_rate" "from_currency" "to_currency" "rate")] ; same currency
     (t/is (= 0.80M (core/get-amount converted)))
     (t/is (= :gbp (core/get-currency converted)))
-    (t/is (thrown? ExceptionInfo (sut/convert money :gbp (LocalDate/of 2024 1 1) db-rate-provider)))))
+    (t/is (= 1M (core/get-amount converted-back)))
+    (t/is (= :eur (core/get-currency converted-back)))
+    (t/is (= 1M (core/get-amount m1-again)))
+    (t/is (= :eur (core/get-currency m1-again)))
+    (t/is (thrown? ExceptionInfo (sut/convert-using-db m1 :jpy db "exchange_rate" "from_currency" "to_currency" "rate"))))
+  (let [money (core/money-of 1M :eur)
+        date (LocalDate/of 2024 9 8)
+        converted (sut/convert-using-db money :gbp date db "exchange_rate" "from_currency" "to_currency" "rate" "date")]
+    (t/is (= 0.80M (core/get-amount converted)))
+    (t/is (= :gbp (core/get-currency converted)))
+    (t/is (thrown? ExceptionInfo (sut/convert-using-db money :gbp (LocalDate/of 2024 1 1) db "exchange_rate" "from_currency" "to_currency" "rate" "date")))))
 
-(t/deftest convert-using-ecb-provider
+(t/deftest convert-using-ecb
+  ;; current rates
   (let [m1 (core/money-of 1M :eur)
         ecb-date (:date (ecb/get-ecb-rates))
         query-date (LocalDate/parse ecb-date (DateTimeFormatter/ofPattern "yyyy-M-d"))
-        m1-converted (sut/convert m1 :gbp query-date ecb/current-rates-provider)
-        m2-converted (sut/convert m1-converted :eur query-date ecb/current-rates-provider)
-        m3-converted (sut/convert m1 :eur query-date ecb/current-rates-provider)] ; same currency
-    (t/is (> 1M (core/get-amount m1-converted)))
-    (t/is (= :gbp (core/get-currency m1-converted)))
-    (t/is (= 1M (core/get-amount m2-converted)))
-    (t/is (= :eur (core/get-currency m2-converted)))
-    (t/is (= 1M (core/get-amount m3-converted)))
-    (t/is (= :eur (core/get-currency m3-converted)))
-    (t/is (thrown? ExceptionInfo (sut/convert (core/money-of 1 :gbp) :jpy query-date ecb/current-rates-provider)))
-    (t/is (thrown? ExceptionInfo (sut/convert m1 :gbp (LocalDate/of 2024 1 1) ecb/current-rates-provider)))
-    (t/is (thrown? ExceptionInfo (sut/convert m1 :invalid query-date ecb/current-rates-provider)))))
-
-(t/deftest convert-using-ecb-historical-provider
+        converted (sut/convert-using-ecb m1 :gbp query-date)
+        converted-back (sut/convert-using-ecb converted :eur query-date) ; round trip
+        m1-again (sut/convert-using-ecb m1 :eur query-date)] ; same currency
+    (t/is (> 1M (core/get-amount converted)))
+    (t/is (= :gbp (core/get-currency converted)))
+    (t/is (= 1M (core/get-amount converted-back)))
+    (t/is (= :eur (core/get-currency converted-back)))
+    (t/is (= 1M (core/get-amount m1-again)))
+    (t/is (= :eur (core/get-currency m1-again)))
+    (t/is (thrown? ExceptionInfo (sut/convert-using-ecb (core/money-of 1 :gbp) :jpy query-date)))
+    (t/is (thrown? ExceptionInfo (sut/convert-using-ecb m1 :gbp (LocalDate/of 2024 1 1))))
+    (t/is (thrown? ExceptionInfo (sut/convert-using-ecb m1 :invalid query-date))))
+  ;; historical rates
   (let [m1 (core/money-of 1M :eur)
         ecb-dates (map :date (ecb/get-ecb-hist90-rates))
         query-date (LocalDate/parse (last ecb-dates) (DateTimeFormatter/ofPattern "yyyy-M-d"))
-        m1-converted (sut/convert m1 :gbp query-date ecb/historical-rates-provider)
-        m2-converted (sut/convert m1-converted :eur query-date ecb/historical-rates-provider)
-        m3-converted (sut/convert m1 :eur query-date ecb/historical-rates-provider)] ; same currency
-    (t/is (> 1M (core/get-amount m1-converted)))
-    (t/is (= :gbp (core/get-currency m1-converted)))
-    (t/is (= 1M (core/get-amount m2-converted)))
-    (t/is (= :eur (core/get-currency m2-converted)))
-    (t/is (= 1M (core/get-amount m3-converted)))
-    (t/is (= :eur (core/get-currency m3-converted)))
-    (t/is (thrown? ExceptionInfo (sut/convert (core/money-of 1 :gbp) :jpy query-date ecb/historical-rates-provider)))
-    (t/is (thrown? ExceptionInfo (sut/convert m1 :gbp (LocalDate/.minusDays query-date 1) ecb/historical-rates-provider)))
-    (t/is (thrown? ExceptionInfo (sut/convert m1 :invalid query-date ecb/historical-rates-provider)))))
+        converted (sut/convert-using-ecb m1 :gbp query-date)
+        converted-back (sut/convert-using-ecb converted :eur query-date) ; round trip
+        m1-again (sut/convert-using-ecb m1 :eur query-date)] ; same currency
+    (t/is (> 1M (core/get-amount converted)))
+    (t/is (= :gbp (core/get-currency converted)))
+    (t/is (= 1M (core/get-amount converted-back)))
+    (t/is (= :eur (core/get-currency converted-back)))
+    (t/is (= 1M (core/get-amount m1-again)))
+    (t/is (= :eur (core/get-currency m1-again)))
+    (t/is (thrown? ExceptionInfo (sut/convert-using-ecb (core/money-of 1 :gbp) :jpy query-date)))
+    (t/is (thrown? ExceptionInfo (sut/convert-using-ecb m1 :gbp (LocalDate/.minusDays query-date 1))))
+    (t/is (thrown? ExceptionInfo (sut/convert-using-ecb m1 :invalid query-date)))))
 
-(t/deftest convert-using-coinbase-provider
+(t/deftest convert-using-coinbase
   (let [m1 (core/money-of 1M :btc)
-        m2 (core/money-of 1M :eur)
-        m1-converted (sut/convert m1 :btc coinbase/bitcoin-rate-provider)
-        m2-converted (sut/convert m1 :eur coinbase/bitcoin-rate-provider)]
-    (t/is (= 1M (core/get-amount m1-converted)))
-    (t/is (= :btc (core/get-currency m1-converted)))
-    (t/is (< 1M (core/get-amount m2-converted)))
-    (t/is (= :eur (core/get-currency m2-converted)))
-    (t/is (thrown? ExceptionInfo (sut/convert m2 :gbp coinbase/bitcoin-rate-provider)))
-    (t/is (thrown? ExceptionInfo (sut/convert m1 :invalid coinbase/bitcoin-rate-provider)))))
+        converted (sut/convert-using-coinbase m1 :eur) ; round trip
+        converted-back (sut/convert-using-coinbase converted :btc)] ; same currency
+    (t/is (< 1M (core/get-amount converted)))
+    (t/is (= :eur (core/get-currency converted)))
+    (t/is (= 1M (core/get-amount converted-back)))
+    (t/is (= :btc (core/get-currency converted-back)))
+    (t/is (thrown? ExceptionInfo (sut/convert-using-coinbase (core/money-of 1M :eur) :gbp)))
+    (t/is (thrown? ExceptionInfo (sut/convert-using-coinbase m1 :invalid)))))
