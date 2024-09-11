@@ -370,6 +370,10 @@ For example, to perform currency conversion using a database, use =convert-using
 #+end_src
 Additionally, you can retrieve exchange rates from external providers. Currently, the library supports exchange rates from the European Central Bank (ECB) for both current and historical (up to 90 days) data, as well as from Coinbase for current Bitcoin exchange rates:
 #+begin_src clojure
+  (let [money (dinero/money-of 1 :eur)]
+    (conversion/convert-using-ecb money :gbp))
+  ;; => {:amount 0.84375M, :currency :gbp}
+
   (let [money (dinero/money-of 1 :eur)
         date (java.time.LocalDate/of 2024 9 11)]
     (conversion/convert-using-ecb money :gbp date))
