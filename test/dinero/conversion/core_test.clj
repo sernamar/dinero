@@ -17,7 +17,7 @@
 
 (defn- create-db-for-testing
   []
-  (let [db (jdbc/get-datasource {:dbtype "h2:mem" :dbname "test-db"})]
+  (let [db (jdbc/get-datasource {:dbtype "h2:mem" :dbname "core-test"})]
     (jdbc/execute-one! db ["CREATE TABLE exchange_rate (from_currency VARCHAR(3), to_currency VARCHAR(3), rate DOUBLE, date DATE)"])
     (jdbc/execute-one! db ["INSERT INTO exchange_rate (from_currency, to_currency, rate, date) VALUES ('EUR', 'GBP', 0.80, '2024-09-08')"])
     db))
