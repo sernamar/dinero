@@ -42,7 +42,7 @@
       (and (not (currency/iso-4217? currency)) (= :code symbol-style))
       (str/replace formatted-money locale-symbol currency-code)
       ;; Invalid symbol style
-      :else(throw (ex-info "Invalid symbol style" {:symbol-style symbol-style})))))
+      :else (throw (ex-info "Invalid symbol style" {:symbol-style symbol-style})))))
 
 (defn format
   "Formats the given monetary amount with the given options."
