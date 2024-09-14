@@ -44,7 +44,7 @@
       ;; Invalid symbol style
       :else (throw (ex-info "Invalid symbol style" {:symbol-style symbol-style})))))
 
-(defn format
+(defn format-money
   "Formats the given monetary amount with the given options."
   [money & {:keys [locale decimal-places rounding-mode symbol-style] :as _options}]
   (let [amount (core/get-amount money)
@@ -56,7 +56,7 @@
         formatter (make-formatter currency locale decimal-places rounding-mode)]
     (format-amount amount currency formatter locale symbol-style)))
 
-(defn format-with-pattern
+(defn format-money-with-pattern
   "Formats the given monetary amount with the given pattern and options."
   [money pattern & {:keys [locale rounding-mode] :as _options}]
   (let [amount (core/get-amount money)

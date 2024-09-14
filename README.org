@@ -128,9 +128,9 @@ For rounded monetary amounts, you can also use the =get-scale= and =get-rounding
 *** Formatting
 As already mentioned, monetary amounts could be stored internally with more decimal places than the smallest unit of the currency. Although this may be important for accurate numerical computations, you might be interested in displaying amounts in a user-friendly format.
 
-To display monetary amounts in a user-friendly format, you can use the =format= function. This function will convert the internal representation of the monetary amount into a string with a more readable format.
+To display monetary amounts in a user-friendly format, you can use the =format-money= function. This function will convert the internal representation of the monetary amount into a string with a more readable format.
 
-The =format= function accepts a map of configuration options as its second argument. The available options are:
+The =format-money= function accepts a map of configuration options as its second argument. The available options are:
 - locale
 - rounding-mode
 - decimal-places
@@ -139,28 +139,28 @@ For example:
 #+begin_src clojure
   (let [m1 (dinero/money-of 1234.5678 :eur)
         germany java.util.Locale/GERMANY]
-    (println (format/format m1 {:locale germany}))
-    (println (format/format m1 {:locale germany :symbol-style :code}))
-    (println (format/format m1 {:locale germany :rounding-mode :down :symbol-style :code}))
-    (println (format/format m1 {:locale germany :rounding-mode :down :decimal-places 0 :symbol-style :code})))
+    (println (format/format-money m1 {:locale germany}))
+    (println (format/format-money m1 {:locale germany :symbol-style :code}))
+    (println (format/format-money m1 {:locale germany :rounding-mode :down :symbol-style :code}))
+    (println (format/format-money m1 {:locale germany :rounding-mode :down :decimal-places 0 :symbol-style :code})))
   ;; 1.234,57 €
   ;; 1.234,57 EUR
   ;; 1.234,56 EUR
   ;; 1.234 EUR
 #+end_src
-You can also use the =format-with-pattern= function, which uses the given formatting pattern to format the monetary amount. This function also accepts a map of configuration options as its third argument, supporting these options:
+You can also use the =format-money-with-pattern= function, which uses the given formatting pattern to format the monetary amount. This function also accepts a map of configuration options as its third argument, supporting these options:
 - locale
 - rounding-mode
 For example:
 #+begin_src clojure
   (let [m1 (dinero/money-of 1234.5678 :eur)
         germany java.util.Locale/GERMANY]
-    (println (format/format-with-pattern m1 "#,##0.00 ¤" {:locale germany}))
-    (println (format/format-with-pattern m1 "#,##0.00 ¤¤" {:locale germany}))
-    (println (format/format-with-pattern m1 "#,##0.00 euros" {:locale germany}))
-    (println (format/format-with-pattern m1 "#,##0.000 ¤" {:locale germany}))
-    (println (format/format-with-pattern m1 "#,##0 ¤" {:locale germany}))
-    (println (format/format-with-pattern m1 "#,##0 ¤" {:locale germany :rounding-mode :down})))
+    (println (format/format-money-with-pattern m1 "#,##0.00 ¤" {:locale germany}))
+    (println (format/format-money-with-pattern m1 "#,##0.00 ¤¤" {:locale germany}))
+    (println (format/format-money-with-pattern m1 "#,##0.00 euros" {:locale germany}))
+    (println (format/format-money-with-pattern m1 "#,##0.000 ¤" {:locale germany}))
+    (println (format/format-money-with-pattern m1 "#,##0 ¤" {:locale germany}))
+    (println (format/format-money-with-pattern m1 "#,##0 ¤" {:locale germany :rounding-mode :down})))
   ;; 1.234,57 €
   ;; 1.234,57 EUR
   ;; 1.234,57 euros
