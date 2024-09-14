@@ -169,39 +169,56 @@ For example:
   ;; 1.234 €
 #+end_src
 *** Parsing
-For now, this library only supports parsing strings that contain ISO 4217 currency symbols (like =€=) but does not support parsing strings with ISO 4217 currency codes (like =EUR=) or strings with non-ISO 4217 currency symbols or codes (like =₿= or =BTC=).
+This library supports parsing strings with both ISO 4217 currencies (e.g., =:eur=) and non-ISO 4217 currencies (e.g., =:btc=), whether they include currency symbols (e.g., =€= or =₿=) or currency codes (e.g., =EUR= or =BTC=).
 
-So you can use the =parse-containing-iso-4217-symbol= function to parse a string that contains an ISO 4217 currency symbol:
+To parse a string representing a monetary amount, use the =parse-money= function, which accepts a map of configuration options as its second argument. The available options are:
+- =:locale=: a =java.util.Locale= object used for parsing. If =NIL=, the default locale is used.
+- =:currencies=: a sequence of currencies to attempt during parsing. If =NIL=, it defaults to either the configured currency or the locale's default currency.
+- =:try-all-currencies?=: a boolean flag. If =TRUE=, the function will attempt to parse the string using all currencies available in =resources/currencies.edn= if the provided currencies fail. Defaults to =FALSE=.
 #+begin_src clojure
-  (parse/parse-containing-iso-4217-symbol "1.234,56 €" java.util.Locale/GERMANY)
+  (parse/parse-money "1.234,56 €" {:locale java.util.Locale/GERMANY})
   ;; => {:amount 1234.56M, :currency :eur}
 
-  (parse/parse-containing-iso-4217-symbol "£1,234.56" java.util.Locale/UK)
+  (parse/parse-money "1.234,56 EUR" {:locale java.util.Locale/GERMANY})
+  ;; => {:amount 1234.56M, :currency :eur}
+
+  (parse/parse-money "1.234,56 £" {:locale java.util.Locale/GERMANY :currencies [:eur :gbp]})
   ;; => {:amount 1234.56M, :currency :gbp}
+
+  (parse/parse-money "1.234,56 GBP" {:locale java.util.Locale/GERMANY :currencies [:eur :gbp]})
+  ;; => {:amount 1234.56M, :currency :gbp}
+
+  (parse/parse-money "1.234,56 £" {:locale java.util.Locale/GERMANY :try-all-currencies? true})
+  ;; => {:amount 1234.56M, :currency :gbp}
+
+  (parse/parse-money "1.234,56 ₿" {:locale java.util.Locale/GERMANY :currencies [:btc]})
+  ;; => {:amount 1234.56M, :currency :btc}
+
+  (parse/parse-money "1.234,56 BTC" {:locale java.util.Locale/GERMANY :currencies [:btc]})
+  ;; => {:amount 1234.56M, :currency :btc}
+
+  (parse/parse-money "1.234,56 ₿" {:locale java.util.Locale/GERMANY :try-all-currencies? true})
+  ;; => {:amount 1234.56M, :currency :btc}
+
+  (parse/parse-money "1.234,56 ₿" {:locale java.util.Locale/GERMANY :currencies [:eur :gbp] :try-all-currencies? true})
+  ;; => {:amount 1234.56M, :currency :btc}
 #+end_src
-But it doesn't support parsing strings with ISO 4217 currency codes or strings with non-ISO 4217 currency symbols or codes, throwing a =java.text.ParseException= exception in that case:
+If =parse-money= cannot recognize the format or the currency in the string, it throws a =java.text.ParseException=:
 #+begin_src clojure
-  (parse/parse-containing-iso-4217-symbol "1.234,56 EUR" java.util.Locale/GERMANY)
-  ;; java.text.ParseException
-  ;; Unparseable number: "1.234,56 EUR"
+  ;; unrecognized format for java.util.Locale/GERMANY
+  (parse/parse-money "1,234.56 €" {:locale java.util.Locale/GERMANY})
+  ;; Unhandled java.text.ParseException
+  ;; Unparseable number: "1,234.56 €"
 
-  (parse/parse-containing-iso-4217-symbol "1,23456789 ₿" java.util.Locale/GERMANY)
-  ;; java.text.ParseException
-  ;; Unparseable number: "1,23456789 ₿"
-
-  (parse/parse-containing-iso-4217-symbol "1,23456789 BTC" java.util.Locale/GERMANY)
-  ;; java.text.ParseException
-  ;; Unparseable number: "1,23456789 BTC"
-#+end_src
-The =parse-containing-iso-4217-symbol= function also throws a =java.text.ParseException= exception if the currency symbol is in the wrong position for the specified =locale=, or if the =locale= uses a different default currency:
-#+begin_src clojure
-  (parse/parse-containing-iso-4217-symbol "€1.234,56" java.util.Locale/GERMANY)
-  ;; java.text.ParseException
-  ;; Unparseable number: "€1.234,56"
-
-  (parse/parse-containing-iso-4217-symbol "1.234,56 £" java.util.Locale/GERMANY)
-  ;; java.text.ParseException
+  ;; unrecognized currency for java.util.Locale/GERMANY
+  (parse/parse-money "1.234,56 £" {:locale java.util.Locale/GERMANY})
+  ;; Unhandled java.text.ParseException
   ;; Unparseable number: "1.234,56 £"
+
+  ;; unrecognized currency for any java.util.Locale
+  (parse/parse-money "1.234,56 ₿" {:locale java.util.Locale/GERMANY})
+  ;; Unhandled java.text.ParseException
+  ;; Unparseable number: "1.234,56 ₿"
 #+end_src
 *** Equality and comparison
 You could use the following functions to do equality and comparison operations on monetary amounts: ~=~, =not==, =money<=, =money<==, =money>=, =money>==, =money-zero?=, =money-pos?=, and =money-neg?=.
