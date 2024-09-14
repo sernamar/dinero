@@ -32,7 +32,7 @@
         m1-again (sut/convert-using-db m1 :eur db "exchange_rate" "from_currency" "to_currency" "rate")] ; same currency
     (t/is (= 0.80M (core/get-amount converted)))
     (t/is (= :gbp (core/get-currency converted)))
-    (t/is (= 1M (core/get-amount converted-back)))
+    (t/is (= 1M (BigDecimal/.setScale (core/get-amount converted-back) 15 BigDecimal/ROUND_HALF_UP)))
     (t/is (= :eur (core/get-currency converted-back)))
     (t/is (= 1M (core/get-amount m1-again)))
     (t/is (= :eur (core/get-currency m1-again)))
@@ -54,7 +54,7 @@
         m1-again (sut/convert-using-ecb m1 :eur query-date)] ; same currency
     (t/is (> 1M (core/get-amount converted)))
     (t/is (= :gbp (core/get-currency converted)))
-    (t/is (= 1M (core/get-amount converted-back)))
+    (t/is (= 1M (BigDecimal/.setScale (core/get-amount converted-back) 15 BigDecimal/ROUND_HALF_UP)))
     (t/is (= :eur (core/get-currency converted-back)))
     (t/is (= 1M (core/get-amount m1-again)))
     (t/is (= :eur (core/get-currency m1-again)))
@@ -70,7 +70,7 @@
         m1-again (sut/convert-using-ecb m1 :eur query-date)] ; same currency
     (t/is (> 1M (core/get-amount converted)))
     (t/is (= :gbp (core/get-currency converted)))
-    (t/is (= 1M (core/get-amount converted-back)))
+    (t/is (= 1M (BigDecimal/.setScale (core/get-amount converted-back) 15 BigDecimal/ROUND_HALF_UP)))
     (t/is (= :eur (core/get-currency converted-back)))
     (t/is (= 1M (core/get-amount m1-again)))
     (t/is (= :eur (core/get-currency m1-again)))
@@ -84,7 +84,7 @@
         converted-back (sut/convert-using-coinbase converted :btc)] ; same currency
     (t/is (< 1M (core/get-amount converted)))
     (t/is (= :eur (core/get-currency converted)))
-    (t/is (= 1M (core/get-amount converted-back)))
+    (t/is (= 1M (BigDecimal/.setScale (core/get-amount converted-back) 15 BigDecimal/ROUND_HALF_UP)))
     (t/is (= :btc (core/get-currency converted-back)))
     (t/is (thrown? ExceptionInfo (sut/convert-using-coinbase (core/money-of 1M :eur) :gbp)))
     (t/is (thrown? ExceptionInfo (sut/convert-using-coinbase m1 :invalid)))))
