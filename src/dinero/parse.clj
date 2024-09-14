@@ -17,8 +17,8 @@
 
     :else (throw (ex-info "Currency style not supported" {:currency-style :currency-style}))))
 
-(defn- get-currency-formatter
-  "Returns a currency formatter for the given locale, currency and currency style."
+(defn- make-formatter
+  "Creates a new formatter for the given locale, currency and currency style."
   [locale currency currency-style]
   (let [formatter (DecimalFormat/getCurrencyInstance locale)
         symbols (DecimalFormat/.getDecimalFormatSymbols formatter)
@@ -32,11 +32,11 @@
   "Parses a monetary string using currency symbol or code."
   [string locale currency]
   (try
-    (let [formatter (get-currency-formatter locale currency :symbol)
+    (let [formatter (make-formatter locale currency :symbol)
           amount (DecimalFormat/.parse ^DecimalFormat formatter string)]
       (core/money-of amount currency))
     (catch Exception _e
-      (let [formatter (get-currency-formatter locale currency :code)
+      (let [formatter (make-formatter locale currency :code)
             amount (DecimalFormat/.parse ^DecimalFormat formatter string)]
         (core/money-of amount currency)))))
 
