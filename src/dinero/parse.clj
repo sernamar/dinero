@@ -1,8 +1,7 @@
 (ns dinero.parse
   (:require [dinero.core :as core]
             [dinero.currency :as currency]
-            [clojure.string :as str]
-            [clojure.tools.logging :as log])
+            [clojure.string :as str])
   (:import [java.text DecimalFormat DecimalFormatSymbols ParseException]
            [java.util Currency Locale]))
 
@@ -45,8 +44,8 @@
   "Tries to parse a monetary string using a list of currencies."
   [string locale currencies]
   (or (some #(try (parse-with-symbol-or-code string locale %)
-                  (catch ParseException e
-                    (log/warn (str (Exception/.getMessage e) " for locale " locale " and currency " %))))
+                  (catch ParseException _e
+                    nil)) ;; ignore parse exceptions
             currencies)
       (throw (ParseException. (str "Unparseable number: \"" string "\"") 0))))
 
