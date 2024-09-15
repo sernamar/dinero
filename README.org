@@ -5,6 +5,7 @@ A Clojure library for working with money.
   - [[#configuration][Configuration]]
   - [[#usage][Usage]]
     - [[#monetary-amounts][Monetary amounts]]
+    - [[#currencies][Currencies]]
     - [[#formatting][Formatting]]
     - [[#parsing][Parsing]]
     - [[#equality-and-comparison][Equality and comparison]]
@@ -100,7 +101,7 @@ If =currency= is not specified, the =rounded-money-of= function will use the def
   ;; => {:amount 1234.57M, :currency :eur, :scale 2, :rounding-mode :half-even}
 
   (dinero/rounded-money-of 1234.5678 :eur 0)
-    ;; => {:amount 1235M, :currency :eur, :scale 0, :rounding-mode :half-even}
+  ;; => {:amount 1235M, :currency :eur, :scale 0, :rounding-mode :half-even}
 
   (dinero/rounded-money-of 1234.5678 :eur 0 :down)
   ;; => {:amount 1234M, :currency :eur, :scale 0, :rounding-mode :down}
@@ -125,6 +126,18 @@ For rounded monetary amounts, you can also use the =get-scale= and =get-rounding
     (dinero/get-rounding-mode money))
   ;; => :half-even
 #+end_src
+*** Currencies
+This library supports all ISO 4217 currencies by default, providing seamless handling of major world currencies like the Euro (=EUR=) and British Pound (=GBP=). Additionally, you can extend support to non-ISO currencies, such as cryptocurrencies like Bitcoin (=BTC=), or even custom currencies specific to your domain, by editing the =resources/currencies.edn= file. The format for defining currencies is as follows:
+#+begin_src clojure
+  {:eur {:type :iso-4217, :currency-code "EUR", :minor-units 2},
+   :gbp {:type :iso-4217, :currency-code "GBP", :minor-units 2},
+   :btc {:type :crypto, :currency-code "BTC", :symbol "₿", :minor-units 8}}
+#+end_src
+For ISO 4217 currencies, the =:symbol= key should not be used, as the library automatically relies on the symbol defined by the locale. For example, the British Pound (=GBP=) is represented as =£= in =java.util.Locale/UK=, while in =java.util.Locale/FRANCE=, it appears as =£GB=. This ensures that the correct symbol is displayed based on the user's locale settings.
+
+For non-ISO currencies, such as Bitcoin, the =:symbol= key is required because they are not supported by =java.util.Locale=. Since their symbols are not locale-specific, we define a single symbol in the =resources/currencies.edn= file, which is used consistently across all locales.
+
+This approach provides flexibility in handling both standardized and custom currencies, allowing your application to adapt to a wide range of monetary systems.
 *** Formatting
 As already mentioned, monetary amounts could be stored internally with more decimal places than the smallest unit of the currency. Although this may be important for accurate numerical computations, you might be interested in displaying amounts in a user-friendly format.
 
