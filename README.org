@@ -1,8 +1,17 @@
 * dinero
-A Clojure library for working with money.
+*A Clojure library for working with money.*
+** Introduction
+/dinero/ is a Clojure library designed for managing monetary amounts and currencies. It offers support for precise arithmetic operations, formatting, and parsing, all tailored to different locales and currencies.
 
+This library supports two types of monetary amounts:
+- =money=: represents monetary amounts with arbitrary precision and scale, ensuring accurate numerical computations during arithmetic operations.
+- =rounded money=: represents monetary amounts that are automatically rounded after each arithmetic operation, ensuring consistent precision.
+
+It also offers functionality to format monetary amounts and parse strings representing monetary amounts. It takes care of different formats and currencies based on the user's locale settings, ensuring accurate and locale-sensitive representations.
+
+In terms of currencies, it supports all ISO 4217 currencies by default, allowing for seamless handling of major world currencies like the Euro (=EUR=) and British Pound (=GBP=). You can also extend support to non-ISO currencies, such as cryptocurrencies like Bitcoin (=BTC=), or even custom currencies specific to your domain, through an EDN configuration file.
 ** Configuration
-For convenience, before using this library, you can configure the default currency and default rounding mode using a configuration file named =config.edn=, which should be located in the root directory of the project.
+Before using this library, you can configure the default currency and default rounding mode using a configuration file named =config.edn=, which should be located in the root directory of the project.
 
 For example, to set /euros/ as the default currency and the /half even/ method as the default rounding method, the =config.edn= file should have the following content:
 #+begin_src clojure
