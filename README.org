@@ -184,52 +184,52 @@ For example:
 *** Parsing
 This library supports parsing strings with both ISO 4217 currencies (e.g., =:eur=) and non-ISO 4217 currencies (e.g., =:btc=), whether they include currency symbols (e.g., =€= or =₿=) or currency codes (e.g., =EUR= or =BTC=).
 
-To parse a string representing a monetary amount, use the =parse-money= function, which accepts a map of configuration options as its second argument. The available options are:
+To parse a string representing a monetary amount, use the =parse-string= function, which accepts a map of configuration options as its second argument. The available options are:
 - =:locale=: a =java.util.Locale= object used for parsing. If =NIL=, the default locale is used.
 - =:currencies=: a sequence of currencies to attempt during parsing. If =NIL=, it defaults to either the configured currency or the locale's default currency.
 - =:try-all-currencies?=: a boolean flag. If =TRUE=, the function will attempt to parse the string using all currencies available in =resources/currencies.edn= if the provided currencies fail. Defaults to =FALSE=.
 #+begin_src clojure
-  (parse/parse-money "1.234,56 €" {:locale java.util.Locale/GERMANY})
+  (parse/parse-string "1.234,56 €" {:locale java.util.Locale/GERMANY})
   ;; => {:amount 1234.56M, :currency :eur}
 
-  (parse/parse-money "1.234,56 EUR" {:locale java.util.Locale/GERMANY})
+  (parse/parse-string "1.234,56 EUR" {:locale java.util.Locale/GERMANY})
   ;; => {:amount 1234.56M, :currency :eur}
 
-  (parse/parse-money "1.234,56 £" {:locale java.util.Locale/GERMANY :currencies [:eur :gbp]})
+  (parse/parse-string "1.234,56 £" {:locale java.util.Locale/GERMANY :currencies [:eur :gbp]})
   ;; => {:amount 1234.56M, :currency :gbp}
 
-  (parse/parse-money "1.234,56 GBP" {:locale java.util.Locale/GERMANY :currencies [:eur :gbp]})
+  (parse/parse-string "1.234,56 GBP" {:locale java.util.Locale/GERMANY :currencies [:eur :gbp]})
   ;; => {:amount 1234.56M, :currency :gbp}
 
-  (parse/parse-money "1.234,56 £" {:locale java.util.Locale/GERMANY :try-all-currencies? true})
+  (parse/parse-string "1.234,56 £" {:locale java.util.Locale/GERMANY :try-all-currencies? true})
   ;; => {:amount 1234.56M, :currency :gbp}
 
-  (parse/parse-money "1.234,56 ₿" {:locale java.util.Locale/GERMANY :currencies [:btc]})
+  (parse/parse-string "1.234,56 ₿" {:locale java.util.Locale/GERMANY :currencies [:btc]})
   ;; => {:amount 1234.56M, :currency :btc}
 
-  (parse/parse-money "1.234,56 BTC" {:locale java.util.Locale/GERMANY :currencies [:btc]})
+  (parse/parse-string "1.234,56 BTC" {:locale java.util.Locale/GERMANY :currencies [:btc]})
   ;; => {:amount 1234.56M, :currency :btc}
 
-  (parse/parse-money "1.234,56 ₿" {:locale java.util.Locale/GERMANY :try-all-currencies? true})
+  (parse/parse-string "1.234,56 ₿" {:locale java.util.Locale/GERMANY :try-all-currencies? true})
   ;; => {:amount 1234.56M, :currency :btc}
 
-  (parse/parse-money "1.234,56 ₿" {:locale java.util.Locale/GERMANY :currencies [:eur :gbp] :try-all-currencies? true})
+  (parse/parse-string "1.234,56 ₿" {:locale java.util.Locale/GERMANY :currencies [:eur :gbp] :try-all-currencies? true})
   ;; => {:amount 1234.56M, :currency :btc}
 #+end_src
-If =parse-money= cannot recognize the format or the currency in the string, it throws a =java.text.ParseException=:
+If =parse-string= cannot recognize the format or the currency in the string, it throws a =java.text.ParseException=:
 #+begin_src clojure
   ;; unrecognized format for java.util.Locale/GERMANY
-  (parse/parse-money "1,234.56 €" {:locale java.util.Locale/GERMANY})
+  (parse/parse-string "1,234.56 €" {:locale java.util.Locale/GERMANY})
   ;; Unhandled java.text.ParseException
   ;; Unparseable number: "1,234.56 €"
 
   ;; unrecognized currency for java.util.Locale/GERMANY
-  (parse/parse-money "1.234,56 £" {:locale java.util.Locale/GERMANY})
+  (parse/parse-string "1.234,56 £" {:locale java.util.Locale/GERMANY})
   ;; Unhandled java.text.ParseException
   ;; Unparseable number: "1.234,56 £"
 
   ;; unrecognized currency for any java.util.Locale
-  (parse/parse-money "1.234,56 ₿" {:locale java.util.Locale/GERMANY})
+  (parse/parse-string "1.234,56 ₿" {:locale java.util.Locale/GERMANY})
   ;; Unhandled java.text.ParseException
   ;; Unparseable number: "1.234,56 ₿"
 #+end_src

@@ -28,7 +28,7 @@
     (DecimalFormat/.setDecimalFormatSymbols formatter symbols)
     formatter))
 
-(defn parse-with-symbol-or-code
+(defn parse-string-with-symbol-or-code
   "Parses a monetary string using currency symbol or code."
   [string locale currency]
   (try
@@ -40,21 +40,21 @@
             amount (DecimalFormat/.parse ^DecimalFormat formatter string)]
         (core/money-of amount currency)))))
 
-(defn attempt-parse-with-multiple-currencies
+(defn attempt-parse-string-with-multiple-currencies
   "Tries to parse a monetary string using a list of currencies."
   [string locale currencies]
-  (or (some #(try (parse-with-symbol-or-code string locale %)
+  (or (some #(try (parse-string-with-symbol-or-code string locale %)
                   (catch ParseException _e
                     nil)) ;; ignore parse exceptions
             currencies)
       (throw (ParseException. (str "Unparseable number: \"" string "\"") 0))))
 
-(defn attempt-parse-with-all-currencies
+(defn attempt-parse-string-with-all-currencies
   "Tries to parse a monetary string using all available currencies in the `resources/currencies.edn` file."
   [string locale]
-  (attempt-parse-with-multiple-currencies string locale (currency/get-all-currencies)))
+  (attempt-parse-string-with-multiple-currencies string locale (currency/get-all-currencies)))
 
-(defn parse-money
+(defn parse-string
   "Parses a monetary string with optional locale and currency settings."
   [string & {:keys [locale currencies try-all-currencies?] :as _options}]
   (let [locale (or locale (Locale/getDefault))
@@ -64,8 +64,8 @@
         currencies (or currencies [core/*default-currency*] [locale-currency])
         try-all-currencies? (or try-all-currencies? false)]
     (try
-      (attempt-parse-with-multiple-currencies string locale currencies)
+      (attempt-parse-string-with-multiple-currencies string locale currencies)
       (catch ParseException e
         (if try-all-currencies?
-          (attempt-parse-with-all-currencies string locale)
+          (attempt-parse-string-with-all-currencies string locale)
           (throw e))))))
