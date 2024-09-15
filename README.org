@@ -1,18 +1,5 @@
 * dinero
 A Clojure library for working with money.
-** Table of contents                                                  :TOC_3:
-- [[#dinero][dinero]]
-  - [[#configuration][Configuration]]
-  - [[#usage][Usage]]
-    - [[#monetary-amounts][Monetary amounts]]
-    - [[#currencies][Currencies]]
-    - [[#formatting][Formatting]]
-    - [[#parsing][Parsing]]
-    - [[#equality-and-comparison][Equality and comparison]]
-    - [[#arithmetic-operations][Arithmetic operations]]
-    - [[#rounding][Rounding]]
-    - [[#currency-conversion][Currency conversion]]
-  - [[#license][License]]
 
 ** Configuration
 For convenience, before using this library, you can configure the default currency and default rounding mode using a configuration file named =config.edn=, which should be located in the root directory of the project.
