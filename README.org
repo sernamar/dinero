@@ -358,12 +358,12 @@ For example, the Swiss Franc (=CHF=) uses unique rounding rules because the smal
 This approach is also useful when formatting currencies with special rounding requirements. For instance, when formatting Swiss Francs, you might want to round the amount before using the =format= function to ensure the displayed value matches the currency's rounding conventions:
 #+begin_src clojure
   (let [money (dinero/money-of 1.025 :chf)]
-    (format/format money {:locale (java.util.Locale. "de" "CH")}))
+    (format/format-money money {:locale (java.util.Locale. "de" "CH")}))
   ;; => "CHF 1.02"
 
   (let [money (dinero/money-of 1.025 :chf)
         rounded-money (rounding/round money rounding/chf-rounding-fn)]
-    (format/format rounded-money {:locale (java.util.Locale. "de" "CH")}))
+    (format/format-money rounded-money {:locale (java.util.Locale. "de" "CH")}))
   ;; => "CHF 1.05"
 #+end_src
 *** Currency conversion
