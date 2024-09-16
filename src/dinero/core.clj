@@ -14,15 +14,9 @@
 
 ;;; Monetary amounts
 
-(defrecord Money [amount currency]
-  Object
-  (toString [_this]
-    (str "Money{amount=" amount ", currency=" currency )))
+(defrecord Money [amount currency])
 
-(defrecord RoundedMoney [amount currency scale rounding-mode]
-  Object
-  (toString [_this]
-    (str "RoundedMoney{amount=" amount ", currency=" currency ", scale=" scale ", rounding-mode=" rounding-mode)))
+(defrecord RoundedMoney [amount currency scale rounding-mode])
 
 (defn money-of
   "Creates a monetary amount with the given amount and currency."
