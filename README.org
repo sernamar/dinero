@@ -19,14 +19,6 @@ For example, to set /euros/ as the default currency and the /half even/ method a
    :default-rounding-mode :half-even}
 #+end_src
 ** Usage
-You can try out the examples below in a REPL after the following =requires=:
-#+begin_src clojure
-  (require '[dinero.core :as dinero]
-           '[dinero.format :as format]
-           '[dinero.parse :as parse]
-           '[dinero.rounding :as rounding]
-           '[dinero.conversion.core :as conversion])
-#+end_src
 *** Monetary amounts
 This library support two types of monetary amounts:
 - =money=: represents monetary amounts with arbitrary precision and scale, ensuring accurate numerical computations during arithmetic operations.
@@ -37,6 +29,8 @@ You can use =money-of= to create monetary amounts with arbitrary precision and s
 - =currency=: must be a keyword.
 If the =currency= is not specified, the =money-of= function will use the default currency set in the configuration file. If a currency is provided, it will override the default and use the specified currency instead:
 #+begin_src clojure
+  (require '[dinero.core :as dinero])
+
   (dinero/money-of 1)
   ;; => {:amount 1M, :currency :eur}
 
@@ -146,6 +140,9 @@ The =format-money= function accepts a map of configuration options as its second
 - symbol-style: accepts either =:symbol= (default) or =:code=.
 For example:
 #+begin_src clojure
+  (require '[dinero.core :as dinero]
+           '[dinero.format :as format])
+
   (let [m1 (dinero/money-of 1234.5678 :eur)
         germany java.util.Locale/GERMANY]
     (println (format/format-money m1 {:locale germany}))
@@ -185,6 +182,8 @@ To parse a string representing a monetary amount, use the =parse-string= functio
 - =:currencies=: a sequence of currencies to attempt during parsing. If =NIL=, it defaults to either the configured currency or the locale's default currency.
 - =:try-all-currencies?=: a boolean flag. If =TRUE=, the function will attempt to parse the string using all currencies available in =resources/currencies.edn= if the provided currencies fail. Defaults to =FALSE=.
 #+begin_src clojure
+  (require '[dinero.parse :as parse])
+
   (parse/parse-string "1.234,56 €" {:locale java.util.Locale/GERMANY})
   ;; => {:amount 1234.56M, :currency :eur}
 
@@ -234,6 +233,8 @@ You could use the following functions to do equality and comparison operations o
 
 For example:
 #+begin_src clojure
+  (require '[dinero.core :as dinero])
+
   (let [m1 (dinero/money-of 1 :eur)
         m2 (dinero/money-of 1 :eur)]
     (= m1 m2))
@@ -274,6 +275,8 @@ For example:
 *** Arithmetic operations
 You can use =add=, =substract=, =multiply=, and =divide= to perform arithmetic operations on monetary amounts:
 #+begin_src clojure
+  (require '[dinero.core :as dinero])
+
   (let [m1 (dinero/money-of 1 :eur)
         m2 (dinero/money-of 1 :eur)]
     (dinero/add m1 m2))
@@ -322,6 +325,9 @@ As previously mentioned, money amounts could be stored internally with more deci
 
 By default, the =round= function rounds amounts to the smallest unit of the currency, using the default rounding mode specified in the configuration file (if no rounding mode is configured, it defaults to =:half-even=):
 #+begin_src clojure
+  (require '[dinero.core :as dinero]
+           '[dinero.rounding :as rounding])
+
   (let [m1 (dinero/money-of 1.555 :eur)
         m2 (dinero/money-of 1.555 :eur)]
     (dinero/add m1 m2))
@@ -371,6 +377,9 @@ This library provides several functions to convert monetary amounts between curr
 
 The simplest function is =convert-using-exchange-rate=, where you provide the exchange rate for the conversion:
 #+begin_src clojure
+  (require '[dinero.core :as dinero]
+           '[dinero.conversion.core :as conversion])
+
   (let [money (dinero/money-of 1 :eur)]
     (conversion/convert-using-exchange-rate money :gbp 0.8))
   ;; => {:amount 0.8M, :currency :gbp}
