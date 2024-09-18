@@ -51,9 +51,15 @@
 
 (defn convert-using-coinbase
   "Converts the given monetary amount to the term currency using the Coinbase rates."
-  [money term-currency]
-  (let [base-currency (core/get-currency money)]
-    (if (= base-currency term-currency)
-      money
-      (let [exchange-rate (coinbase/current-rate-provider base-currency term-currency)]
-        (convert-using-exchange-rate money term-currency exchange-rate)))))
+  ([money term-currency]
+   (let [base-currency (core/get-currency money)]
+     (if (= base-currency term-currency)
+       money
+       (let [exchange-rate (coinbase/current-rate-provider base-currency term-currency)]
+         (convert-using-exchange-rate money term-currency exchange-rate)))))
+  ([money term-currency date]
+   (let [base-currency (core/get-currency money)]
+     (if (= base-currency term-currency)
+       money
+       (let [exchange-rate (coinbase/historical-rate-provider base-currency term-currency date)]
+         (convert-using-exchange-rate money term-currency exchange-rate))))))

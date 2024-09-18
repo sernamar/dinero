@@ -79,10 +79,24 @@
     (t/is (thrown? ExceptionInfo (sut/convert-using-ecb m1 :invalid query-date)))))
 
 (t/deftest convert-using-coinbase
+  ;; current rates
   (let [m1 (core/money-of 1M :btc)
         converted (sut/convert-using-coinbase m1 :eur)
         converted-back (sut/convert-using-coinbase converted :btc) ; round trip
         m1-again (sut/convert-using-coinbase m1 :btc)] ; same currency
+    (t/is (< 1M (core/get-amount converted)))
+    (t/is (= :eur (core/get-currency converted)))
+    (t/is (= 1M (BigDecimal/.setScale (core/get-amount converted-back) 2 BigDecimal/ROUND_HALF_UP)))
+    (t/is (= :btc (core/get-currency converted-back)))
+    (t/is (= 1M (core/get-amount m1-again)))
+    (t/is (= :btc (core/get-currency m1-again)))
+    (t/is (thrown? ExceptionInfo (sut/convert-using-coinbase m1 :invalid))))
+  ;; historical rates
+  (let [m1 (core/money-of 1M :btc)
+        date (LocalDate/of 2024 9 11)
+        converted (sut/convert-using-coinbase m1 :eur date)
+        converted-back (sut/convert-using-coinbase converted :btc date) ; round trip
+        m1-again (sut/convert-using-coinbase m1 :btc date)] ; same currency
     (t/is (< 1M (core/get-amount converted)))
     (t/is (= :eur (core/get-currency converted)))
     (t/is (= 1M (BigDecimal/.setScale (core/get-amount converted-back) 2 BigDecimal/ROUND_HALF_UP)))
