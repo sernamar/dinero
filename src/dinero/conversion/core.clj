@@ -55,5 +55,5 @@
   (let [base-currency (core/get-currency money)]
     (if (= base-currency term-currency)
       money
-      (let [exchange-rate (coinbase/bitcoin-rate-provider base-currency term-currency)]
+      (let [exchange-rate (coinbase/current-rate-provider base-currency term-currency)]
         (convert-using-exchange-rate money term-currency exchange-rate)))))
