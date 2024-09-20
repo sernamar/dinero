@@ -30,6 +30,8 @@
 
 (defn rounded-money-of
   "Creates a rounded monetary amount with the given amount, currency, scale, and rounding mode."
+  ([]
+   (rounded-money-of 0 *default-currency*))
   ([amount]
    (rounded-money-of amount *default-currency*))
   ([amount currency]
