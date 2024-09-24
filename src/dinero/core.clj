@@ -284,18 +284,21 @@
 (defmethod divide Money
   [money divisor]
   (let [amount (get-amount money)
-        quotient (/ amount (bigdec divisor))
+        scale 256 ; max precision
+        rounding-mode (utils/keyword->rounding-mode (or *default-rounding-mode* :half-even))
+        quotient (BigDecimal/.divide ^BigDecimal amount (bigdec divisor) scale ^RoundingMode rounding-mode)
         currency (get-currency money)]
-    (money-of quotient currency)))
+    (money-of (BigDecimal/.stripTrailingZeros quotient) currency)))
 
 (defmethod divide RoundedMoney
   [money divisor]
   (let [amount (get-amount money)
-        quotient (/ amount (bigdec divisor))
         currency (get-currency money)
         scale (get-scale money)
-        rounding-mode (get-rounding-mode money)]
-    (rounded-money-of quotient currency scale rounding-mode)))
+        rounding-mode (get-rounding-mode money)
+        rounding-mode-object (utils/keyword->rounding-mode rounding-mode)
+        quotient (BigDecimal/.divide ^BigDecimal amount (bigdec divisor) ^int scale ^RoundingMode rounding-mode-object)]
+    (rounded-money-of (BigDecimal/.stripTrailingZeros quotient) currency scale rounding-mode)))
 
 (defmethod negate Money
   [money]

@@ -134,6 +134,13 @@
   (let [money (sut/money-of 2 :eur)
         divisor 2]
     (t/is (= (sut/money-of 1 :eur) (sut/divide money divisor))))
+  ;; Test case for non-terminating decimal expansion.
+  ;; Dividing 1 by 3 cannot be exactly represented as a BigDecimal.
+  ;; Without specifying a scale and rounding mode, attempting this division
+  ;; will throw a java.lang.ArithmeticException: Non-terminating decimal expansion.
+  (let [money (sut/money-of 1 :eur)
+        divisor 3]
+    (t/is (= (sut/money-of 0.3333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333M :eur) (sut/divide money divisor))))
   ;; rounded money
   (let [money (sut/rounded-money-of 1.555 :eur 2 :down)
         divisor 2]
