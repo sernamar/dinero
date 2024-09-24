@@ -13,8 +13,13 @@
         term-currency :gbp
         exchange-rate 0.80
         converted (sut/convert-using-exchange-rate money term-currency exchange-rate)]
-    (t/is (= 0.80M (core/get-amount converted)))
-    (t/is (= :gbp (core/get-currency converted)))))
+    (t/is (= (core/money-of 0.80 :gbp) converted)))
+  ;; rounded money
+  (let [money (core/rounded-money-of 1M :eur)
+        term-currency :gbp
+        exchange-rate 0.80
+        converted (sut/convert-using-exchange-rate money term-currency exchange-rate)]
+    (t/is (= (core/rounded-money-of 0.80 :gbp) converted))))
 
 (defn- create-db-for-testing
   []
@@ -30,18 +35,15 @@
         converted (sut/convert-using-db m1 :gbp db "exchange_rate" "from_currency" "to_currency" "rate")
         converted-back (sut/convert-using-db converted :eur db "exchange_rate" "from_currency" "to_currency" "rate") ; round trip
         m1-again (sut/convert-using-db m1 :eur db "exchange_rate" "from_currency" "to_currency" "rate")] ; same currency
-    (t/is (= 0.80M (core/get-amount converted)))
-    (t/is (= :gbp (core/get-currency converted)))
+    (t/is (= (core/money-of 0.80 :gbp) converted))
     (t/is (= 1M (BigDecimal/.setScale (core/get-amount converted-back) 15 BigDecimal/ROUND_HALF_UP)))
     (t/is (= :eur (core/get-currency converted-back)))
-    (t/is (= 1M (core/get-amount m1-again)))
-    (t/is (= :eur (core/get-currency m1-again)))
+    (t/is (= (core/money-of 1M :eur) m1-again))
     (t/is (thrown? ExceptionInfo (sut/convert-using-db m1 :jpy db "exchange_rate" "from_currency" "to_currency" "rate"))))
   (let [money (core/money-of 1M :eur)
         date (LocalDate/of 2024 9 8)
         converted (sut/convert-using-db money :gbp date db "exchange_rate" "from_currency" "to_currency" "rate" "date")]
-    (t/is (= 0.80M (core/get-amount converted)))
-    (t/is (= :gbp (core/get-currency converted)))
+    (t/is (= (core/money-of 0.80 :gbp) converted))
     (t/is (thrown? ExceptionInfo (sut/convert-using-db money :gbp (LocalDate/of 2024 1 1) db "exchange_rate" "from_currency" "to_currency" "rate" "date")))))
 
 (t/deftest convert-using-ecb
@@ -56,8 +58,7 @@
     (t/is (= :gbp (core/get-currency converted)))
     (t/is (= 1M (BigDecimal/.setScale (core/get-amount converted-back) 15 BigDecimal/ROUND_HALF_UP)))
     (t/is (= :eur (core/get-currency converted-back)))
-    (t/is (= 1M (core/get-amount m1-again)))
-    (t/is (= :eur (core/get-currency m1-again)))
+    (t/is (= (core/money-of 1M :eur) m1-again))
     (t/is (thrown? ExceptionInfo (sut/convert-using-ecb (core/money-of 1 :gbp) :jpy query-date)))
     (t/is (thrown? ExceptionInfo (sut/convert-using-ecb m1 :gbp (LocalDate/of 2024 1 1))))
     (t/is (thrown? ExceptionInfo (sut/convert-using-ecb m1 :invalid query-date))))
@@ -72,8 +73,7 @@
     (t/is (= :gbp (core/get-currency converted)))
     (t/is (= 1M (BigDecimal/.setScale (core/get-amount converted-back) 15 BigDecimal/ROUND_HALF_UP)))
     (t/is (= :eur (core/get-currency converted-back)))
-    (t/is (= 1M (core/get-amount m1-again)))
-    (t/is (= :eur (core/get-currency m1-again)))
+    (t/is (= (core/money-of 1M :eur) m1-again))
     (t/is (thrown? ExceptionInfo (sut/convert-using-ecb (core/money-of 1 :gbp) :jpy query-date)))
     (t/is (thrown? ExceptionInfo (sut/convert-using-ecb m1 :gbp (LocalDate/.minusDays query-date 1))))
     (t/is (thrown? ExceptionInfo (sut/convert-using-ecb m1 :invalid query-date)))))
@@ -88,8 +88,7 @@
     (t/is (= :eur (core/get-currency converted)))
     (t/is (= 1M (BigDecimal/.setScale (core/get-amount converted-back) 2 BigDecimal/ROUND_HALF_UP)))
     (t/is (= :btc (core/get-currency converted-back)))
-    (t/is (= 1M (core/get-amount m1-again)))
-    (t/is (= :btc (core/get-currency m1-again)))
+    (t/is (= (core/money-of 1M :btc) m1-again))
     (t/is (thrown? ExceptionInfo (sut/convert-using-coinbase m1 :invalid))))
   ;; historical rates
   (let [m1 (core/money-of 1M :btc)
@@ -101,6 +100,5 @@
     (t/is (= :eur (core/get-currency converted)))
     (t/is (= 1M (BigDecimal/.setScale (core/get-amount converted-back) 2 BigDecimal/ROUND_HALF_UP)))
     (t/is (= :btc (core/get-currency converted-back)))
-    (t/is (= 1M (core/get-amount m1-again)))
-    (t/is (= :btc (core/get-currency m1-again)))
+    (t/is (= (core/money-of 1M :btc) m1-again))
     (t/is (thrown? ExceptionInfo (sut/convert-using-coinbase m1 :invalid)))))
