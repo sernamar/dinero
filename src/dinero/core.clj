@@ -268,14 +268,14 @@
 (defmethod multiply Money
   [money factor]
   (let [amount (get-amount money)
-        product (* amount factor)
+        product (* amount (bigdec factor))
         currency (get-currency money)]
     (money-of product currency)))
 
 (defmethod multiply RoundedMoney
   [money factor]
   (let [amount (get-amount money)
-        product (* amount factor)
+        product (* amount (bigdec factor))
         currency (get-currency money)
         scale (get-scale money)
         rounding-mode (get-rounding-mode money)]
@@ -284,14 +284,14 @@
 (defmethod divide Money
   [money divisor]
   (let [amount (get-amount money)
-        quotient (/ amount divisor)
+        quotient (/ amount (bigdec divisor))
         currency (get-currency money)]
     (money-of quotient currency)))
 
 (defmethod divide RoundedMoney
   [money divisor]
   (let [amount (get-amount money)
-        quotient (/ amount divisor)
+        quotient (/ amount (bigdec divisor))
         currency (get-currency money)
         scale (get-scale money)
         rounding-mode (get-rounding-mode money)]
