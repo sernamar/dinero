@@ -201,7 +201,7 @@
 
 (defmulti divide
   "Divides the given monetary amount by the given divisor."
-  {:arglists '([moeny divisor])}
+  {:arglists '([money divisor])}
   (fn [money _divisor]
     (class money)))
 
