@@ -17,12 +17,12 @@
 (defn rounded-money-simulation
   [money]
   (-> money
-      (core/add (core/rounded-money-of 1234567.3444 :eur 2 :half-up))
-      (core/subtract (core/rounded-money-of 232323 :eur 2 :half-up))
+      (core/add (core/rounded-money-of 1234567.3444 :eur 2 :half-even))
+      (core/subtract (core/rounded-money-of 232323 :eur 2 :half-even))
       (core/multiply 3.4)
       (core/divide 5.456)))
 
 (time
- (reduce (fn [acc _] (rounded-money-simulation acc)) (core/rounded-money-of 0 :eur 2 :half-up) (range 1000000)))
+ (reduce (fn [acc _] (rounded-money-simulation acc)) (core/rounded-money-of 0 :eur 2 :half-even) (range 1000000)))
 ;; => "Elapsed time: 7031.994195 msecs"
-;; => {:amount 1657407.95M, :currency :eur, :scale 2, :rounding-mode :half-up}
+;; => {:amount 1657407.95M, :currency :eur, :scale 2, :rounding-mode :half-even}

@@ -30,7 +30,7 @@
         m2 (core/money-of 1 :btc)
         germany Locale/GERMANY]
     (t/is (= "1.234,57 €" (sut/format-money m1 {:locale germany
-                                                :rounding-mode :half-up
+                                                :rounding-mode :half-even
                                                 :decimal-places 2})))
     (t/is (= "1.234,56 €" (sut/format-money m1 {:locale germany
                                                 :rounding-mode :down
@@ -39,19 +39,19 @@
                                              :rounding-mode :down
                                              :decimal-places 0})))
     (t/is (= "1.234,57 €" (sut/format-money m1 {:locale germany
-                                                :rounding-mode :half-up
+                                                :rounding-mode :half-even
                                                 :decimal-places 2
                                                 :symbol-style :symbol})))
     (t/is (= "1.234,57 EUR" (sut/format-money m1 {:locale germany
-                                                  :rounding-mode :half-up
+                                                  :rounding-mode :half-even
                                                   :decimal-places 2
                                                   :symbol-style :code})))
     (t/is (= "1,00 ₿" (sut/format-money m2 {:locale germany
-                                            :rounding-mode :half-up
+                                            :rounding-mode :half-even
                                             :decimal-places 2
                                             :symbol-style :symbol})))
     (t/is (= "1,00 BTC" (sut/format-money m2 {:locale germany
-                                              :rounding-mode :half-up
+                                              :rounding-mode :half-even
                                               :decimal-places 2
                                               :symbol-style :code})))))
 
@@ -65,5 +65,5 @@
     (t/is (= "1.234,568 €" (sut/format-money-with-pattern money "#,##0.000 ¤" {:locale germany})))
     (t/is (= "1,234.57 £" (sut/format-money-with-pattern money "#,##0.00 ¤" {:locale uk})))
     (t/is (= "1,234.57 GBP" (sut/format-money-with-pattern money "#,##0.00 ¤¤" {:locale uk})))
-    (t/is (= "1.234,57 €" (sut/format-money-with-pattern money "#,##0.00 ¤" {:locale germany :rounding-mode :half-up})))
+    (t/is (= "1.234,57 €" (sut/format-money-with-pattern money "#,##0.00 ¤" {:locale germany :rounding-mode :half-even})))
     (t/is (= "1.234,56 €" (sut/format-money-with-pattern money "#,##0.00 ¤" {:locale germany :rounding-mode :down})))))
