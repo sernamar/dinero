@@ -31,14 +31,15 @@
 (defn parse-string-with-symbol-or-code
   "Parses a monetary string using currency symbol or code."
   [string locale currency]
-  (try
-    (let [formatter (make-formatter locale currency :symbol)
-          amount (DecimalFormat/.parse ^DecimalFormat formatter string)]
-      (core/money-of amount currency))
-    (catch Exception _e
-      (let [formatter (make-formatter locale currency :code)
+  (let [string (str/replace string #"\s+" " ")] ; replace regular spaces with a non-breaking space
+    (try
+      (let [formatter (make-formatter locale currency :symbol)
             amount (DecimalFormat/.parse ^DecimalFormat formatter string)]
-        (core/money-of amount currency)))))
+        (core/money-of amount currency))
+      (catch Exception _e
+        (let [formatter (make-formatter locale currency :code)
+              amount (DecimalFormat/.parse ^DecimalFormat formatter string)]
+          (core/money-of amount currency))))))
 
 (defn attempt-parse-string-with-multiple-currencies
   "Tries to parse a monetary string using a list of currencies."
