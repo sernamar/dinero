@@ -1,6 +1,7 @@
 (ns dinero.core
   (:require [dinero.currency :as currency]
-            [dinero.utils :as utils])
+            [dinero.utils :as utils]
+            [clojure.pprint :as pp])
   (:import [java.math RoundingMode]))
 
 (set! *warn-on-reflection* true)
@@ -17,6 +18,13 @@
 (defrecord Money [amount currency])
 
 (defrecord RoundedMoney [amount currency scale rounding-mode])
+
+(defrecord FastMoney [amount currency scale])
+
+(defmethod pp/simple-dispatch FastMoney [money]
+  (let [{:keys [amount currency scale]} money
+        amount (BigDecimal/.stripTrailingZeros (BigDecimal/valueOf amount scale))]
+    (print {:amount amount :currency currency})))
 
 (defn money-of
   "Creates a monetary amount with the given amount and currency."
@@ -50,6 +58,19 @@
                     scale
                     rounding-mode))))
 
+(defn fast-money-of
+  "Creates a fast monetary amount with the given amount and currency."
+  ([]
+   (fast-money-of 0 *default-currency*))
+  ([amount]
+   (fast-money-of amount *default-currency*))
+  ([amount currency]
+   (currency/assert-currency currency)
+   (let [extra-decimals 3
+         scale (+ (currency/get-minor-units currency) extra-decimals)
+         amount (-> amount bigdec (BigDecimal/.movePointRight scale) BigDecimal/.longValueExact)]
+     (FastMoney. amount currency scale))))
+
 (defn money?
   "Returns true if the given value is a monetary amount of type `Money`."
   [money]
@@ -60,10 +81,18 @@
   [money]
   (instance? RoundedMoney money))
 
+(defn fast-money?
+  "Returns true if the given value is a monetary amount of type `FastMoney`."
+  [money]
+  (instance? FastMoney money))
+
 (defn get-amount
   "Returns the amount of the given monetary amount."
   [money]
-  (:amount money))
+  (if (fast-money? money)
+    (let [{:keys [amount scale]} money]
+      (BigDecimal/valueOf amount scale))
+    (:amount money)))
 
 (defn get-currency
   "Returns the currency of the given monetary amount."
@@ -71,7 +100,7 @@
   (:currency money))
 
 (defn get-scale
-  "Returns the scale of the given rounded monetary amount."
+  "Returns the scale of the given monetary amount."
   [money]
   (:scale money))
 
@@ -101,17 +130,17 @@
     (throw (ex-info "Currencies do not match" {:currencies (map get-currency moneis)}))))
 
 (defn- same-scale?
-  "Returns true if all the given rounded monetary amounts have the same scale."
-  [& rounded-moneis]
-  (when (some nil? rounded-moneis)
+  "Returns true if all the given monetary amounts have the same scale."
+  [& moneis]
+  (when (some nil? moneis)
     (throw (ex-info "Scale must be non-nil" {})))
-  (apply = (map get-scale rounded-moneis)))
+  (apply = (map get-scale moneis)))
 
 (defn- assert-same-scale
-  "Asserts that all the given rounded monetary amounts have the same scale."
-  [& rounded-moneis]
-  (when-not (apply same-scale? rounded-moneis)
-    (throw (ex-info "Scales do not match" {:scales (map get-scale rounded-moneis)}))))
+  "Asserts that all the given monetary amounts have the same scale."
+  [& moneis]
+  (when-not (apply same-scale? moneis)
+    (throw (ex-info "Scales do not match" {:scales (map get-scale moneis)}))))
 
 (defn- same-rounding-mode?
   "Returns true if all the given rounded monetary amounts have the same rounding mode."
@@ -181,16 +210,18 @@
   "Adds the given monetary amounts."
   {:arglists '([& moneis])}
   (fn [& moneis]
-    (if (some money? moneis)
-      Money
+    (condp some moneis
+      money? Money
+      fast-money? FastMoney
       RoundedMoney)))
 
 (defmulti subtract
   "Subtracts the given monetary amounts."
   {:arglists '([& moneis])}
   (fn [& moneis]
-    (if (some money? moneis)
-      Money
+    (condp some moneis
+      money? Money
+      fast-money? FastMoney
       RoundedMoney)))
 
 (defmulti multiply
@@ -219,16 +250,18 @@
   "Returns the maximum of the given monetary amounts."
   {:arglists '([& moneis])}
   (fn [& moneis]
-    (if (some money? moneis)
-      Money
+    (condp some moneis
+      money? Money
+      fast-money? FastMoney
       RoundedMoney)))
 
 (defmulti money-min
   "Returns the minimum of the given monetary amounts."
   {:arglists '([& moneis])}
   (fn [& moneis]
-    (if (some money? moneis)
-      Money
+    (condp some moneis
+      money? Money
+      fast-money? FastMoney
       RoundedMoney)))
 
 (defmethod add Money
@@ -248,6 +281,11 @@
           rounding-mode (get-rounding-mode (first moneis))]
       (rounded-money-of sum currency scale rounding-mode))))
 
+;; TODO: Implement `add` for `FastMoney`
+(defmethod add FastMoney
+  [& moneis]
+  :not-implemented)
+
 (defmethod subtract Money
   [& moneis]
   (apply assert-same-currency moneis)
@@ -265,6 +303,11 @@
           rounding-mode (get-rounding-mode (first moneis))]
       (rounded-money-of difference currency scale rounding-mode))))
 
+;; TODO: Implement `subtract` for `FastMoney`
+(defmethod subtract FastMoney
+  [& moneis]
+  :not-implemented)
+
 (defmethod multiply Money
   [money factor]
   (let [amount (get-amount money)
@@ -280,6 +323,11 @@
         scale (get-scale money)
         rounding-mode (get-rounding-mode money)]
     (rounded-money-of product currency scale rounding-mode)))
+
+;; TODO: Implement `multiply` for `FastMoney`
+(defmethod multiply FastMoney
+  [money factor]
+  :not-implemented)
 
 (defmethod divide Money
   [money divisor]
@@ -300,21 +348,33 @@
         quotient (BigDecimal/.divide ^BigDecimal amount (bigdec divisor) ^int scale ^RoundingMode rounding-mode-object)]
     (rounded-money-of (BigDecimal/.stripTrailingZeros quotient) currency scale rounding-mode)))
 
+;; TODO: Implement `divide` for `FastMoney`
+(defmethod divide FastMoney
+  [money divisor]
+  :not-implemented)
+
 (defmethod negate Money
   [money]
   (let [amount (get-amount money)
-        negated (BigDecimal/.negate amount)
+        negated (- amount)
         currency (get-currency money)]
     (money-of negated currency)))
 
 (defmethod negate RoundedMoney
   [money]
   (let [amount (get-amount money)
-        negated (BigDecimal/.negate amount)
+        negated (- amount)
         currency (get-currency money)
         scale (get-scale money)
         rounding-mode (get-rounding-mode money)]
     (rounded-money-of negated currency scale rounding-mode)))
+
+(defmethod negate FastMoney
+  [money]
+  (let [amount (get-amount money)
+        negated (- amount)
+        currency (get-currency money)]
+    (fast-money-of negated currency)))
 
 (defmethod money-abs Money
   [money]
@@ -332,6 +392,13 @@
         rounding-mode (get-rounding-mode money)]
     (rounded-money-of absolute currency scale rounding-mode)))
 
+(defmethod money-abs FastMoney
+  [money]
+  (let [amount (get-amount money)
+        absolute (abs amount)
+        currency (get-currency money)]
+    (fast-money-of absolute currency)))
+
 (defmethod money-max Money
   [& moneis]
   (apply assert-same-currency moneis)
@@ -344,11 +411,19 @@
   [& moneis]
   (apply assert-same-currency-scale-and-rounding-mode moneis)
   (let [amounts (map get-amount moneis)
-          max-amount (apply max amounts)
-          currency (get-currency (first moneis))
-          scale (get-scale (first moneis))
-          rounding-mode (get-rounding-mode (first moneis))]
-      (rounded-money-of max-amount currency scale rounding-mode)))
+        max-amount (apply max amounts)
+        currency (get-currency (first moneis))
+        scale (get-scale (first moneis))
+        rounding-mode (get-rounding-mode (first moneis))]
+    (rounded-money-of max-amount currency scale rounding-mode)))
+
+(defmethod money-max FastMoney
+  [& moneis]
+  (apply assert-same-currency moneis)
+  (let [amounts (map get-amount moneis)
+        max-amount (apply max amounts)
+        currency (get-currency (first moneis))]
+    (fast-money-of max-amount currency)))
 
 (defmethod money-min Money
   [& moneis]
@@ -367,3 +442,11 @@
         scale (get-scale (first moneis))
         rounding-mode (get-rounding-mode (first moneis))]
     (rounded-money-of min-amount currency scale rounding-mode)))
+
+(defmethod money-min FastMoney
+  [& moneis]
+  (apply assert-same-currency moneis)
+  (let [amounts (map get-amount moneis)
+        min-amount (apply min amounts)
+        currency (get-currency (first moneis))]
+    (fast-money-of min-amount currency)))

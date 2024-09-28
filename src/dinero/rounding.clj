@@ -15,8 +15,15 @@
          currency (core/get-currency money)
          rounding-mode-object (utils/keyword->rounding-mode rounding-mode)
          rounded (BigDecimal/.setScale ^BigDecimal amount ^int decimal-places ^RoundingMode rounding-mode-object)]
-     (if (core/money? money)
+     (cond
+       ;; money
+       (core/money? money)
        (core/money-of rounded currency)
+       ;; fast money
+       (core/fast-money? money)
+       (core/fast-money-of rounded currency)
+       ;; rounded money
+       :else
        (core/rounded-money-of rounded currency decimal-places rounding-mode)))))
 
 (defn chf-rounding-fn
@@ -28,6 +35,13 @@
         rounded (BigDecimal/.multiply
                  (BigDecimal/.divide ^BigDecimal amount (bigdec 0.05) scale RoundingMode/HALF_UP)
                  (bigdec 0.05))]
-    (if (core/money? money)
+    (cond
+      ;; money
+      (core/money? money)
       (core/money-of rounded currency)
+      ;; fast money
+      (core/fast-money? money)
+      (core/fast-money-of rounded currency)
+      ;; rounded money
+      :else
       (core/rounded-money-of rounded currency 2 :half-up))))

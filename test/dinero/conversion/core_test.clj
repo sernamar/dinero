@@ -9,11 +9,18 @@
            [java.time.format DateTimeFormatter]))
 
 (t/deftest convert-using-exchange-rate
+  ;; money
   (let [money (core/money-of 1M :eur)
         term-currency :gbp
         exchange-rate 0.80
         converted (sut/convert-using-exchange-rate money term-currency exchange-rate)]
     (t/is (= (core/money-of 0.80 :gbp) converted)))
+  ;; fast money
+  (let [money (core/fast-money-of 1M :eur)
+        term-currency :gbp
+        exchange-rate 0.80
+        converted (sut/convert-using-exchange-rate money term-currency exchange-rate)]
+    (t/is (= (core/fast-money-of 0.80 :gbp) converted)))
   ;; rounded money
   (let [money (core/rounded-money-of 1M :eur)
         term-currency :gbp

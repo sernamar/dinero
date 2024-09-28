@@ -34,6 +34,22 @@
     (t/is (= :down (sut/get-rounding-mode m2)))
     (t/is (thrown? ExceptionInfo (sut/rounded-money-of 1234.5678 :eur -1 :down)))))
 
+(t/deftest fast-money-of
+  (let [m1 (sut/fast-money-of 1 :eur)
+        m2 (sut/fast-money-of 1.0 :eur)
+        m3 (sut/fast-money-of 1M :eur)
+        m4 (sut/fast-money-of "1" :eur)]
+    (t/is (= 1M (sut/get-amount m1)))
+    (t/is (= 1M (sut/get-amount m2)))
+    (t/is (= 1M (sut/get-amount m3)))
+    (t/is (= 1M (sut/get-amount m4)))
+    (t/is (= :eur (sut/get-currency m1)))
+    (t/is (= :eur (sut/get-currency m2)))
+    (t/is (= :eur (sut/get-currency m3)))
+    (t/is (= :eur (sut/get-currency m4)))
+    (t/is (thrown? ExceptionInfo (sut/fast-money-of 1 nil)))
+    (t/is (thrown? ExceptionInfo (sut/fast-money-of 1 :unknown-currency)))))
+
 ;;; Equality and comparison
 
 (t/deftest comparison
@@ -95,6 +111,10 @@
         m3 (sut/rounded-money-of 1.555 :eur 2 :up)]
     (t/is (= (sut/rounded-money-of 3.1 :eur 2 :down) (sut/add m1 m2)))
     (t/is (thrown? ExceptionInfo (sut/add m1 m3))))
+  ;; fast money
+  (let [m1 (sut/fast-money-of 1 :eur)
+        m2 (sut/fast-money-of 2 :eur)]
+    (t/is (= (sut/fast-money-of 3 :eur) (sut/add m1 m2))))
   ;; mixed money and rounded money
   (let [m1 (sut/money-of 1 :eur)
         m2 (sut/rounded-money-of 1 :eur)]
@@ -114,6 +134,10 @@
         m3 (sut/rounded-money-of 1.555 :eur 2 :up)]
     (t/is (= (sut/rounded-money-of 0 :eur 2 :down) (sut/subtract m1 m2)))
     (t/is (thrown? ExceptionInfo (sut/subtract m1 m3))))
+  ;; fast money
+  (let [m1 (sut/fast-money-of 3 :eur)
+        m2 (sut/fast-money-of 2 :eur)]
+    (t/is (= (sut/fast-money-of 1 :eur) (sut/subtract m1 m2))))
   ;; mixed money and rounded money
   (let [m1 (sut/money-of 1 :eur)
         m2 (sut/rounded-money-of 1 :eur)]
@@ -127,7 +151,11 @@
   ;; rounded money
   (let [money (sut/rounded-money-of 1.555 :eur 2 :down)
         factor 2]
-    (t/is (= (sut/rounded-money-of 3.1 :eur 2 :down) (sut/multiply money factor)))))
+    (t/is (= (sut/rounded-money-of 3.1 :eur 2 :down) (sut/multiply money factor))))
+  ;; fast money
+  (let [money (sut/fast-money-of 1 :eur)
+        factor 2]
+    (t/is (= (sut/fast-money-of 2 :eur) (sut/multiply money factor)))))
 
 (t/deftest divide
   ;; money
@@ -144,7 +172,11 @@
   ;; rounded money
   (let [money (sut/rounded-money-of 1.555 :eur 2 :down)
         divisor 2]
-    (t/is (= (sut/rounded-money-of 0.77 :eur 2 :down) (sut/divide money divisor)))))
+    (t/is (= (sut/rounded-money-of 0.77 :eur 2 :down) (sut/divide money divisor))))
+  ;; fast money
+  (let [money (sut/fast-money-of 2 :eur)
+        divisor 2]
+    (t/is (= (sut/fast-money-of 1 :eur) (sut/divide money divisor)))))
 
 (t/deftest negate
   ;; money
@@ -154,6 +186,10 @@
   ;; rounded money
   (let [m1 (sut/rounded-money-of 1.555 :eur 2 :down)
         m2 (sut/rounded-money-of -1.555 :eur 2 :down)]
+    (t/is (= m2 (sut/negate m1))))
+  ;; fast money
+  (let [m1 (sut/fast-money-of 1 :eur)
+        m2 (sut/fast-money-of -1 :eur)]
     (t/is (= m2 (sut/negate m1)))))
 
 (t/deftest money-abs
@@ -164,6 +200,10 @@
   ;; rounded money
   (let [m1 (sut/rounded-money-of 1.555 :eur 2 :down)
         m2 (sut/rounded-money-of -1.555 :eur 2 :down)]
+    (t/is (= m1 (sut/money-abs m2))))
+  ;; fast money
+  (let [m1 (sut/fast-money-of 1 :eur)
+        m2 (sut/fast-money-of -1 :eur)]
     (t/is (= m1 (sut/money-abs m2)))))
 
 (t/deftest money-max
@@ -184,6 +224,14 @@
     (t/is (= m3 (sut/money-max m1 m2 m3)))
     (t/is (thrown? ExceptionInfo (sut/money-max m1 m4)))
     (t/is (thrown? ExceptionInfo (sut/money-max m1 m5))))
+  ;; fast money
+  (let [m1 (sut/fast-money-of 1 :eur)
+        m2 (sut/fast-money-of 2 :eur)
+        m3 (sut/fast-money-of 3 :eur)]
+    (t/is (= m2 (sut/money-max m1 m2)))
+    (t/is (= m3 (sut/money-max m1 m2 m3)))
+    (t/is (thrown? ExceptionInfo (sut/money-max m1 (sut/money-of 1 :gbp))))
+    (t/is (thrown? ExceptionInfo (sut/money-max m1 (sut/fast-money-of 1 :gbp)))))
   ;; mixed money and rounded money
   (let [m1 (sut/money-of 1 :eur)
         m2 (sut/rounded-money-of 1 :eur)
@@ -211,6 +259,16 @@
     (t/is (= m1 (sut/money-min m1 m2 m3)))
     (t/is (thrown? ExceptionInfo (sut/money-min m1 m4)))
     (t/is (thrown? ExceptionInfo (sut/money-min m1 m5))))
+  ;; fast money
+  (let [m1 (sut/fast-money-of 1 :eur)
+        m2 (sut/fast-money-of 2 :eur)
+        m3 (sut/fast-money-of 3 :eur)]
+    (t/is (= m1 (sut/money-min m1 m2)))
+    (t/is (= m1 (sut/money-min m1 m2 m3)))
+    (t/is (thrown? ExceptionInfo (sut/money-min m1 (sut/money-of 1 :gbp))))
+    (t/is (thrown? ExceptionInfo (sut/money-min m1 (sut/fast-money-of 1 :gbp))))
+    (t/is (thrown? ExceptionInfo (sut/money-min (sut/money-of 1 :gbp) m1)))
+    (t/is (thrown? ExceptionInfo (sut/money-min (sut/fast-money-of 1 :gbp) m1))))
   ;; mixed money and rounded money
   (let [m1 (sut/money-of 1 :eur)
         m2 (sut/rounded-money-of 1 :eur)
