@@ -28,9 +28,27 @@
     (DecimalFormat/.setDecimalFormatSymbols formatter symbols)
     formatter))
 
+(defn valid-grouping?
+  "Checks if the grouping is valid."
+  [string locale]
+  (let [formatter (DecimalFormat/getInstance locale)
+        symbols (DecimalFormat/.getDecimalFormatSymbols formatter)
+        grouping-separator (DecimalFormatSymbols/.getGroupingSeparator symbols)
+        grouping-size (DecimalFormat/.getGroupingSize formatter)
+        index (str/last-index-of string grouping-separator)]
+    (or (nil? index) ; return true if no grouping separator found
+        (= grouping-size (count (take-while Character/isDigit (subs string (inc index)))))))) ; count digits after grouping separator and check if it matches grouping size
+
+(defn assert-valid-grouping
+  "Asserts that the grouping is valid."
+  [string locale]
+  (when-not (valid-grouping? string locale)
+    (throw (ParseException. (str "Unparseable number: \"" string "\"") 0))))
+
 (defn parse-string-with-symbol-or-code
   "Parses a monetary string using currency symbol or code."
   [string locale currency]
+  (assert-valid-grouping string locale)
   (let [string (str/replace string #"\s+" " ")] ; replace regular spaces with a non-breaking space
     (try
       (let [formatter (make-formatter locale currency :symbol)
