@@ -15,4 +15,7 @@
          :exec-fn cognitect.test-runner.api/test}
   :splint {:extra-deps {io.github.noahtheduke/splint {:mvn/version "1.16.0"}
                         org.clojure/clojure {:mvn/version "1.11.1"}}
-           :main-opts ["-m" "noahtheduke.splint"]}}}
+           :main-opts ["-m" "noahtheduke.splint"]}
+  :build {:deps {io.github.clojure/tools.build {:mvn/version "0.10.5"}
+                 slipset/deps-deploy {:mvn/version "0.2.2"}}
+          :ns-default build}}}
