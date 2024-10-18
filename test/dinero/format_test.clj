@@ -5,27 +5,27 @@
   (:import [java.util Locale]))
 
 (t/deftest test-format-money
-  ;; different locales
-  (let [m1 (core/money-of 1 :eur)
-        m2 (core/money-of 1 :gbp)
-        m3 (core/money-of 1 :jpy)
-        m4 (core/money-of 1 :btc)
-        germany Locale/GERMANY
-        uk Locale/UK
-        japan Locale/JAPAN]
-    (t/is (= "1,00 €" (sut/format-money m1 {:locale germany})))
-    (t/is (= "1,00 £" (sut/format-money m2 {:locale germany})))
-    (t/is (= "1 ¥" (sut/format-money m3 {:locale germany})))
-    (t/is (= "1,00000000 ₿" (sut/format-money m4 {:locale germany})))
-    (t/is (= "€1.00" (sut/format-money m1 {:locale uk})))
-    (t/is (= "£1.00" (sut/format-money m2 {:locale uk})))
-    (t/is (= "JP¥1" (sut/format-money m3 {:locale uk})))
-    (t/is (= "₿1.00000000" (sut/format-money m4 {:locale uk})))
-    (t/is (= "€1.00" (sut/format-money m1 {:locale japan})))
-    (t/is (= "£1.00" (sut/format-money m2 {:locale japan})))
-    (t/is (= "￥1" (sut/format-money m3 {:locale japan})))
-    (t/is (= "₿1.00000000" (sut/format-money m4 {:locale japan}))))
-  ;; different formatting options
+  (t/testing "Different locales"
+    (let [m1 (core/money-of 1 :eur)
+          m2 (core/money-of 1 :gbp)
+          m3 (core/money-of 1 :jpy)
+          m4 (core/money-of 1 :btc)
+          germany Locale/GERMANY
+          uk Locale/UK
+          japan Locale/JAPAN]
+      (t/is (= "1,00 €" (sut/format-money m1 {:locale germany})))
+      (t/is (= "1,00 £" (sut/format-money m2 {:locale germany})))
+      (t/is (= "1 ¥" (sut/format-money m3 {:locale germany})))
+      (t/is (= "1,00000000 ₿" (sut/format-money m4 {:locale germany})))
+      (t/is (= "€1.00" (sut/format-money m1 {:locale uk})))
+      (t/is (= "£1.00" (sut/format-money m2 {:locale uk})))
+      (t/is (= "JP¥1" (sut/format-money m3 {:locale uk})))
+      (t/is (= "₿1.00000000" (sut/format-money m4 {:locale uk})))
+      (t/is (= "€1.00" (sut/format-money m1 {:locale japan})))
+      (t/is (= "£1.00" (sut/format-money m2 {:locale japan})))
+      (t/is (= "￥1" (sut/format-money m3 {:locale japan})))
+      (t/is (= "₿1.00000000" (sut/format-money m4 {:locale japan})))))
+  (t/testing "Different formatting options")
   (let [m1 (core/money-of 1234.5678 :eur)
         m2 (core/money-of 1 :btc)
         germany Locale/GERMANY]

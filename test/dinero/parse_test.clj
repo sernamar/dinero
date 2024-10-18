@@ -26,34 +26,34 @@
     (t/is (not (sut/valid-grouping? "£12,3456" uk)))))
 
 (t/deftest parse-string-with-symbol-or-code
-  ;; test using non-breaking space (U+00A0)
-  (let [m1 (core/money-of 1234.56 :eur)
-        m2 (core/money-of 1234.56 :gbp)
-        germany Locale/GERMANY
-        uk Locale/UK]
-    (t/is (= m1 (sut/parse-string-with-symbol-or-code "1.234,56 €" germany :eur)))
-    (t/is (= m1 (sut/parse-string-with-symbol-or-code "1.234,56 EUR" germany :eur)))
-    (t/is (= m2 (sut/parse-string-with-symbol-or-code "1.234,56 £" germany :gbp)))
-    (t/is (= m2 (sut/parse-string-with-symbol-or-code "1.234,56 GBP" germany :gbp)))
-    (t/is (= m2 (sut/parse-string-with-symbol-or-code "£1,234.56" uk :gbp)))
-    (t/is (= m2 (sut/parse-string-with-symbol-or-code "GBP1,234.56" uk :gbp)))
-    (t/is (thrown? ParseException (sut/parse-string-with-symbol-or-code "1.234,56 €" germany :gbp)))
-    (t/is (thrown? ParseException (sut/parse-string-with-symbol-or-code "£1,234.56" germany :gbp))))
-  ;; test using multiple regular spaces
-  (let [m1 (core/money-of 1234.56 :eur)
-        germany Locale/GERMANY]
-    (t/is (= m1 (sut/parse-string-with-symbol-or-code "1.234,56 €" germany :eur)))
-    (t/is (= m1 (sut/parse-string-with-symbol-or-code "1.234,56  €" germany :eur)))
-    (t/is (= m1 (sut/parse-string-with-symbol-or-code "1.234,56    €" germany :eur)))
-    (t/is (= m1 (sut/parse-string-with-symbol-or-code "1.234,56 EUR" germany :eur)))
-    (t/is (= m1 (sut/parse-string-with-symbol-or-code "1.234,56  EUR" germany :eur)))
-    (t/is (= m1 (sut/parse-string-with-symbol-or-code "1.234,56    EUR" germany :eur))))
-  ;; test invalid grouping
-  (let [germany Locale/GERMANY]
-    (t/is (thrown? ParseException (sut/parse-string-with-symbol-or-code "12.34 €" germany :eur)))
-    (t/is (thrown? ParseException (sut/parse-string-with-symbol-or-code "12.34 EUR" germany :eur)))
-    (t/is (thrown? ParseException (sut/parse-string-with-symbol-or-code "12.3456 €" germany :eur)))
-    (t/is (thrown? ParseException (sut/parse-string-with-symbol-or-code "12.3456 EUR" germany :eur)))))
+  (t/testing "Non-breaking space (U+00A0)"
+    (let [m1 (core/money-of 1234.56 :eur)
+          m2 (core/money-of 1234.56 :gbp)
+          germany Locale/GERMANY
+          uk Locale/UK]
+      (t/is (= m1 (sut/parse-string-with-symbol-or-code "1.234,56 €" germany :eur)))
+      (t/is (= m1 (sut/parse-string-with-symbol-or-code "1.234,56 EUR" germany :eur)))
+      (t/is (= m2 (sut/parse-string-with-symbol-or-code "1.234,56 £" germany :gbp)))
+      (t/is (= m2 (sut/parse-string-with-symbol-or-code "1.234,56 GBP" germany :gbp)))
+      (t/is (= m2 (sut/parse-string-with-symbol-or-code "£1,234.56" uk :gbp)))
+      (t/is (= m2 (sut/parse-string-with-symbol-or-code "GBP1,234.56" uk :gbp)))
+      (t/is (thrown? ParseException (sut/parse-string-with-symbol-or-code "1.234,56 €" germany :gbp)))
+      (t/is (thrown? ParseException (sut/parse-string-with-symbol-or-code "£1,234.56" germany :gbp)))))
+  (t/testing "Multiple regular spaces"
+    (let [m1 (core/money-of 1234.56 :eur)
+          germany Locale/GERMANY]
+      (t/is (= m1 (sut/parse-string-with-symbol-or-code "1.234,56 €" germany :eur)))
+      (t/is (= m1 (sut/parse-string-with-symbol-or-code "1.234,56  €" germany :eur)))
+      (t/is (= m1 (sut/parse-string-with-symbol-or-code "1.234,56    €" germany :eur)))
+      (t/is (= m1 (sut/parse-string-with-symbol-or-code "1.234,56 EUR" germany :eur)))
+      (t/is (= m1 (sut/parse-string-with-symbol-or-code "1.234,56  EUR" germany :eur)))
+      (t/is (= m1 (sut/parse-string-with-symbol-or-code "1.234,56    EUR" germany :eur)))))
+  (t/testing "Invalid grouping"
+    (let [germany Locale/GERMANY]
+      (t/is (thrown? ParseException (sut/parse-string-with-symbol-or-code "12.34 €" germany :eur)))
+      (t/is (thrown? ParseException (sut/parse-string-with-symbol-or-code "12.34 EUR" germany :eur)))
+      (t/is (thrown? ParseException (sut/parse-string-with-symbol-or-code "12.3456 €" germany :eur)))
+      (t/is (thrown? ParseException (sut/parse-string-with-symbol-or-code "12.3456 EUR" germany :eur))))))
 
 (t/deftest attempt-parse-string-with-multiple-currencies
   (let [m1 (core/money-of 1234.56 :eur)
@@ -91,6 +91,6 @@
     (t/is (= m3 (sut/parse-string "1.234,56 ₿" {:locale germany :try-all-currencies? true})))
     (t/is (= m3 (sut/parse-string "1.234,56 ₿" {:locale germany :currencies [:eur :gbp :btc]})))
     (t/is (thrown? ParseException (sut/parse-string "1,234.56 €" {:locale germany})))
-    ;; test invalid grouping
-    (t/is (thrown? ParseException (sut/parse-string "12.34 €" {:locale germany :currencies [:eur]})))
-    (t/is (thrown? ParseException (sut/parse-string "12.3456 €" {:locale germany :currencies [:eur]})))))
+    (t/testing "Invalid grouping"
+      (t/is (thrown? ParseException (sut/parse-string "12.34 €" {:locale germany :currencies [:eur]})))
+      (t/is (thrown? ParseException (sut/parse-string "12.3456 €" {:locale germany :currencies [:eur]}))))))

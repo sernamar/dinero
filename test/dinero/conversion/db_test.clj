@@ -19,13 +19,13 @@
     (t/is (= 0.80 (db-rate-provider :eur :gbp)))
     (t/is (= 1.25 (db-rate-provider :gbp :eur)))
     (t/is (thrown? ExceptionInfo (db-rate-provider :eur :jpy))))
-  ;; wrong db
-  (let [wrong-db (jdbc/get-datasource {:dbtype "h2:mem" :dbname "wrong_db"})
-        db-rate-provider (sut/create-db-rate-provider wrong-db "exchange_rate" "from_currency" "to_currency" "rate")]
-    (t/is (thrown? JdbcSQLSyntaxErrorException (db-rate-provider :eur :gbp))))
-  ;; wrong table name
-  (let [db-rate-provider (sut/create-db-rate-provider db "wrong_table_name" "from_currency" "to_currency" "rate")]
-    (t/is (thrown? JdbcSQLSyntaxErrorException (db-rate-provider :eur :gbp))))
-  ;; wrong column name
-  (let [db-rate-provider (sut/create-db-rate-provider db "exchange_rate" "wrong_column_name" "to_currency" "rate")]
-    (t/is (thrown? JdbcSQLSyntaxErrorException (db-rate-provider :eur :gbp)))))
+  (t/testing "Wrong db"
+    (let [wrong-db (jdbc/get-datasource {:dbtype "h2:mem" :dbname "wrong_db"})
+          db-rate-provider (sut/create-db-rate-provider wrong-db "exchange_rate" "from_currency" "to_currency" "rate")]
+      (t/is (thrown? JdbcSQLSyntaxErrorException (db-rate-provider :eur :gbp)))))
+  (t/testing "Wrong table name"
+    (let [db-rate-provider (sut/create-db-rate-provider db "wrong_table_name" "from_currency" "to_currency" "rate")]
+      (t/is (thrown? JdbcSQLSyntaxErrorException (db-rate-provider :eur :gbp)))))
+  (t/testing "Wrong column name"
+    (let [db-rate-provider (sut/create-db-rate-provider db "exchange_rate" "wrong_column_name" "to_currency" "rate")]
+      (t/is (thrown? JdbcSQLSyntaxErrorException (db-rate-provider :eur :gbp))))))
