@@ -50,7 +50,7 @@
   (let [amount (core/get-amount money)
         currency (core/get-currency money)
         locale (or locale (Locale/getDefault))
-        decimal-places (or decimal-places (currency/get-minor-units currency))
+        decimal-places (or decimal-places (currency/get-minor-units currency) (BigDecimal/.scale amount))
         rounding-mode (utils/keyword->rounding-mode (or rounding-mode core/*default-rounding-mode* :half-even))
         symbol-style (or symbol-style :symbol)
         formatter (make-formatter currency locale decimal-places rounding-mode)]

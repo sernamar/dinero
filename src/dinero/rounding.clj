@@ -7,7 +7,10 @@
 (defn round
   "Rounds the given monetary amount"
   ([money]
-   (round money (currency/get-minor-units (core/get-currency money)) (or core/*default-rounding-mode* :half-even)))
+   (let [minor-units (currency/get-minor-units (core/get-currency money))
+         decimal-places (or minor-units (BigDecimal/.scale (core/get-amount money)))
+         rounding-mode (or core/*default-rounding-mode* :half-even)]
+     (round money decimal-places rounding-mode)))
   ([money rounding-fn]
    (rounding-fn money))
   ([money decimal-places rounding-mode]

@@ -53,7 +53,13 @@
     (t/is (= "1,00 BTC" (sut/format-money m2 {:locale germany
                                               :rounding-mode :half-even
                                               :decimal-places 2
-                                              :symbol-style :code})))))
+                                              :symbol-style :code}))))
+  (t/testing "Currency with no minor units (`nil`)"
+    (let [money (core/money-of 1.23 :xau)
+          rounded-money (core/rounded-money-of 1.23 :xau)
+          germany Locale/GERMANY]
+      (t/is (= "1,23 XAU" (sut/format-money money {:locale germany})))
+      (t/is (= "1,23 XAU" (sut/format-money rounded-money {:locale germany}))))))
 
 (t/deftest format-money-with-pattern
   (let [money (core/money-of 1234.5678 :eur)

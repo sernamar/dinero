@@ -17,7 +17,12 @@
     (t/is (= (core/rounded-money-of 1234.57 :eur 2 :up) (sut/round money 2 :up)))
     (t/is (= (core/rounded-money-of 1234.57 :eur 2 :down) (sut/round money 2 :down)))
     (t/is (= (core/rounded-money-of 1235 :eur 0 :up) (sut/round money 0 :up)))
-    (t/is (= (core/rounded-money-of 1234 :eur 0 :down) (sut/round money 0 :down)))))
+    (t/is (= (core/rounded-money-of 1234 :eur 0 :down) (sut/round money 0 :down))))
+  (t/testing "Currency with no minor units (`nil`)"
+    (let [money (core/money-of 1.23 :xau)
+          rounded-money (core/rounded-money-of 1.23 :xau)]
+      (t/is (= 1.23M (core/get-amount (sut/round money))))
+      (t/is (= 1.23M (core/get-amount (sut/round rounded-money)))))))
 
 (t/deftest round-chf
   ;; money

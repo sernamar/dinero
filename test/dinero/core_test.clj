@@ -19,7 +19,12 @@
     (t/is (= :eur (sut/get-currency m3)))
     (t/is (= :eur (sut/get-currency m4))))
   (t/is (thrown? ExceptionInfo (sut/money-of 1 nil)))
-  (t/is (thrown? ExceptionInfo (sut/money-of 1 :unknown-currency))))
+  (t/is (thrown? ExceptionInfo (sut/money-of 1 :unknown-currency)))
+  (t/testing "Currency with no minor units (`nil`)"
+    (let [m1 (sut/money-of 1 :xau)
+          m2 (sut/money-of 1.23 :xau)]
+      (t/is (= 1M (sut/get-amount m1)))
+      (t/is (= 1.23M (sut/get-amount m2))))))
 
 (t/deftest rounded-money-of
   (let [m1 (sut/rounded-money-of 1234.5678 :eur 2 :down)
@@ -32,7 +37,14 @@
     (t/is (zero? (sut/get-scale m2)))
     (t/is (= :down (sut/get-rounding-mode m1)))
     (t/is (= :down (sut/get-rounding-mode m2)))
-    (t/is (thrown? ExceptionInfo (sut/rounded-money-of 1234.5678 :eur -1 :down)))))
+    (t/is (thrown? ExceptionInfo (sut/rounded-money-of 1234.5678 :eur -1 :down))))
+  (t/testing "Currency with no minor units (`nil`)"
+    (let [m1 (sut/rounded-money-of 1 :xau)
+          m2 (sut/rounded-money-of 1.23 :xau)]
+      (t/is (= 1M (sut/get-amount m1)))
+      (t/is (zero? (sut/get-scale m1)))
+      (t/is (= 1.23M (sut/get-amount m2)))
+      (t/is (= 2 (sut/get-scale m2))))))
 
 ;;; Equality and comparison
 

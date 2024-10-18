@@ -35,7 +35,9 @@
   ([amount]
    (rounded-money-of amount *default-currency*))
   ([amount currency]
-   (rounded-money-of amount currency (currency/get-minor-units currency) *default-rounding-mode*))
+   (let [minor-units (currency/get-minor-units currency)
+         scale (or minor-units (BigDecimal/.scale (bigdec amount)))]
+     (rounded-money-of amount currency scale *default-rounding-mode*)))
   ([amount currency scale]
    (rounded-money-of amount currency scale *default-rounding-mode*))
   ([amount currency scale rounding-mode]
