@@ -1,9 +1,9 @@
 (ns dinero.conversion.core-test
   (:require [dinero.conversion.core :as sut]
             [dinero.conversion.ecb :as ecb]
+            [dinero.conversion.test-helper :as h]
             [dinero.core :as core]
-            [clojure.test :as t]
-            [next.jdbc :as jdbc])
+            [clojure.test :as t])
   (:import [clojure.lang ExceptionInfo]
            [java.time LocalDate]
            [java.time.format DateTimeFormatter]))
@@ -22,30 +22,23 @@
           converted (sut/convert-using-exchange-rate money term-currency exchange-rate)]
       (t/is (= (core/rounded-money-of 0.80 :gbp) converted)))))
 
-(defn- create-db-for-testing
-  []
-  (let [db (jdbc/get-datasource {:dbtype "h2:mem" :dbname "core-test"})]
-    (jdbc/execute-one! db ["CREATE TABLE exchange_rate (from_currency VARCHAR(3), to_currency VARCHAR(3), rate DOUBLE, date DATE)"])
-    (jdbc/execute-one! db ["INSERT INTO exchange_rate (from_currency, to_currency, rate, date) VALUES ('EUR', 'GBP', 0.80, '2024-09-08')"])
-    db))
-
-(defonce db (create-db-for-testing))
+(t/use-fixtures :once h/db-fixture)
 
 (t/deftest convert-using-db
   (let [m1 (core/money-of 1M :eur)
-        converted (sut/convert-using-db m1 :gbp db "exchange_rate" "from_currency" "to_currency" "rate")
-        converted-back (sut/convert-using-db converted :eur db "exchange_rate" "from_currency" "to_currency" "rate") ; round trip
-        m1-again (sut/convert-using-db m1 :eur db "exchange_rate" "from_currency" "to_currency" "rate")] ; same currency
+        converted (sut/convert-using-db m1 :gbp h/db-spec "exchange_rate" "from_currency" "to_currency" "rate")
+        converted-back (sut/convert-using-db converted :eur h/db-spec "exchange_rate" "from_currency" "to_currency" "rate") ; round trip
+        m1-again (sut/convert-using-db m1 :eur h/db-spec "exchange_rate" "from_currency" "to_currency" "rate")] ; same currency
     (t/is (= (core/money-of 0.80 :gbp) converted))
     (t/is (= 1M (BigDecimal/.setScale (core/get-amount converted-back) 15 BigDecimal/ROUND_HALF_UP)))
     (t/is (= :eur (core/get-currency converted-back)))
     (t/is (= (core/money-of 1M :eur) m1-again))
-    (t/is (thrown? ExceptionInfo (sut/convert-using-db m1 :jpy db "exchange_rate" "from_currency" "to_currency" "rate"))))
+    (t/is (thrown? ExceptionInfo (sut/convert-using-db m1 :jpy h/db-spec "exchange_rate" "from_currency" "to_currency" "rate"))))
   (let [money (core/money-of 1M :eur)
         date (LocalDate/of 2024 9 8)
-        converted (sut/convert-using-db money :gbp date db "exchange_rate" "from_currency" "to_currency" "rate" "date")]
+        converted (sut/convert-using-db money :gbp date h/db-spec "exchange_rate" "from_currency" "to_currency" "rate" "date")]
     (t/is (= (core/money-of 0.80 :gbp) converted))
-    (t/is (thrown? ExceptionInfo (sut/convert-using-db money :gbp (LocalDate/of 2024 1 1) db "exchange_rate" "from_currency" "to_currency" "rate" "date")))))
+    (t/is (thrown? ExceptionInfo (sut/convert-using-db money :gbp (LocalDate/of 2024 1 1) h/db-spec "exchange_rate" "from_currency" "to_currency" "rate" "date")))))
 
 (t/deftest convert-using-ecb
   (t/testing "Current rates"
