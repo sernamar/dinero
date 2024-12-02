@@ -79,7 +79,7 @@
   [string & {:keys [locale currencies try-all-currencies?] :as _options}]
   (let [locale (or locale (Locale/getDefault))
         locale-currency (utils/get-locale-currency locale)
-        currencies (or currencies [core/*default-currency*] [locale-currency])
+        currencies (or currencies [core/*default-currency* locale-currency])
         try-all-currencies? (or try-all-currencies? false)]
     (try
       (attempt-parse-string-with-multiple-currencies string locale currencies)
