@@ -1,9 +1,10 @@
 (ns dinero.parse
   (:require [dinero.core :as core]
             [dinero.currency :as currency]
-            [clojure.string :as str])
+            [clojure.string :as str]
+            [dinero.utils :as utils])
   (:import [java.text DecimalFormat DecimalFormatSymbols ParseException]
-           [java.util Currency Locale]))
+           [java.util Locale]))
 
 (defn- get-currency-symbol
   "Returns the currency symbol or code for the given currency and locale."
@@ -77,9 +78,7 @@
   "Parses a monetary string with optional locale and currency settings."
   [string & {:keys [locale currencies try-all-currencies?] :as _options}]
   (let [locale (or locale (Locale/getDefault))
-        locale-currency (-> (Currency/.getCurrencyCode (Currency/getInstance locale))
-                            str/lower-case
-                            keyword)
+        locale-currency (utils/get-locale-currency locale)
         currencies (or currencies [core/*default-currency*] [locale-currency])
         try-all-currencies? (or try-all-currencies? false)]
     (try

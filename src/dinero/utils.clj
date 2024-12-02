@@ -2,7 +2,8 @@
   (:require [clojure.edn :as edn]
             [clojure.string :as str])
   (:import [java.io File]
-           [java.math RoundingMode]))
+           [java.math RoundingMode]
+           [java.util Currency]))
 
 (defn keyword->rounding-mode
   "Returns the rounding mode for the given keyword."
@@ -35,3 +36,12 @@
      (keyword? arg) (name arg)
      (symbol? arg) (name arg)
      :else (throw (ex-info "Invalid argument" {:arg arg})))))
+
+(defn get-locale-currency
+  "Returns the currency for the given locale."
+  [locale]
+  (-> locale
+      Currency/getInstance
+      Currency/.getCurrencyCode
+      str/lower-case
+      keyword))
