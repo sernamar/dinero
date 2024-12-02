@@ -77,20 +77,27 @@
     (t/is (thrown? ParseException (sut/attempt-parse-string-with-all-currencies "1,234.56 €" germany)))))
 
 (t/deftest parse-string
-  (let [m1 (core/money-of 1234.56 :eur)
-        m2 (core/money-of 1234.56 :gbp)
-        m3 (core/money-of 1234.56 :btc)
-        germany Locale/GERMANY]
-    (t/is (= m1 (sut/parse-string "1.234,56 €" {:locale germany})))
-    (t/is (= m1 (sut/parse-string "1.234,56 €" {:locale germany :currencies [:eur :gbp]})))
-    (t/is (= m1 (sut/parse-string "1.234,56 €" {:locale germany :currencies [:gbp :eur]})))
-    (t/is (thrown? ParseException (sut/parse-string "1.234,56 £" {:locale germany})))
-    (t/is (= m2 (sut/parse-string "1.234,56 £" {:locale germany :try-all-currencies? true})))
-    (t/is (= m2 (sut/parse-string "1.234,56 £" {:locale germany :currencies [:eur :gbp]})))
-    (t/is (thrown? ParseException (sut/parse-string "1.234,56 ₿" {:locale germany})))
-    (t/is (= m3 (sut/parse-string "1.234,56 ₿" {:locale germany :try-all-currencies? true})))
-    (t/is (= m3 (sut/parse-string "1.234,56 ₿" {:locale germany :currencies [:eur :gbp :btc]})))
-    (t/is (thrown? ParseException (sut/parse-string "1,234.56 €" {:locale germany})))
-    (t/testing "Invalid grouping"
+  (t/testing "Different currencies"
+      (let [m1 (core/money-of 1234.56 :eur)
+            m2 (core/money-of 1234.56 :gbp)
+            m3 (core/money-of 1234.56 :btc)
+            germany Locale/GERMANY]
+        (t/is (= m1 (sut/parse-string "1.234,56 €" {:locale germany})))
+        (t/is (= m1 (sut/parse-string "1.234,56 €" {:locale germany :currencies [:eur :gbp]})))
+        (t/is (= m1 (sut/parse-string "1.234,56 €" {:locale germany :currencies [:gbp :eur]})))
+        (t/is (thrown? ParseException (sut/parse-string "1.234,56 £" {:locale germany})))
+        (t/is (= m2 (sut/parse-string "1.234,56 £" {:locale germany :try-all-currencies? true})))
+        (t/is (= m2 (sut/parse-string "1.234,56 £" {:locale germany :currencies [:eur :gbp]})))
+        (t/is (thrown? ParseException (sut/parse-string "1.234,56 ₿" {:locale germany})))
+        (t/is (= m3 (sut/parse-string "1.234,56 ₿" {:locale germany :try-all-currencies? true})))
+        (t/is (= m3 (sut/parse-string "1.234,56 ₿" {:locale germany :currencies [:eur :gbp :btc]})))
+        (t/is (thrown? ParseException (sut/parse-string "1,234.56 €" {:locale germany})))))
+  (t/testing "Same symbol in different locales"
+    (let [us-dollars (core/money-of 1234.56 :usd)
+          canadian-dollars (core/money-of 1234.56 :cad)]
+      (t/is (= us-dollars (sut/parse-string "$1,234.56" {:locale Locale/US})))
+      (t/is (= canadian-dollars (sut/parse-string "$1,234.56" {:locale Locale/CANADA})))))
+  (t/testing "Invalid grouping"
+    (let [germany Locale/GERMANY]
       (t/is (thrown? ParseException (sut/parse-string "12.34 €" {:locale germany :currencies [:eur]})))
       (t/is (thrown? ParseException (sut/parse-string "12.3456 €" {:locale germany :currencies [:eur]}))))))
