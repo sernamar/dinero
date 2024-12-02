@@ -222,6 +222,14 @@ To parse a string representing a monetary amount, use the =parse-string= functio
   (parse/parse-string "1.234,56 ₿" {:locale java.util.Locale/GERMANY :currencies [:eur :gbp] :try-all-currencies? true})
   ;; => {:amount 1234.56M, :currency :btc}
 #+end_src
+The =parse-string= function is capable of differentiating between the same currency symbol used in different locales. For example, the dollar sign (=$=) represents both US dollars (=USD=) and Canadian dollars (=CAD=), depending on the locale:
+#+begin_src clojure
+  (parse/parse-string "$1,234.56" {:locale java.util.Locale/US})
+  ;; => {:amount 1234.56M, :currency :usd}
+
+  (parse/parse-string "$1,234.56" {:locale java.util.Locale/CANADA})
+  ;; => {:amount 1234.56M, :currency :cad}
+#+end_src
 If =parse-string= cannot recognize the format or the currency in the string, it throws a =java.text.ParseException=:
 #+begin_src clojure
   ;; unrecognized format for java.util.Locale/GERMANY
