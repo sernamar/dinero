@@ -1,7 +1,22 @@
-* dinero
+** dinero                                                          :noexport:
 [[https://clojars.org/io.github.sernamar/dinero][file:https://img.shields.io/clojars/v/io.github.sernamar/dinero.svg]]
 
 A Clojure library for working with money.
+** Table of contents :TOC_3:
+  - [[#introduction][Introduction]]
+  - [[#installation][Installation]]
+  - [[#configuration][Configuration]]
+  - [[#usage][Usage]]
+    - [[#monetary-amounts][Monetary amounts]]
+    - [[#currencies][Currencies]]
+    - [[#formatting][Formatting]]
+    - [[#parsing][Parsing]]
+    - [[#equality-and-comparison][Equality and comparison]]
+    - [[#arithmetic-operations][Arithmetic operations]]
+    - [[#rounding][Rounding]]
+    - [[#currency-conversion][Currency conversion]]
+  - [[#license][License]]
+
 ** Introduction
 /dinero/ is a Clojure library designed for managing monetary amounts and currencies. It offers support for precise arithmetic operations, formatting, and parsing, all tailored to different locales and currencies.
 
