@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>io.github.sernamar</groupId>
   <artifactId>dinero</artifactId>
-  <version>0.1.1</version>
+  <version>0.1.2</version>
   <name>io.github.sernamar/dinero</name>
   <description>A Clojure library for working with money</description>
   <url>https://github.com/sernamar/dinero</url>

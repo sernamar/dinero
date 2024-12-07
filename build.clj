@@ -3,7 +3,7 @@
             [deps-deploy.deps-deploy :as dd]))
 
 (def lib 'io.github.sernamar/dinero)
-(def version "0.1.1")
+(def version "0.1.2")
 
 (def target-dir "target/")
 (def class-dir (str target-dir "classes/"))
