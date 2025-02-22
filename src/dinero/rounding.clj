@@ -4,6 +4,8 @@
             [dinero.utils :as utils])
   (:import [java.math BigDecimal RoundingMode]))
 
+(set! *warn-on-reflection* true)
+
 (defn round
   "Rounds the given monetary amount"
   ([money]

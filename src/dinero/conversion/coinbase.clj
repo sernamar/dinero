@@ -2,6 +2,8 @@
   (:require [hato.client :as hato])
   (:import [clojure.lang ExceptionInfo]))
 
+(set! *warn-on-reflection* true)
+
 (defn current-rate-provider
   "Returns the exchange rate for the given currency pair from Coinbase."
   [from-currency to-currency]

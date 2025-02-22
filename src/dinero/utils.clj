@@ -3,7 +3,9 @@
             [clojure.string :as str])
   (:import [java.io File]
            [java.math RoundingMode]
-           [java.util Currency]))
+           [java.util Currency Locale]))
+
+(set! *warn-on-reflection* true)
 
 (defn keyword->rounding-mode
   "Returns the rounding mode for the given keyword."
@@ -40,8 +42,4 @@
 (defn get-locale-currency
   "Returns the currency for the given locale."
   [locale]
-  (-> locale
-      Currency/getInstance
-      Currency/.getCurrencyCode
-      str/lower-case
-      keyword))
+  (keyword (str/lower-case (Currency/.getCurrencyCode (Currency/getInstance ^Locale locale)))))

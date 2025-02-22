@@ -6,6 +6,8 @@
   (:import [java.text DecimalFormat DecimalFormatSymbols ParseException]
            [java.util Locale]))
 
+(set! *warn-on-reflection* true)
+
 (defn- get-currency-symbol
   "Returns the currency symbol or code for the given currency and locale."
   [locale currency currency-style]
@@ -38,7 +40,7 @@
         grouping-size (DecimalFormat/.getGroupingSize formatter)
         index (str/last-index-of string grouping-separator)]
     (or (nil? index) ; return true if no grouping separator found
-        (= grouping-size (count (take-while Character/isDigit (subs string (inc index)))))))) ; count digits after grouping separator and check if it matches grouping size
+        (= grouping-size (count (take-while #(Character/isDigit ^char %) (subs string (inc index)))))))) ; count digits after grouping separator and check if it matches grouping size
 
 (defn assert-valid-grouping
   "Asserts that the grouping is valid."

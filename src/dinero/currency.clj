@@ -4,6 +4,8 @@
             [dinero.utils :as utils])
   (:import [java.util Currency Locale]))
 
+(set! *warn-on-reflection* true)
+
 (defonce currencies (-> "currencies.edn" io/resource slurp edn/read-string))
 
 (defn get-currency-code
@@ -32,7 +34,9 @@
    (get-symbol currency (Locale/getDefault)))
   ([currency locale]
    (if (iso-4217? currency)
-     (-> currency utils/to-uppercase-string Currency/getInstance (Currency/.getSymbol locale))
+     (Currency/.getSymbol
+      (Currency/getInstance ^String (utils/to-uppercase-string currency))
+      locale)
      (get-in currencies [currency :symbol]))))
 
 (defn assert-currency

@@ -7,6 +7,8 @@
   (:import [java.text DecimalFormat DecimalFormatSymbols]
            [java.util Currency Locale]))
 
+(set! *warn-on-reflection* true)
+
 (defn- make-formatter
   "Creates a new formatter for the given currency, locale, rounding mode, and decimal places."
   [currency locale decimal-places rounding-mode]

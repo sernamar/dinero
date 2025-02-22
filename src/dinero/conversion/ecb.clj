@@ -3,6 +3,8 @@
             [clojure.xml :as xml])
   (:import [java.time LocalDate]))
 
+(set! *warn-on-reflection* true)
+
 (defn- currency-cube->map
   "Transforms a currency cube entry into a map."
   [cube]
