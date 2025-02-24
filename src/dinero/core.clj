@@ -47,7 +47,7 @@
          rounding-mode-object (utils/keyword->rounding-mode rounding-mode)]
      (when (neg? scale)
        (throw (ex-info "Scale must be non-negative" {:scale scale})))
-     (RoundedMoney. (BigDecimal/.setScale ^BigDecimal (bigdec amount) ^int scale ^RoundingMode rounding-mode-object)
+     (RoundedMoney. (BigDecimal/.stripTrailingZeros (BigDecimal/.setScale ^BigDecimal (bigdec amount) ^int scale ^RoundingMode rounding-mode-object))
                     currency
                     scale
                     rounding-mode))))
