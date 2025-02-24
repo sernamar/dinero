@@ -140,17 +140,23 @@
     (throw (ex-info "Currencies do not match" {:currencies (map get-currency moneis)}))))
 
 (defn- same-scale?
-  "Returns true if all the given rounded monetary amounts have the same scale."
-  [& rounded-moneis]
-  (when (some nil? rounded-moneis)
+  "Returns true if all the given monetary amounts have the same scale."
+  [& moneis]
+  (when (some nil? moneis)
     (throw (ex-info "Scale must be non-nil" {})))
-  (apply = (map get-scale rounded-moneis)))
+  (apply = (map get-scale moneis)))
 
 (defn- assert-same-scale
-  "Asserts that all the given rounded monetary amounts have the same scale."
-  [& rounded-moneis]
-  (when-not (apply same-scale? rounded-moneis)
-    (throw (ex-info "Scales do not match" {:scales (map get-scale rounded-moneis)}))))
+  "Asserts that all the given monetary amounts have the same scale."
+  [& moneis]
+  (when-not (apply same-scale? moneis)
+    (throw (ex-info "Scales do not match" {:scales (map get-scale moneis)}))))
+
+(defn- assert-same-currency-and-scale
+  "Asserts that all the given monetary amounts have the same currency and scale."
+  [& moneis]
+  (or (apply assert-same-currency moneis)
+      (apply assert-same-scale moneis)))
 
 (defn- same-rounding-mode?
   "Returns true if all the given rounded monetary amounts have the same rounding mode."
