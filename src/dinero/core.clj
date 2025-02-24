@@ -243,12 +243,11 @@
 (defmethod add RoundedMoney
   [& moneis]
   (apply assert-same-currency-scale-and-rounding-mode moneis)
-  (when-not (apply assert-same-scale-and-rounding-mode moneis)
-    (let [sum (reduce + (map get-amount moneis))
-          currency (get-currency (first moneis))
-          scale (get-scale (first moneis))
-          rounding-mode (get-rounding-mode (first moneis))]
-      (rounded-money-of sum currency scale rounding-mode))))
+  (let [sum (reduce + (map get-amount moneis))
+        currency (get-currency (first moneis))
+        scale (get-scale (first moneis))
+        rounding-mode (get-rounding-mode (first moneis))]
+    (rounded-money-of sum currency scale rounding-mode)))
 
 (defmethod subtract Money
   [& moneis]
@@ -260,12 +259,11 @@
 (defmethod subtract RoundedMoney
   [& moneis]
   (apply assert-same-currency-scale-and-rounding-mode moneis)
-  (when-not (apply assert-same-scale-and-rounding-mode moneis)
-    (let [difference (reduce - (map get-amount moneis))
-          currency (get-currency (first moneis))
-          scale (get-scale (first moneis))
-          rounding-mode (get-rounding-mode (first moneis))]
-      (rounded-money-of difference currency scale rounding-mode))))
+  (let [difference (reduce - (map get-amount moneis))
+        currency (get-currency (first moneis))
+        scale (get-scale (first moneis))
+        rounding-mode (get-rounding-mode (first moneis))]
+    (rounded-money-of difference currency scale rounding-mode)))
 
 (defmethod multiply Money
   [money factor]
