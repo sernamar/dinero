@@ -82,7 +82,7 @@
       (t/is (thrown? ExceptionInfo (sut/money<= m1 m4)))
       (t/is (thrown? ExceptionInfo (sut/money> m1 m4)))
       (t/is (thrown? ExceptionInfo (sut/money>= m1 m4)))))
-  (t/testing "Rounded money"
+  (t/testing "Rounded Money"
     (let [m1 (sut/rounded-money-of 1 :eur)
           m2 (sut/rounded-money-of 1 :eur)
           m3 (sut/rounded-money-of 2 :eur)
@@ -101,15 +101,43 @@
       (t/is (sut/money< m1 m2))
       (t/is (sut/money<= m1 m2))
       (t/is (sut/money> m2 m1))
-      (t/is (sut/money>= m2 m1)))))
+      (t/is (sut/money>= m2 m1))))
+  (t/testing "Fast Money"
+    (let [m1 (sut/fast-money-of 1 :eur)
+          m2 (sut/fast-money-of 1 :eur)
+          m3 (sut/fast-money-of 2 :eur)
+          m4 (sut/fast-money-of 1 :gbp)]
+      (t/is (sut/money< m1 m3))
+      (t/is (sut/money<= m1 m2))
+      (t/is (sut/money> m3 m1))
+      (t/is (sut/money>= m3 m2))
+      (t/is (thrown? ExceptionInfo (sut/money< m1 m4)))
+      (t/is (thrown? ExceptionInfo (sut/money<= m1 m4)))
+      (t/is (thrown? ExceptionInfo (sut/money> m1 m4)))
+      (t/is (thrown? ExceptionInfo (sut/money>= m1 m4))))))
 
 (t/deftest sign-operations
-  (let [m1 (sut/money-of 0 :eur)
-        m2 (sut/money-of 1 :eur)
-        m3 (sut/money-of -1 :eur)]
-    (t/is (sut/money-zero? m1))
-    (t/is (sut/money-pos? m2))
-    (t/is (sut/money-neg? m3))))
+  (t/testing "Money"
+    (let [m1 (sut/money-of 0 :eur)
+          m2 (sut/money-of 1 :eur)
+          m3 (sut/money-of -1 :eur)]
+      (t/is (sut/money-zero? m1))
+      (t/is (sut/money-pos? m2))
+      (t/is (sut/money-neg? m3))))
+  (t/testing "Rounded Money"
+    (let [m1 (sut/rounded-money-of 0 :eur 2 :down)
+          m2 (sut/rounded-money-of 1 :eur 2 :down)
+          m3 (sut/rounded-money-of -1 :eur 2 :down)]
+      (t/is (sut/money-zero? m1))
+      (t/is (sut/money-pos? m2))
+      (t/is (sut/money-neg? m3))))
+  (t/testing "Fast Money"
+    (let [m1 (sut/fast-money-of 0 :eur)
+          m2 (sut/fast-money-of 1 :eur)
+          m3 (sut/fast-money-of -1 :eur)]
+      (t/is (sut/money-zero? m1))
+      (t/is (sut/money-pos? m2))
+      (t/is (sut/money-neg? m3)))))
 
 ;;; Arithmetic operations
 
