@@ -50,6 +50,17 @@
       (t/is (= 1.23M (sut/get-amount m2)))
       (t/is (= 2 (sut/get-scale m2))))))
 
+(t/deftest fast-money-of
+  (t/testing "Different amounts"
+    (let [m1 (sut/fast-money-of 1234 :eur)
+          m2 (sut/fast-money-of 1234.56 :eur)
+          m3 (sut/fast-money-of 1234.5678 :eur)]
+      (t/is (= 1234M (sut/get-amount m1)))
+      (t/is (= 1234.56M (sut/get-amount m2)))
+      (t/is (= 1234.5678M (sut/get-amount m3)))
+      (t/is (thrown? ExceptionInfo (sut/fast-money-of (dec (bigdec Long/MIN_VALUE)) :eur)))
+      (t/is (thrown? ExceptionInfo (sut/fast-money-of (inc (bigdec Long/MAX_VALUE)) :eur))))))
+
 ;;; Equality and comparison
 
 (t/deftest comparison

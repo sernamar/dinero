@@ -1,6 +1,7 @@
 (ns dinero.core
   (:require [dinero.currency :as currency]
-            [dinero.utils :as utils])
+            [dinero.utils :as utils]
+            [clojure.pprint :as pp])
   (:import [java.math RoundingMode]))
 
 (set! *warn-on-reflection* true)
@@ -12,11 +13,20 @@
 (def ^:dynamic *default-currency* (:default-currency config))
 (def ^:dynamic *default-rounding-mode* (:default-rounding-mode config))
 
+(def ^:private fast-money-max-scale 5)
+
 ;;; Monetary amounts
 
 (defrecord Money [amount currency])
 
 (defrecord RoundedMoney [amount currency scale rounding-mode])
+
+(defrecord FastMoney [amount currency scale])
+
+(defmethod pp/simple-dispatch FastMoney [money]
+  (let [{:keys [amount currency scale]} money
+        amount (BigDecimal/.stripTrailingZeros (BigDecimal/valueOf amount scale))]
+    (print {:amount amount :currency currency})))
 
 (defn money-of
   "Creates a monetary amount with the given amount and currency."
@@ -52,6 +62,24 @@
                     scale
                     rounding-mode))))
 
+(defn fast-money-of
+  "Creates a fast monetary amount with the given amount and currency."
+  ([]
+   (fast-money-of 0 *default-currency*))
+  ([amount]
+   (fast-money-of amount *default-currency*))
+  ([amount currency]
+   (let [amount (bigdec amount)
+         scale (BigDecimal/.scale amount)]
+     (when (> scale fast-money-max-scale)
+       (throw (ex-info "Scale exceeds the maximum allowed value" {:scale scale})))
+     (when (or (< amount (bigdec Long/MIN_VALUE)) (> amount (bigdec Long/MAX_VALUE)))
+       (throw (ex-info "Amount cannot be represented as `FastMoney` (based on `long`). Consider using `Money` (based on `BigDecimal`)"
+                       {:amount amount})))
+     (let [amount-scaled (BigDecimal/.movePointRight amount fast-money-max-scale)
+           amount-long (BigDecimal/.longValueExact amount-scaled)]
+       (FastMoney. amount-long currency fast-money-max-scale)))))
+
 (defn money?
   "Returns true if the given value is a monetary amount of type `Money`."
   [money]
@@ -62,10 +90,18 @@
   [money]
   (instance? RoundedMoney money))
 
+(defn fast-money?
+  "Returns true if the given value is a monetary amount of type `FastMoney`."
+  [money]
+  (instance? FastMoney money))
+
 (defn get-amount
   "Returns the amount of the given monetary amount."
   [money]
-  (:amount money))
+  (if (fast-money? money)
+    (let [{:keys [amount scale]} money]
+      (BigDecimal/.stripTrailingZeros (BigDecimal/valueOf amount scale)))
+    (:amount money)))
 
 (defn get-currency
   "Returns the currency of the given monetary amount."
@@ -73,7 +109,7 @@
   (:currency money))
 
 (defn get-scale
-  "Returns the scale of the given rounded monetary amount."
+  "Returns the scale of the given monetary amount."
   [money]
   (:scale money))
 
