@@ -358,10 +358,20 @@
         rounding-mode (get-rounding-mode money)]
     (rounded-money-of product currency scale rounding-mode)))
 
-;; TODO: Implement `multiply` for `FastMoney`
 (defmethod multiply FastMoney
   [money factor]
-  :not-implemented)
+  (let [amount-as-long (:amount money)
+        factor-scaled (to-fast-money-long factor)
+        product-scaled (try (* amount-as-long factor-scaled)
+                            (catch ArithmeticException e
+                              (throw (ex-info "`FastMoney` multiplication failed: amount exceeds precision of `FastMoney` (`long`-based). Consider using `Money` (`BigDecimal`-based) instead."
+                                              {:money money
+                                               :factor factor
+                                               :error (ex-message e)}))))
+        product (long (from-fast-money product-scaled fast-money-max-scale))
+        currency (get-currency money)]
+    ;; use `FastMoney` constructor directly instead of `fast-money-of` to improve performance
+    (FastMoney. product currency fast-money-max-scale)))
 
 (defmethod divide Money
   [money divisor]

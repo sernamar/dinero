@@ -210,12 +210,28 @@
 (t/deftest multiply
   (t/testing "Money"
     (let [money (sut/money-of 1 :eur)
-          factor 2]
-      (t/is (= (sut/money-of 2 :eur) (sut/multiply money factor)))))
+          factor-long 2
+          factor-double 2.5]
+      (t/is (= (sut/money-of 2 :eur) (sut/multiply money factor-long)))
+      (t/is (= (sut/money-of 2.5 :eur) (sut/multiply money factor-double)))))
   (t/testing "Rounded Money"
     (let [money (sut/rounded-money-of 1.555 :eur 2 :down)
-          factor 2]
-      (t/is (= (sut/rounded-money-of 3.1 :eur 2 :down) (sut/multiply money factor))))))
+          factor-long 2
+          factor-double 2.5]
+      (t/is (= (sut/rounded-money-of 3.1 :eur 2 :down) (sut/multiply money factor-long)))
+      (t/is (= (sut/rounded-money-of 3.87 :eur 2 :down) (sut/multiply money factor-double)))))
+  (t/testing "Fast Money"
+    (let [money (sut/fast-money-of 1 :eur)
+          factor-long 2
+          factor-double 2.5]
+      (t/is (= (sut/fast-money-of 2 :eur) (sut/multiply money factor-long)))
+      (t/is (= (sut/fast-money-of 2.5 :eur) (sut/multiply money factor-double))))
+    ;; result cannot be represented as a long
+    (let [max-value (/ Long/MAX_VALUE 100000) ; 10000 = 10^fast-money-max-scale
+          min-value (/ Long/MIN_VALUE 100000)] ; 10000 = 10^fast-money-max-scale
+      ;; result cannot be represented as a long
+      (t/is (thrown? ExceptionInfo (sut/multiply (sut/fast-money-of max-value :eur) 2)))
+      (t/is (thrown? ExceptionInfo (sut/multiply (sut/fast-money-of min-value :eur) 2))))))
 
 (t/deftest divide
   (t/testing "Money"
