@@ -248,7 +248,14 @@
   (t/testing "Rounded Money"
     (let [money (sut/rounded-money-of 1.555 :eur 2 :down)
           divisor 2]
-      (t/is (= (sut/rounded-money-of 0.77 :eur 2 :down) (sut/divide money divisor))))))
+      (t/is (= (sut/rounded-money-of 0.77 :eur 2 :down) (sut/divide money divisor)))))
+  (t/testing "Fast Money"
+    (let [money (sut/fast-money-of 2 :eur)
+          divisor 2]
+      (t/is (= (sut/fast-money-of 1 :eur) (sut/divide money divisor))))
+    (let [money (sut/fast-money-of 1 :eur)
+          divisor 3]
+      (t/is (= (sut/fast-money-of 0.33333 :eur) (sut/divide money divisor))))))
 
 (t/deftest negate
   (t/testing "Money"

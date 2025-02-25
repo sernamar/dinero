@@ -380,7 +380,7 @@
         rounding-mode (utils/keyword->rounding-mode (or *default-rounding-mode* :half-even))
         quotient (BigDecimal/.divide ^BigDecimal amount (bigdec divisor) scale ^RoundingMode rounding-mode)
         currency (get-currency money)]
-    (money-of (BigDecimal/.stripTrailingZeros quotient) currency)))
+    (money-of quotient currency)))
 
 (defmethod divide RoundedMoney
   [money divisor]
@@ -390,12 +390,21 @@
         rounding-mode (get-rounding-mode money)
         rounding-mode-object (utils/keyword->rounding-mode rounding-mode)
         quotient (BigDecimal/.divide ^BigDecimal amount (bigdec divisor) ^int scale ^RoundingMode rounding-mode-object)]
-    (rounded-money-of (BigDecimal/.stripTrailingZeros quotient) currency scale rounding-mode)))
+    (rounded-money-of quotient currency scale rounding-mode)))
 
-;; TODO: Implement `divide` for `FastMoney`
+(defn- round-double
+  "Rounds the given double value to the given precision."
+  [value precission]
+  (let [factor (Math/pow 10 precission)]
+    (/ (Math/round (* value factor)) factor)))
+
 (defmethod divide FastMoney
   [money divisor]
-  :not-implemented)
+  (let [amount (get-amount money)
+        quotient (/ amount divisor)
+        quotient-rounded (round-double quotient fast-money-max-scale)
+        currency (get-currency money)]
+    (fast-money-of quotient-rounded currency)))
 
 (defmethod negate Money
   [money]
