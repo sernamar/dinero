@@ -50,6 +50,22 @@
       (t/is (= 1.23M (sut/get-amount m2)))
       (t/is (= 2 (sut/get-scale m2))))))
 
+(t/deftest fast-money-of
+  (t/testing "Different amounts"
+    (let [m1 (sut/fast-money-of 1234 :eur)
+          m2 (sut/fast-money-of 1234.56 :eur)
+          m3 (sut/fast-money-of 1234.5678 :eur)
+          m4 (sut/fast-money-of 0.12345 :btc)]
+      (t/is (= 1234M (sut/get-amount m1)))
+      (t/is (= 1234.56M (sut/get-amount m2)))
+      (t/is (= 1234.5678M (sut/get-amount m3)))
+      (t/is (= 0.12345M (sut/get-amount m4)))
+      ;; scale exceeds the maximum allowed value of 5
+      (t/is (thrown? ExceptionInfo (sut/fast-money-of 0.123456 :btc)))
+      ;; amount cannot be represented as a long
+      (t/is (thrown? ExceptionInfo (sut/fast-money-of (dec (bigdec Long/MIN_VALUE)) :eur)))
+      (t/is (thrown? ExceptionInfo (sut/fast-money-of (inc (bigdec Long/MAX_VALUE)) :eur))))))
+
 ;;; Equality and comparison
 
 (t/deftest comparison
