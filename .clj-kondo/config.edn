@@ -1,0 +1,1 @@
+{:linters {:unused-binding {:exclude-defmulti-args true}}}

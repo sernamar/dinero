@@ -198,13 +198,13 @@
 (defmulti multiply
   "Multiplies the given monetary amount by the given factor."
   {:arglists '([money factor])}
-  (fn [money _factor]
+  (fn [money factor]
     (class money)))
 
 (defmulti divide
   "Divides the given monetary amount by the given divisor."
   {:arglists '([money divisor])}
-  (fn [money _divisor]
+  (fn [money divisor]
     (class money)))
 
 (defmulti negate
