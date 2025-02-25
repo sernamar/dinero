@@ -61,10 +61,12 @@
       (t/is (= 1234.5678M (sut/get-amount m3)))
       (t/is (= 0.12345M (sut/get-amount m4)))
       ;; scale exceeds the maximum allowed value of 5
-      (t/is (thrown? ExceptionInfo (sut/fast-money-of 0.123456 :btc)))
+      (t/is (thrown? ExceptionInfo (sut/fast-money-of 0.123456 :btc))))
+    (let [max-value (/ Long/MAX_VALUE 100000) ; 10000 = 10^fast-money-max-scale
+          min-value (/ Long/MIN_VALUE 100000)] ; 10000 = 10^fast-money-max-scale
       ;; amount cannot be represented as a long
-      (t/is (thrown? ExceptionInfo (sut/fast-money-of (dec (bigdec Long/MIN_VALUE)) :eur)))
-      (t/is (thrown? ExceptionInfo (sut/fast-money-of (inc (bigdec Long/MAX_VALUE)) :eur))))))
+      (t/is (thrown? ExceptionInfo (sut/fast-money-of (inc max-value) :eur)))
+      (t/is (thrown? ExceptionInfo (sut/fast-money-of (dec min-value) :eur))))))
 
 ;;; Equality and comparison
 
@@ -165,11 +167,13 @@
           m3 (sut/fast-money-of 3 :eur)]
       (t/is (= (sut/fast-money-of 3 :eur) (sut/add m1 m2)))
       (t/is (= (sut/fast-money-of 6 :eur) (sut/add m1 m2 m3)))
-      ;; long overflow
-      (t/is (thrown? ExceptionInfo (sut/add (sut/fast-money-of Long/MAX_VALUE :eur) (sut/fast-money-of 1 :eur))))
-      (t/is (thrown? ExceptionInfo (sut/add (sut/fast-money-of Long/MIN_VALUE :eur) (sut/fast-money-of -1 :eur))))
       ;; different currencies
-      (t/is (thrown? ExceptionInfo (sut/add (sut/fast-money-of 1 :eur) (sut/fast-money-of 1 :gbp)))))))
+      (t/is (thrown? ExceptionInfo (sut/add (sut/fast-money-of 1 :eur) (sut/fast-money-of 1 :gbp)))))
+    ;; result cannot be represented as a long
+    (let [max-value (/ Long/MAX_VALUE 100000) ; 10000 = 10^fast-money-max-scale
+          min-value (/ Long/MIN_VALUE 100000)] ; 10000 = 10^fast-money-max-scale
+      (t/is (thrown? ExceptionInfo (sut/add (sut/fast-money-of max-value :eur) (sut/fast-money-of 1 :eur))))
+      (t/is (thrown? ExceptionInfo (sut/add (sut/fast-money-of min-value :eur) (sut/fast-money-of -1 :eur)))))))
 
 (t/deftest subtract
   (t/testing "Money"
@@ -195,11 +199,13 @@
           m3 (sut/fast-money-of 1 :eur)]
       (t/is (= (sut/fast-money-of 1 :eur) (sut/subtract m1 m2)))
       (t/is (= (sut/fast-money-of 0 :eur) (sut/subtract m1 m2 m3)))
-      ;; long overflow
-      (t/is (thrown? ExceptionInfo (sut/subtract (sut/fast-money-of Long/MIN_VALUE :eur) (sut/fast-money-of 1 :eur))))
-      (t/is (thrown? ExceptionInfo (sut/subtract (sut/fast-money-of Long/MAX_VALUE :eur) (sut/fast-money-of -1 :eur))))
       ;; different currencies
-      (t/is (thrown? ExceptionInfo (sut/subtract (sut/fast-money-of 1 :eur) (sut/fast-money-of 1 :gbp)))))))
+      (t/is (thrown? ExceptionInfo (sut/subtract (sut/fast-money-of 1 :eur) (sut/fast-money-of 1 :gbp)))))
+    ;; result cannot be represented as a long
+    (let [max-value (/ Long/MAX_VALUE 100000) ; 10000 = 10^fast-money-max-scale
+          min-value (/ Long/MIN_VALUE 100000)] ; 10000 = 10^fast-money-max-scale
+      (t/is (thrown? ExceptionInfo (sut/subtract (sut/fast-money-of min-value :eur) (sut/fast-money-of 1 :eur))))
+      (t/is (thrown? ExceptionInfo (sut/subtract (sut/fast-money-of max-value :eur) (sut/fast-money-of -1 :eur)))))))
 
 (t/deftest multiply
   (t/testing "Money"
