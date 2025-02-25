@@ -188,7 +188,18 @@
   (t/testing "Mix money and rounded money"
     (let [m1 (sut/money-of 1 :eur)
           m2 (sut/rounded-money-of 1 :eur)]
-      (t/is (= (sut/money-of 0 :eur) (sut/subtract m1 m2))))))
+      (t/is (= (sut/money-of 0 :eur) (sut/subtract m1 m2)))))
+  (t/testing "Fast Money"
+    (let [m1 (sut/fast-money-of 3 :eur)
+          m2 (sut/fast-money-of 2 :eur)
+          m3 (sut/fast-money-of 1 :eur)]
+      (t/is (= (sut/fast-money-of 1 :eur) (sut/subtract m1 m2)))
+      (t/is (= (sut/fast-money-of 0 :eur) (sut/subtract m1 m2 m3)))
+      ;; long overflow
+      (t/is (thrown? ExceptionInfo (sut/subtract (sut/fast-money-of Long/MIN_VALUE :eur) (sut/fast-money-of 1 :eur))))
+      (t/is (thrown? ExceptionInfo (sut/subtract (sut/fast-money-of Long/MAX_VALUE :eur) (sut/fast-money-of -1 :eur))))
+      ;; different currencies
+      (t/is (thrown? ExceptionInfo (sut/subtract (sut/fast-money-of 1 :eur) (sut/fast-money-of 1 :gbp)))))))
 
 (t/deftest multiply
   (t/testing "Money"

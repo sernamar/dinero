@@ -319,10 +319,17 @@
         rounding-mode (get-rounding-mode (first moneis))]
     (rounded-money-of difference currency scale rounding-mode)))
 
-;; TODO: Implement `subtract` for `FastMoney`
 (defmethod subtract FastMoney
   [& moneis]
-  :not-implemented)
+  (apply assert-same-currency moneis)
+  (let [difference (try (reduce - (map :amount moneis))
+                        (catch ArithmeticException e
+                          (throw (ex-info "`FastMoney` subtraction failed: amount exceeds precision of `FastMoney` (`long`-based). Consider using `Money` (`BigDecimal`-based) instead."
+                                          {:moneis moneis
+                                           :error (ex-message e)}))))
+        currency (get-currency (first moneis))]
+    ;; use `FastMoney` constructor directly instead of `fast-money-of` to improve performance
+    (FastMoney. difference currency fast-money-max-scale)))
 
 (defmethod multiply Money
   [money factor]
