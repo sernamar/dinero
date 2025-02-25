@@ -56,10 +56,10 @@
           m2 (sut/fast-money-of 1234.56 :eur)
           m3 (sut/fast-money-of 1234.5678 :eur)
           m4 (sut/fast-money-of 0.12345 :btc)]
-      (t/is (= 1234M (sut/get-amount m1)))
-      (t/is (= 1234.56M (sut/get-amount m2)))
-      (t/is (= 1234.5678M (sut/get-amount m3)))
-      (t/is (= 0.12345M (sut/get-amount m4)))
+      (t/is (= 1234.0 (sut/get-amount m1)))
+      (t/is (= 1234.56 (sut/get-amount m2)))
+      (t/is (= 1234.5678 (sut/get-amount m3)))
+      (t/is (= 0.12345 (sut/get-amount m4)))
       ;; scale exceeds the maximum allowed value of 5
       (t/is (thrown? ExceptionInfo (sut/fast-money-of 0.123456 :btc))))
     (let [max-value (/ Long/MAX_VALUE 100000) ; 10000 = 10^fast-money-max-scale

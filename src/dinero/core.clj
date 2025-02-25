@@ -23,9 +23,30 @@
 
 (defrecord FastMoney [amount currency scale])
 
+(defn- to-fast-money-long
+  "Converts the given amount to the `long`-based internal representation of `FastMoney`."
+  [amount]
+  (let [amount (bigdec amount)
+        scale (BigDecimal/.scale amount)]
+    (when (> scale fast-money-max-scale)
+      (throw (ex-info "Scale exceeds the maximum allowed value" {:scale scale})))
+    (try
+      (-> amount
+          (BigDecimal/.movePointRight fast-money-max-scale)
+          (BigDecimal/.longValueExact))
+      (catch ArithmeticException e
+        (throw (ex-info "Amount exceeds precision of `FastMoney` (`long`-based). Consider using `Money` (`BigDecimal`-based) instead."
+                        {:amount amount
+                         :error (ex-message e)}))))))
+
+(defn- from-fast-money
+  "Converts the `long`-based internal representation of `FastMoney` to a `double`."
+  [amount scale]
+  (/ amount (Math/pow 10 scale)))
+
 (defmethod pp/simple-dispatch FastMoney [money]
   (let [{:keys [amount currency scale]} money
-        amount (BigDecimal/.stripTrailingZeros (BigDecimal/valueOf amount scale))]
+        amount (from-fast-money amount scale)]
     (print {:amount amount :currency currency})))
 
 (defn money-of
@@ -69,18 +90,8 @@
   ([amount]
    (fast-money-of amount *default-currency*))
   ([amount currency]
-   (let [amount (bigdec amount)
-         scale (BigDecimal/.scale amount)]
-     (when (> scale fast-money-max-scale)
-       (throw (ex-info "Scale exceeds the maximum allowed value" {:scale scale})))
-     (try
-       (let [amount-scaled (BigDecimal/.movePointRight amount fast-money-max-scale)
-             amount-long (BigDecimal/.longValueExact amount-scaled)]
-         (FastMoney. amount-long currency fast-money-max-scale))
-       (catch ArithmeticException e
-         (throw (ex-info "Amount exceeds precision of `FastMoney` (`long`-based). Consider using `Money` (`BigDecimal`-based) instead."
-                         {:amount amount
-                          :error (ex-message e)})))))))
+   (let [internal-amount (to-fast-money-long amount)]
+     (FastMoney. internal-amount currency fast-money-max-scale))))
 
 (defn money?
   "Returns true if the given value is a monetary amount of type `Money`."
@@ -102,7 +113,7 @@
   [money]
   (if (fast-money? money)
     (let [{:keys [amount scale]} money]
-      (BigDecimal/.stripTrailingZeros (BigDecimal/valueOf amount scale)))
+      (from-fast-money amount scale))
     (:amount money)))
 
 (defn get-currency
