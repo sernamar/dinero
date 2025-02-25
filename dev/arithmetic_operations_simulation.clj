@@ -26,3 +26,16 @@
  (reduce (fn [acc _] (rounded-money-simulation acc)) (core/rounded-money-of 0 :eur 2 :half-even) (range 1000000)))
 ;; => "Elapsed time: 7031.994195 msecs"
 ;; => {:amount 1657407.95M, :currency :eur, :scale 2, :rounding-mode :half-even}
+
+(defn fast-money-simulation
+  [money]
+  (-> money
+      (core/add (core/fast-money-of 1234567.3444 :eur))
+      (core/subtract (core/fast-money-of 232323 :eur))
+      (core/multiply 3.4)
+      (core/divide 5.456)))
+
+(time
+ (reduce (fn [acc _] (fast-money-simulation acc)) (core/fast-money-of 0 :eur) (range 1000000)))
+;; => "Elapsed time: 3557.049248 msecs"
+;; => {:amount 1657407.96252, :currency :eur}
