@@ -265,7 +265,16 @@
   (t/testing "Rounded Money"
     (let [m1 (sut/rounded-money-of 1.555 :eur 2 :down)
           m2 (sut/rounded-money-of -1.555 :eur 2 :down)]
-      (t/is (= m2 (sut/negate m1))))))
+      (t/is (= m2 (sut/negate m1)))))
+  (t/testing "Fast Money"
+    (let [m1 (sut/fast-money-of 1 :eur)
+          m2 (sut/fast-money-of -1 :eur)
+          max-value (/ Long/MAX_VALUE 100000) ; 10000 = 10^fast-money-max-scale
+          min-value (/ Long/MIN_VALUE 100000) ;10000 = 10^fast-money-max-scale
+          min-value-plus-one (/ (inc Long/MIN_VALUE) 100000)] ; 10000 = 10^fast-money-max-scale
+      (t/is (= m2 (sut/negate m1)))
+      (t/is (= (sut/fast-money-of min-value-plus-one :eur) (sut/negate (sut/fast-money-of max-value :eur))))
+      (t/is (thrown? ExceptionInfo (sut/negate (sut/fast-money-of min-value :eur)))))))
 
 (t/deftest money-abs
   (t/testing "Money"
@@ -277,7 +286,14 @@
     (let [m1 (sut/rounded-money-of 1.555 :eur 2 :down)
           m2 (sut/rounded-money-of -1.555 :eur 2 :down)]
       (t/is (= m1 (sut/money-abs m1)))
-      (t/is (= m1 (sut/money-abs m2))))))
+      (t/is (= m1 (sut/money-abs m2)))))
+  (t/testing "Fast Money"
+    (let [m1 (sut/fast-money-of 1 :eur)
+          m2 (sut/fast-money-of -1 :eur)
+          min-value (/ Long/MIN_VALUE 100000)] ; 10000 = 10^fast-money-max-scale
+      (t/is (= m1 (sut/money-abs m1)))
+      (t/is (= m1 (sut/money-abs m2)))
+      (t/is (thrown? ExceptionInfo (sut/money-abs (sut/fast-money-of min-value :eur)))))))
 
 (t/deftest money-max
   (t/testing "Money"
@@ -304,7 +320,14 @@
       (t/is (= m1 (sut/money-max m1 m2)))
       (t/is (= m1 (sut/money-max m2 m1)))
       (t/is (= (sut/money-of 2 :eur) (sut/money-max m1 m3)))
-      (t/is (= (sut/money-of 2 :eur) (sut/money-max m3 m1))))))
+      (t/is (= (sut/money-of 2 :eur) (sut/money-max m3 m1)))))
+  (t/testing "Fast Money"
+    (let [m1 (sut/fast-money-of 1 :eur)
+          m2 (sut/fast-money-of 2 :eur)
+          m3 (sut/fast-money-of 3 :eur)]
+      (t/is (= m2 (sut/money-max m1 m2)))
+      (t/is (= m3 (sut/money-max m1 m2 m3)))
+      (t/is (thrown? ExceptionInfo (sut/money-max m1 (sut/fast-money-of 1 :gbp)))))))
 
 (t/deftest money-min
   (t/testing "Money"
@@ -331,4 +354,11 @@
       (t/is (= m1 (sut/money-min m1 m2)))
       (t/is (= m1 (sut/money-min m2 m1)))
       (t/is (= (sut/money-of 1 :eur) (sut/money-min m1 m3)))
-      (t/is (= (sut/money-of 1 :eur) (sut/money-min m3 m1))))))
+      (t/is (= (sut/money-of 1 :eur) (sut/money-min m3 m1)))))
+  (t/testing "Fast Money"
+    (let [m1 (sut/fast-money-of 1 :eur)
+          m2 (sut/fast-money-of 2 :eur)
+          m3 (sut/fast-money-of 3 :eur)]
+      (t/is (= m1 (sut/money-min m1 m2)))
+      (t/is (= m1 (sut/money-min m1 m2 m3)))
+      (t/is (thrown? ExceptionInfo (sut/money-min m1 (sut/fast-money-of 1 :gbp)))))))
