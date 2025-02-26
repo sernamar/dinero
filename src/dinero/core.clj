@@ -1,6 +1,7 @@
 (ns dinero.core
   (:require [dinero.currency :as currency]
-            [dinero.utils :as utils])
+            [dinero.utils :as utils]
+            [clojure.pprint :as pp])
   (:import [java.math RoundingMode]))
 
 (set! *warn-on-reflection* true)
@@ -12,11 +13,41 @@
 (def ^:dynamic *default-currency* (:default-currency config))
 (def ^:dynamic *default-rounding-mode* (:default-rounding-mode config))
 
+(def ^:private fast-money-max-scale 5)
+
 ;;; Monetary amounts
 
 (defrecord Money [amount currency])
 
 (defrecord RoundedMoney [amount currency scale rounding-mode])
+
+(defrecord FastMoney [amount currency scale])
+
+(defn- to-fast-money-long
+  "Converts the given amount to the `long`-based internal representation of `FastMoney`."
+  [amount]
+  (let [amount (bigdec amount)
+        scale (BigDecimal/.scale amount)]
+    (when (> scale fast-money-max-scale)
+      (throw (ex-info "Scale exceeds the maximum allowed value" {:scale scale})))
+    (try
+      (-> amount
+          (BigDecimal/.movePointRight fast-money-max-scale)
+          (BigDecimal/.longValueExact))
+      (catch ArithmeticException e
+        (throw (ex-info "Amount exceeds precision of `FastMoney` (`long`-based). Consider using `Money` (`BigDecimal`-based) instead."
+                        {:amount amount
+                         :error (ex-message e)}))))))
+
+(defn- from-fast-money
+  "Converts the `long`-based internal representation of `FastMoney` to a `double`."
+  [amount scale]
+  (/ amount (Math/pow 10 scale)))
+
+(defmethod pp/simple-dispatch FastMoney [money]
+  (let [{:keys [amount currency scale]} money
+        amount (from-fast-money amount scale)]
+    (print {:amount amount :currency currency})))
 
 (defn money-of
   "Creates a monetary amount with the given amount and currency."
@@ -52,6 +83,16 @@
                     scale
                     rounding-mode))))
 
+(defn fast-money-of
+  "Creates a fast monetary amount with the given amount and currency."
+  ([]
+   (fast-money-of 0 *default-currency*))
+  ([amount]
+   (fast-money-of amount *default-currency*))
+  ([amount currency]
+   (let [internal-amount (to-fast-money-long amount)]
+     (FastMoney. internal-amount currency fast-money-max-scale))))
+
 (defn money?
   "Returns true if the given value is a monetary amount of type `Money`."
   [money]
@@ -62,10 +103,18 @@
   [money]
   (instance? RoundedMoney money))
 
+(defn fast-money?
+  "Returns true if the given value is a monetary amount of type `FastMoney`."
+  [money]
+  (instance? FastMoney money))
+
 (defn get-amount
   "Returns the amount of the given monetary amount."
   [money]
-  (:amount money))
+  (if (fast-money? money)
+    (let [{:keys [amount scale]} money]
+      (from-fast-money amount scale))
+    (:amount money)))
 
 (defn get-currency
   "Returns the currency of the given monetary amount."
@@ -73,7 +122,7 @@
   (:currency money))
 
 (defn get-scale
-  "Returns the scale of the given rounded monetary amount."
+  "Returns the scale of the given monetary amount."
   [money]
   (:scale money))
 
@@ -103,17 +152,17 @@
     (throw (ex-info "Currencies do not match" {:currencies (map get-currency moneis)}))))
 
 (defn- same-scale?
-  "Returns true if all the given rounded monetary amounts have the same scale."
-  [& rounded-moneis]
-  (when (some nil? rounded-moneis)
+  "Returns true if all the given monetary amounts have the same scale."
+  [& moneis]
+  (when (some nil? moneis)
     (throw (ex-info "Scale must be non-nil" {})))
-  (apply = (map get-scale rounded-moneis)))
+  (apply = (map get-scale moneis)))
 
 (defn- assert-same-scale
-  "Asserts that all the given rounded monetary amounts have the same scale."
-  [& rounded-moneis]
-  (when-not (apply same-scale? rounded-moneis)
-    (throw (ex-info "Scales do not match" {:scales (map get-scale rounded-moneis)}))))
+  "Asserts that all the given monetary amounts have the same scale."
+  [& moneis]
+  (when-not (apply same-scale? moneis)
+    (throw (ex-info "Scales do not match" {:scales (map get-scale moneis)}))))
 
 (defn- same-rounding-mode?
   "Returns true if all the given rounded monetary amounts have the same rounding mode."
@@ -183,16 +232,18 @@
   "Adds the given monetary amounts."
   {:arglists '([& moneis])}
   (fn [& moneis]
-    (if (some money? moneis)
-      Money
+    (condp some moneis
+      money? Money
+      fast-money? FastMoney
       RoundedMoney)))
 
 (defmulti subtract
   "Subtracts the given monetary amounts."
   {:arglists '([& moneis])}
   (fn [& moneis]
-    (if (some money? moneis)
-      Money
+    (condp some moneis
+      money? Money
+      fast-money? FastMoney
       RoundedMoney)))
 
 (defmulti multiply
@@ -221,16 +272,18 @@
   "Returns the maximum of the given monetary amounts."
   {:arglists '([& moneis])}
   (fn [& moneis]
-    (if (some money? moneis)
-      Money
+    (condp some moneis
+      money? Money
+      fast-money? FastMoney
       RoundedMoney)))
 
 (defmulti money-min
   "Returns the minimum of the given monetary amounts."
   {:arglists '([& moneis])}
   (fn [& moneis]
-    (if (some money? moneis)
-      Money
+    (condp some moneis
+      money? Money
+      fast-money? FastMoney
       RoundedMoney)))
 
 (defmethod add Money
@@ -249,6 +302,18 @@
         rounding-mode (get-rounding-mode (first moneis))]
     (rounded-money-of sum currency scale rounding-mode)))
 
+(defmethod add FastMoney
+  [& moneis]
+  (apply assert-same-currency moneis)
+  (let [sum (try (reduce + (map :amount moneis))
+                 (catch ArithmeticException e
+                   (throw (ex-info "`FastMoney` addition failed: amount exceeds precision of `FastMoney` (`long`-based). Consider using `Money` (`BigDecimal`-based) instead."
+                                   {:moneis moneis
+                                    :error (ex-message e)}))))
+        currency (get-currency (first moneis))]
+    ;; use `FastMoney` constructor directly instead of `fast-money-of` to improve performance
+    (FastMoney. sum currency fast-money-max-scale)))
+
 (defmethod subtract Money
   [& moneis]
   (apply assert-same-currency moneis)
@@ -264,6 +329,18 @@
         scale (get-scale (first moneis))
         rounding-mode (get-rounding-mode (first moneis))]
     (rounded-money-of difference currency scale rounding-mode)))
+
+(defmethod subtract FastMoney
+  [& moneis]
+  (apply assert-same-currency moneis)
+  (let [difference (try (reduce - (map :amount moneis))
+                        (catch ArithmeticException e
+                          (throw (ex-info "`FastMoney` subtraction failed: amount exceeds precision of `FastMoney` (`long`-based). Consider using `Money` (`BigDecimal`-based) instead."
+                                          {:moneis moneis
+                                           :error (ex-message e)}))))
+        currency (get-currency (first moneis))]
+    ;; use `FastMoney` constructor directly instead of `fast-money-of` to improve performance
+    (FastMoney. difference currency fast-money-max-scale)))
 
 (defmethod multiply Money
   [money factor]
@@ -281,6 +358,21 @@
         rounding-mode (get-rounding-mode money)]
     (rounded-money-of product currency scale rounding-mode)))
 
+(defmethod multiply FastMoney
+  [money factor]
+  (let [amount-as-long (:amount money)
+        factor-scaled (to-fast-money-long factor)
+        product-scaled (try (* amount-as-long factor-scaled)
+                            (catch ArithmeticException e
+                              (throw (ex-info "`FastMoney` multiplication failed: amount exceeds precision of `FastMoney` (`long`-based). Consider using `Money` (`BigDecimal`-based) instead."
+                                              {:money money
+                                               :factor factor
+                                               :error (ex-message e)}))))
+        product (long (from-fast-money product-scaled fast-money-max-scale))
+        currency (get-currency money)]
+    ;; use `FastMoney` constructor directly instead of `fast-money-of` to improve performance
+    (FastMoney. product currency fast-money-max-scale)))
+
 (defmethod divide Money
   [money divisor]
   (let [amount (get-amount money)
@@ -288,7 +380,7 @@
         rounding-mode (utils/keyword->rounding-mode (or *default-rounding-mode* :half-even))
         quotient (BigDecimal/.divide ^BigDecimal amount (bigdec divisor) scale ^RoundingMode rounding-mode)
         currency (get-currency money)]
-    (money-of (BigDecimal/.stripTrailingZeros quotient) currency)))
+    (money-of quotient currency)))
 
 (defmethod divide RoundedMoney
   [money divisor]
@@ -298,7 +390,21 @@
         rounding-mode (get-rounding-mode money)
         rounding-mode-object (utils/keyword->rounding-mode rounding-mode)
         quotient (BigDecimal/.divide ^BigDecimal amount (bigdec divisor) ^int scale ^RoundingMode rounding-mode-object)]
-    (rounded-money-of (BigDecimal/.stripTrailingZeros quotient) currency scale rounding-mode)))
+    (rounded-money-of quotient currency scale rounding-mode)))
+
+(defn- round-double
+  "Rounds the given double value to the given precision."
+  [value precission]
+  (let [factor (Math/pow 10 precission)]
+    (/ (Math/round (* value factor)) factor)))
+
+(defmethod divide FastMoney
+  [money divisor]
+  (let [amount (get-amount money)
+        quotient (/ amount divisor)
+        quotient-rounded (round-double quotient fast-money-max-scale)
+        currency (get-currency money)]
+    (fast-money-of quotient-rounded currency)))
 
 (defmethod negate Money
   [money]
@@ -316,6 +422,17 @@
         rounding-mode (get-rounding-mode money)]
     (rounded-money-of negated currency scale rounding-mode)))
 
+(defmethod negate FastMoney
+  [money]
+  (let [amount (:amount money)
+        negated (try (- amount)
+                     (catch ArithmeticException e
+                       (throw (ex-info "`FastMoney` negation failed: amount exceeds precision of `FastMoney` (`long`-based). Consider using `Money` (`BigDecimal`-based) instead."
+                                       {:money money
+                                        :error (ex-message e)}))))
+        currency (get-currency money)]
+    (FastMoney. negated currency fast-money-max-scale)))
+
 (defmethod money-abs Money
   [money]
   (let [amount (get-amount money)
@@ -332,6 +449,20 @@
         rounding-mode (get-rounding-mode money)]
     (rounded-money-of absolute currency scale rounding-mode)))
 
+(defn- safe-long-abs
+  [value]
+  (if (= value Long/MIN_VALUE)
+    (throw (ex-info "`FastMoney` absolute value failed: amount exceeds precision of `FastMoney` (`long`-based). Consider using `Money` (`BigDecimal`-based) instead."
+                    {:value value}))
+    (abs value)))
+
+(defmethod money-abs FastMoney
+  [money]
+  (let [amount (:amount money)
+        absolute (safe-long-abs amount)
+        currency (get-currency money)]
+    (FastMoney. absolute currency fast-money-max-scale)))
+
 (defmethod money-max Money
   [& moneis]
   (apply assert-same-currency moneis)
@@ -344,11 +475,19 @@
   [& moneis]
   (apply assert-same-currency-scale-and-rounding-mode moneis)
   (let [amounts (map get-amount moneis)
-          max-amount (apply max amounts)
-          currency (get-currency (first moneis))
-          scale (get-scale (first moneis))
-          rounding-mode (get-rounding-mode (first moneis))]
-      (rounded-money-of max-amount currency scale rounding-mode)))
+        max-amount (apply max amounts)
+        currency (get-currency (first moneis))
+        scale (get-scale (first moneis))
+        rounding-mode (get-rounding-mode (first moneis))]
+    (rounded-money-of max-amount currency scale rounding-mode)))
+
+(defmethod money-max FastMoney
+  [& moneis]
+  (apply assert-same-currency moneis)
+  (let [amounts (map :amount moneis)
+        max-amount (apply max amounts)
+        currency (get-currency (first moneis))]
+    (FastMoney. max-amount currency fast-money-max-scale)))
 
 (defmethod money-min Money
   [& moneis]
@@ -367,3 +506,11 @@
         scale (get-scale (first moneis))
         rounding-mode (get-rounding-mode (first moneis))]
     (rounded-money-of min-amount currency scale rounding-mode)))
+
+(defmethod money-min FastMoney
+  [& moneis]
+  (apply assert-same-currency moneis)
+  (let [amounts (map :amount moneis)
+        min-amount (apply min amounts)
+        currency (get-currency (first moneis))]
+    (FastMoney. min-amount currency fast-money-max-scale)))

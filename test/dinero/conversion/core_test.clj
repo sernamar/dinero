@@ -15,12 +15,18 @@
           exchange-rate 0.80
           converted (sut/convert-using-exchange-rate money term-currency exchange-rate)]
       (t/is (= (core/money-of 0.80 :gbp) converted))))
-  (t/testing "Rounded money"
+  (t/testing "Rounded Money"
     (let [money (core/rounded-money-of 1M :eur)
           term-currency :gbp
           exchange-rate 0.80
           converted (sut/convert-using-exchange-rate money term-currency exchange-rate)]
-      (t/is (= (core/rounded-money-of 0.80 :gbp) converted)))))
+      (t/is (= (core/rounded-money-of 0.80 :gbp) converted))))
+  (t/testing "Fast Money"
+    (let [money (core/fast-money-of 1M :eur)
+          term-currency :gbp
+          exchange-rate 0.80
+          converted (sut/convert-using-exchange-rate money term-currency exchange-rate)]
+      (t/is (= (core/fast-money-of 0.80 :gbp) converted)))))
 
 (t/use-fixtures :once h/db-fixture)
 
