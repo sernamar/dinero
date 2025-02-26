@@ -2,13 +2,15 @@
   (:require [criterium.core :as criterium]
             [dinero.core :as core]))
 
-(defn money-simulation
-  [money]
-  (-> money
-      (core/add (core/money-of 1234567.3444 :eur))
-      (core/subtract (core/money-of 232323 :eur))
-      (core/multiply 3.4)
-      (core/divide 5.456)))
+(def money-simulation
+  (let [addend (core/money-of 1234567.3444 :eur)
+        subtrahend (core/money-of 232323 :eur)]
+    (fn [money]
+      (-> money
+          (core/add addend)
+          (core/subtract subtrahend)
+          (core/multiply 3.4)
+          (core/divide 5.456)))))
 
 (comment
   (criterium/bench
@@ -22,13 +24,15 @@
 ;;
 ;; => {:amount 1657407.9625291828793774319066147859922178988326848249027237354085603112840466926070038910505836575875486381322957198443579766536964980544747081712062256809338521400778210116731517509727626459143968871595330739299610894941634241245136186770428015564202334630350194M, :currency :eur}
 
-(defn rounded-money-simulation
-  [money]
-  (-> money
-      (core/add (core/rounded-money-of 1234567.3444 :eur 2 :half-even))
-      (core/subtract (core/rounded-money-of 232323 :eur 2 :half-even))
-      (core/multiply 3.4)
-      (core/divide 5.456)))
+(def rounded-money-simulation
+  (let [addend (core/rounded-money-of 1234567.3444 :eur 2 :half-even)
+        subtrahend (core/rounded-money-of 232323 :eur 2 :half-even)]
+    (fn [money]
+      (-> money
+          (core/add addend)
+          (core/subtract subtrahend)
+          (core/multiply 3.4)
+          (core/divide 5.456)))))
 
 (comment
  (criterium/bench
@@ -45,13 +49,15 @@
 ;;
 ;; => {:amount 1657407.95M, :currency :eur, :scale 2, :rounding-mode :half-even}
 
-(defn fast-money-simulation
-  [money]
-  (-> money
-      (core/add (core/fast-money-of 1234567.3444 :eur))
-      (core/subtract (core/fast-money-of 232323 :eur))
-      (core/multiply 3.4)
-      (core/divide 5.456)))
+(def fast-money-simulation
+  (let [addend (core/fast-money-of 1234567.3444 :eur)
+        subtrahend (core/fast-money-of 232323 :eur)]
+    (fn [money]
+      (-> money
+          (core/add addend)
+          (core/subtract subtrahend)
+          (core/multiply 3.4)
+          (core/divide 5.456)))))
 
 (comment
   (criterium/bench
