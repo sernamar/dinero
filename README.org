@@ -3,7 +3,7 @@
 
 /dinero/ is a Clojure library designed for managing monetary amounts and currencies. It offers support for precise arithmetic operations, formatting, and parsing, all tailored to different locales and currencies.
 
-This library is heavily inspired by [[https://github.com/JavaMoney/jsr354-ri][JSR 354 - Moneta: Reference Implementation]], which is part of the [[https://javamoney.github.io/][JavaMoney]] project.
+This library is heavily inspired by [[https://github.com/JavaMoney/jsr354-ri][Moneta]], which is part of the [[https://javamoney.github.io/][JavaMoney]] project.
 
 It supports two types of monetary amounts:
 - =money=: represents monetary amounts with arbitrary precision and scale, ensuring accurate numerical computations during arithmetic operations.
