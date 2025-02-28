@@ -26,23 +26,27 @@
 (defn- to-fast-money-long
   "Converts the given amount to the `long`-based internal representation of `FastMoney`."
   [amount]
-  (let [amount (bigdec amount)
-        scale (BigDecimal/.scale amount)]
+  (let [big-decimal-amount (bigdec amount)
+        scale (BigDecimal/.scale big-decimal-amount)]
     (when (> scale fast-money-max-scale)
       (throw (ex-info "Scale exceeds the maximum allowed value" {:scale scale})))
+    (when (< big-decimal-amount (bigdec Long/MIN_VALUE))
+      (throw (ex-info "Amount is less than the minimum allowed value" {:amount amount :min-value Long/MIN_VALUE})))
+    (when (> big-decimal-amount (bigdec Long/MAX_VALUE))
+      (throw (ex-info "Amount exceeds the maximum allowed value" {:amount amount :max-value Long/MAX_VALUE})))
     (try
-      (-> amount
+      (-> big-decimal-amount
           (BigDecimal/.movePointRight fast-money-max-scale)
-          (BigDecimal/.longValueExact))
+          BigDecimal/.longValueExact)
       (catch ArithmeticException e
         (throw (ex-info "Amount exceeds precision of `FastMoney` (`long`-based). Consider using `Money` (`BigDecimal`-based) instead."
                         {:amount amount
                          :error (ex-message e)}))))))
 
 (defn- from-fast-money
-  "Converts the `long`-based internal representation of `FastMoney` to a `double`."
+  "Converts the `long`-based internal representation of `FastMoney` to a `BigDecimal`."
   [amount scale]
-  (/ amount (Math/pow 10 scale)))
+  (BigDecimal/.stripTrailingZeros (BigDecimal/valueOf amount scale)))
 
 (defmethod pp/simple-dispatch FastMoney [money]
   (let [{:keys [amount currency scale]} money

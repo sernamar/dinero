@@ -31,7 +31,7 @@
           fast-money (core/fast-money-of 1.23 :xau)]
       (t/is (= 1.23M (core/get-amount (sut/round money))))
       (t/is (= 1.23M (core/get-amount (sut/round rounded-money))))
-      (t/is (= 1.23 (core/get-amount (sut/round fast-money)))))))
+      (t/is (= 1.23M (core/get-amount (sut/round fast-money)))))))
 
 (t/deftest round-chf
   (t/testing "Money"
