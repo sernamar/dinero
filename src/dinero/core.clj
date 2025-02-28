@@ -1,6 +1,7 @@
 (ns dinero.core
   (:require [dinero.currency :as currency]
             [dinero.utils :as utils]
+            [clojure.math :as math]
             [clojure.pprint :as pp])
   (:import [java.math RoundingMode]))
 
@@ -309,13 +310,13 @@
 (defmethod add FastMoney
   [& moneis]
   (apply assert-same-currency moneis)
-  (let [sum (try (reduce + (map :amount moneis))
+  (let [sum (try (reduce math/add-exact (map :amount moneis))
                  (catch ArithmeticException e
                    (throw (ex-info "`FastMoney` addition failed: amount exceeds precision of `FastMoney` (`long`-based). Consider using `Money` (`BigDecimal`-based) instead."
                                    {:moneis moneis
                                     :error (ex-message e)}))))
         currency (get-currency (first moneis))]
-    ;; use `FastMoney` constructor directly instead of `fast-money-of` to improve performance
+    ;; use `FastMoney` constructor because we are working with the internal representation (`long` amounts) directly
     (FastMoney. sum currency fast-money-max-scale)))
 
 (defmethod subtract Money
@@ -337,13 +338,13 @@
 (defmethod subtract FastMoney
   [& moneis]
   (apply assert-same-currency moneis)
-  (let [difference (try (reduce - (map :amount moneis))
+  (let [difference (try (reduce math/subtract-exact (map :amount moneis))
                         (catch ArithmeticException e
                           (throw (ex-info "`FastMoney` subtraction failed: amount exceeds precision of `FastMoney` (`long`-based). Consider using `Money` (`BigDecimal`-based) instead."
                                           {:moneis moneis
                                            :error (ex-message e)}))))
         currency (get-currency (first moneis))]
-    ;; use `FastMoney` constructor directly instead of `fast-money-of` to improve performance
+    ;; use `FastMoney` constructor because we are working with the internal representation (`long` amounts) directly
     (FastMoney. difference currency fast-money-max-scale)))
 
 (defmethod multiply Money
@@ -399,8 +400,8 @@
 (defn- round-double
   "Rounds the given double value to the given precision."
   [value precission]
-  (let [factor (Math/pow 10 precission)]
-    (/ (Math/round (* value factor)) factor)))
+  (let [factor (math/pow 10 precission)]
+    (/ (math/round (* value factor)) factor)))
 
 (defmethod divide FastMoney
   [money divisor]
