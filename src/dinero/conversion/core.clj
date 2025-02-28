@@ -7,15 +7,14 @@
 (defn convert-using-exchange-rate
   "Converts the given monetary amount to the term currency using the given exchange rate."
   [money term-currency exchange-rate]
-  (if (core/money? money)
-    (let [amount (core/get-amount money)
-          term-amount (* amount exchange-rate)]
-      (core/money-of term-amount term-currency))
-    (let [amount (core/get-amount money)
-          decimal-places (core/get-scale money)
-          rounding-mode (core/get-rounding-mode money)
-          term-amount (* amount exchange-rate)]
-      (core/rounded-money-of term-amount term-currency decimal-places rounding-mode))))
+  (let [amount (core/get-amount money)
+        term-amount (* amount exchange-rate)]
+    (cond
+      (core/money? money) (core/money-of term-amount term-currency)
+      (core/fast-money? money) (core/fast-money-of term-amount term-currency)
+      :else (let [decimal-places (core/get-scale money)
+                  rounding-mode (core/get-rounding-mode money)]
+              (core/rounded-money-of term-amount term-currency decimal-places rounding-mode)))))
 
 (defn convert-using-db
   "Converts the given monetary amount to the term currency using the given database and schema information."
