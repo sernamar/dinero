@@ -17,11 +17,11 @@
 
 ;;; Monetary amounts
 
-(defrecord Money [amount currency])
+(defrecord Money [^BigDecimal amount currency])
 
-(defrecord RoundedMoney [amount currency scale rounding-mode])
+(defrecord RoundedMoney [^BigDecimal amount currency scale rounding-mode])
 
-(defrecord FastMoney [amount currency scale])
+(defrecord FastMoney [^long amount currency scale])
 
 (defn- to-fast-money-long
   "Converts the given amount to the `long`-based internal representation of `FastMoney`."
