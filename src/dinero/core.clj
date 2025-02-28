@@ -395,19 +395,18 @@
         quotient (BigDecimal/.divide ^BigDecimal amount (bigdec divisor) ^int scale ^RoundingMode rounding-mode-object)]
     (rounded-money-of quotient currency scale rounding-mode)))
 
-(defn- round-double
-  "Rounds the given double value to the given precision."
-  [value precission]
-  (let [factor (math/pow 10 precission)]
-    (/ (math/round (* value factor)) factor)))
-
 (defmethod divide FastMoney
   [money divisor]
-  (let [amount (get-amount money)
-        quotient (/ amount divisor)
-        quotient-rounded (round-double quotient fast-money-max-scale)
+  (let [amount-as-long (:amount money)
+        quotient (try (math/round (/ amount-as-long divisor))
+                      (catch ArithmeticException e
+                        (throw (ex-info "`FastMoney` division failed: amount exceeds precision of `FastMoney` (`long`-based). Consider using `Money` (`BigDecimal`-based) instead."
+                                        {:money money
+                                         :divisor divisor
+                                         :error (ex-message e)}))))
         currency (get-currency money)]
-    (fast-money-of quotient-rounded currency)))
+    ;; use `FastMoney` constructor because we are working with the internal representation (`long` amounts) directly
+    (FastMoney. quotient currency fast-money-max-scale)))
 
 (defmethod negate Money
   [money]
