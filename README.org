@@ -7,6 +7,7 @@ This library is heavily inspired by [[https://github.com/JavaMoney/jsr354-ri][Mo
 
 It supports two types of monetary amounts:
 - =money=: represents monetary amounts with arbitrary precision and scale, ensuring accurate numerical computations during arithmetic operations.
+- =fast money=: represents monetary amounts using a fixed scale, offering a balance between performance and accuracy while being precise enough for most applications.
 - =rounded money=: represents monetary amounts that are automatically rounded after each arithmetic operation, ensuring consistent precision.
 
 It also offers functionality to format monetary amounts and parse strings representing monetary amounts. It takes care of different formats and currencies based on the user's locale settings, ensuring accurate and locale-sensitive representations.
@@ -47,6 +48,7 @@ For example, to set /euros/ as the default currency and the /half even/ method a
 *** Monetary amounts
 This library support two types of monetary amounts:
 - =money=: represents monetary amounts with arbitrary precision and scale, ensuring accurate numerical computations during arithmetic operations.
+- =fast money=: represents monetary amounts using a fixed scale, offering a balance between performance and accuracy while being precise enough for most applications.
 - =rounded money=: represents monetary amounts that are automatically rounded after each arithmetic operation.
 **** Monetary amounts of type =money=
 You can use =money-of= to create monetary amounts with arbitrary precision and scale. It accepts two arguments:
@@ -104,6 +106,16 @@ So for accurate numerical computations, especially in financial applications, do
   ;; => {:amount 0.123456789123456789123456789M, :currency :eur}
 #+end_src
 #+end_quote
+**** Monetary amounts of type =fast money=
+You can use =fast-money-of= to create monetary amounts optimized for performance while maintaining sufficient accuracy. It accepts up to two arguments:
+- =amount=: can be an integer, a floating-point number, a =BigDecimal=, or a =String=.
+- =currency=: must be a keyword.
+
+If the =currency= is not specified, the =fast-money-of= function will use the default currency from the configuration file. This type of monetary amount uses a fixed scale for calculations, ensuring fast operations while remaining precise enough for most applications:
+#+begin_src clojure
+  (dinero/fast-money-of 1 :eur)
+  ;; => {:amount 1M, :currency :eur}
+#+end_src
 **** Monetary amounts of type =rounded money=
 You can use =rounded-money-of= to create monetary amounts that are automatically rounded after each arithmetic operation. This function accepts up to 4 arguments:
 - =amount=: can be an integer, a floating-point number, a =BigDecimal= or a =String=.
