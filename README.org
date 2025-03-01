@@ -373,18 +373,19 @@ As previously mentioned, money amounts could be stored internally with more deci
 By default, the =round= function rounds amounts to the smallest unit of the currency, using the default rounding mode specified in the configuration file (if no rounding mode is configured, it defaults to =:half-even=):
 #+begin_src clojure
   (require '[dinero.core :as dinero]
+           '[dinero.math :as math]
            '[dinero.rounding :as rounding])
 
   (let [m1 (dinero/money-of 1.555 :eur)
         m2 (dinero/money-of 1.555 :eur)]
-    (dinero/add m1 m2))
+    (math/add m1 m2))
   ;; => {:amount 3.110M, :currency :eur}
 
   (let [m1 (dinero/money-of 1.555 :eur)
         m2 (dinero/money-of 1.555 :eur)
         m1-rounded (rounding/round m1)
         m2-rounded (rounding/round m2)]
-    (dinero/add m1-rounded m2-rounded))
+    (math/add m1-rounded m2-rounded))
   ;; => {:amount 3.12M, :currency :eur}
 #+end_src
 But you can also speficy the number of decimal places and the rounding mode you want to use when rounding. For example:
@@ -393,7 +394,7 @@ But you can also speficy the number of decimal places and the rounding mode you 
         m2 (dinero/money-of 1.555 :eur)
         m1-rounded (rounding/round m1 0 :half-even)
         m2-rounded (rounding/round m2 0 :half-even)]
-    (dinero/add m1-rounded m2-rounded))
+    (math/add m1-rounded m2-rounded))
   ;; => {:amount 4M, :currency :eur}
 #+end_src
 If necessary, you can also call =round= with two arguments, which are the monetary amount and a custom rounding funtion to use to round the monetary amount. This allows you to specify different rounding rules for certain cases.
