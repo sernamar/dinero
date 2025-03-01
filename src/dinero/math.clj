@@ -247,7 +247,7 @@
         rounding-mode (utils/keyword->rounding-mode (or core/*default-rounding-mode* :half-even))
         quotient (BigDecimal/.divide ^BigDecimal amount (bigdec divisor) scale ^RoundingMode rounding-mode)
         currency (core/get-currency money)]
-    (core/money-of quotient currency)))
+    (core/money-of (BigDecimal/.stripTrailingZeros quotient) currency)))
 
 (defmethod divide RoundedMoney
   [money divisor]
@@ -257,7 +257,7 @@
         rounding-mode (core/get-rounding-mode money)
         rounding-mode-object (utils/keyword->rounding-mode rounding-mode)
         quotient (BigDecimal/.divide ^BigDecimal amount (bigdec divisor) ^int scale ^RoundingMode rounding-mode-object)]
-    (core/rounded-money-of quotient currency scale rounding-mode)))
+    (core/rounded-money-of (BigDecimal/.stripTrailingZeros quotient) currency scale rounding-mode)))
 
 (defmethod divide FastMoney
   [money divisor]
