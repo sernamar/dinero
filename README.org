@@ -5,7 +5,7 @@
 
 This library is heavily inspired by [[https://github.com/JavaMoney/jsr354-ri][Moneta]], which is part of the [[https://javamoney.github.io/][JavaMoney]] project.
 
-It supports two types of monetary amounts:
+It supports three types of monetary amounts:
 - =money=: represents monetary amounts with arbitrary precision and scale, ensuring accurate numerical computations during arithmetic operations.
 - =fast money=: represents monetary amounts using a fixed scale, offering a balance between performance and accuracy while being precise enough for most applications.
 - =rounded money=: represents monetary amounts that are automatically rounded after each arithmetic operation, ensuring consistent precision.
@@ -46,7 +46,7 @@ For example, to set /euros/ as the default currency and the /half even/ method a
 #+end_src
 ** Usage
 *** Monetary amounts
-This library support two types of monetary amounts:
+This library support three types of monetary amounts:
 - =money=: represents monetary amounts with arbitrary precision and scale, ensuring accurate numerical computations during arithmetic operations.
 - =fast money=: represents monetary amounts using a fixed scale, offering a balance between performance and accuracy while being precise enough for most applications.
 - =rounded money=: represents monetary amounts that are automatically rounded after each arithmetic operation.
