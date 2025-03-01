@@ -2,8 +2,8 @@
   (:require [clojure.tools.build.api :as b]
             [deps-deploy.deps-deploy :as dd]))
 
-(def lib 'io.github.sernamar/dinero)
-(def version "0.1.2")
+(def lib 'com.sernamar/dinero)
+(def version "0.2.0")
 
 (def target-dir "target/")
 (def class-dir (str target-dir "classes/"))
