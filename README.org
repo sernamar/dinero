@@ -278,7 +278,8 @@ You could use the following functions to do equality and comparison operations o
 
 For example:
 #+begin_src clojure
-  (require '[dinero.core :as dinero])
+  (require '[dinero.core :as dinero]
+           '[dinero.math :as math])
 
   (let [m1 (dinero/money-of 1 :eur)
         m2 (dinero/money-of 1 :eur)]
@@ -297,49 +298,50 @@ For example:
 
   (let [m1 (dinero/money-of 1 :eur)
         m2 (dinero/money-of 2 :eur)]
-    (dinero/money< m1 m2))
+    (math/money< m1 m2))
   ;; => true
 
   (let [m1 (dinero/money-of 1 :eur)
         m2 (dinero/money-of 2 :eur)]
-    (dinero/money> m1 m2))
+    (math/money> m1 m2))
   ;; => false
 
   (let [money (dinero/money-of 0 :eur)]
-    (dinero/money-zero? money))
+    (math/money-zero? money))
   ;; => true
 
   (let [money (dinero/money-of -1 :eur)]
-    (dinero/money-pos? money))
+    (math/money-pos? money))
   ;; => false
 
   (let [money (dinero/money-of -1 :eur)]
-    (dinero/money-neg? money))
+    (math/money-neg? money))
   ;; => true
 #+end_src
 *** Arithmetic operations
 You can use =add=, =substract=, =multiply=, and =divide= to perform arithmetic operations on monetary amounts:
 #+begin_src clojure
-  (require '[dinero.core :as dinero])
+  (require '[dinero.core :as dinero]
+           '[dinero.math :as math])
 
   (let [m1 (dinero/money-of 1 :eur)
         m2 (dinero/money-of 1 :eur)]
-    (dinero/add m1 m2))
+    (math/add m1 m2))
   ;; => {:amount 2M, :currency :eur}
 
   (let [m1 (dinero/money-of 1 :eur)
         m2 (dinero/money-of 1 :eur)]
-    (dinero/subtract m1 m2))
+    (math/subtract m1 m2))
   ;; => {:amount 0M, :currency :eur}
 
   (let [money (dinero/money-of 1 :eur)
         factor 2]
-    (dinero/multiply money factor))
+    (math/multiply money factor))
   ;; => {:amount 2M, :currency :eur}
 
   (let [money (dinero/money-of 2 :eur)
         divisor 2]
-    (dinero/divide money divisor))
+    (math/divide money divisor))
   ;; => {:amount 1M, :currency :eur}
 #+end_src
 Note that =add= and =substract= can be used to add and substract more than two monetary amounts:
@@ -347,20 +349,20 @@ Note that =add= and =substract= can be used to add and substract more than two m
   (let [m1 (dinero/money-of 1 :eur)
         m2 (dinero/money-of 2 :eur)
         m3 (dinero/money-of 3 :eur)]
-    (dinero/add m1 m2 m3))
+    (math/add m1 m2 m3))
   ;; => {:amount 6M, :currency :eur}
 
   (let [m1 (dinero/money-of 3 :eur)
         m2 (dinero/money-of 2 :eur)
         m3 (dinero/money-of 1 :eur)]
-    (dinero/subtract m1 m2 m3))
+    (math/subtract m1 m2 m3))
   ;; => {:amount 0M, :currency :eur}
 #+end_src
 Adding or substracting monetary amounts with different currencies throws an =ExceptionInfo= exception:
 #+begin_src clojure
   (let [m1 (dinero/money-of 1 :eur)
         m2 (dinero/money-of 1 :gbp)]
-    (dinero/add m1 m2))
+    (math/add m1 m2))
   ;; clojure.lang.ExceptionInfo
   ;; Currencies do not match
   ;; {:currencies (:eur :gbp)}
