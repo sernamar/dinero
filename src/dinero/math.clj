@@ -178,7 +178,8 @@
                  (catch ArithmeticException e
                    (throw (ex-info "`FastMoney` addition failed: amount exceeds precision of `FastMoney` (`long`-based). Consider using `Money` (`BigDecimal`-based) instead."
                                    {:moneis moneis
-                                    :error (ex-message e)}))))
+                                    :error {:type (type e)
+                                            :message (ex-message e)}}))))
         currency (core/get-currency (first moneis))]
     ;; use `FastMoney` constructor because we are working with the internal representation (`long` amounts) directly
     (FastMoney. sum currency core/fast-money-max-scale)))
@@ -206,7 +207,8 @@
                         (catch ArithmeticException e
                           (throw (ex-info "`FastMoney` subtraction failed: amount exceeds precision of `FastMoney` (`long`-based). Consider using `Money` (`BigDecimal`-based) instead."
                                           {:moneis moneis
-                                           :error (ex-message e)}))))
+                                           :error {:type (type e)
+                                                   :message (ex-message e)}}))))
         currency (core/get-currency (first moneis))]
     ;; use `FastMoney` constructor because we are working with the internal representation (`long` amounts) directly
     (FastMoney. difference currency core/fast-money-max-scale)))
@@ -235,7 +237,8 @@
                                (throw (ex-info "`FastMoney` multiplication failed: amount exceeds precision of `FastMoney` (`long`-based). Consider using `Money` (`BigDecimal`-based) instead."
                                                {:money money
                                                 :factor factor
-                                                :error (ex-message e)}))))
+                                                :error {:type (type e)
+                                                        :message (ex-message e)}}))))
         currency (core/get-currency money)]
     ;; use `FastMoney` constructor because we are working with the internal representation (`long` amounts) directly
     (FastMoney. product-as-long currency core/fast-money-max-scale)))
@@ -267,7 +270,8 @@
                         (throw (ex-info "`FastMoney` division failed: amount exceeds precision of `FastMoney` (`long`-based). Consider using `Money` (`BigDecimal`-based) instead."
                                         {:money money
                                          :divisor divisor
-                                         :error (ex-message e)}))))
+                                         :error {:type (type e)
+                                                 :message (ex-message e)}}))))
         currency (core/get-currency money)]
     ;; use `FastMoney` constructor because we are working with the internal representation (`long` amounts) directly
     (FastMoney. quotient currency core/fast-money-max-scale)))
@@ -295,7 +299,8 @@
                      (catch ArithmeticException e
                        (throw (ex-info "`FastMoney` negation failed: amount exceeds precision of `FastMoney` (`long`-based). Consider using `Money` (`BigDecimal`-based) instead."
                                        {:money money
-                                        :error (ex-message e)}))))
+                                        :error {:type (type e)
+                                                :message (ex-message e)}}))))
         currency (core/get-currency money)]
     (FastMoney. negated currency core/fast-money-max-scale)))
 
