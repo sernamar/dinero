@@ -2,7 +2,8 @@
   (:require [dinero.core :as core]
             [dinero.math :as sut]
             [clojure.test :as t])
-  (:import [clojure.lang ExceptionInfo]))
+  (:import [clojure.lang ExceptionInfo]
+           [dinero.core Money FastMoney]))
 
 ;;; Equality and comparison
 
@@ -85,7 +86,7 @@
           m2 (core/money-of 2 :eur)
           m3 (core/money-of 3 :eur)]
       (t/is (= (core/money-of 3 :eur) (sut/add m1 m2)))
-      (t/is (= (core/money-of 6 :eur) (sut/add m1 m2 m3)))
+      (t/is (= (core/money-of 6 :eur) (reduce sut/add [m1 m2 m3])))
       (t/is (thrown? ExceptionInfo (sut/add (core/money-of 1 :eur) (core/money-of 1 :gbp))))))
   (t/testing "Rounded Money")
   (let [m1 (core/rounded-money-of 1.555 :eur 2 :down)
@@ -93,23 +94,38 @@
         m3 (core/rounded-money-of 1.555 :eur 2 :up)]
     (t/is (= (core/rounded-money-of 3.1 :eur 2 :down) (sut/add m1 m2)))
     (t/is (thrown? ExceptionInfo (sut/add m1 m3))))
-  (t/testing "Mix money and rounded money"
-    (let [m1 (core/money-of 1 :eur)
-          m2 (core/rounded-money-of 1 :eur)]
-      (t/is (= (core/money-of 2 :eur) (sut/add m1 m2)))))
   (t/testing "Fast Money"
     (let [m1 (core/fast-money-of 1 :eur)
           m2 (core/fast-money-of 2 :eur)
           m3 (core/fast-money-of 3 :eur)]
       (t/is (= (core/fast-money-of 3 :eur) (sut/add m1 m2)))
-      (t/is (= (core/fast-money-of 6 :eur) (sut/add m1 m2 m3)))
+      (t/is (= (core/fast-money-of 6 :eur) (reduce sut/add [m1 m2 m3])))
       ;; different currencies
       (t/is (thrown? ExceptionInfo (sut/add (core/fast-money-of 1 :eur) (core/fast-money-of 1 :gbp)))))
     ;; result cannot be represented as a long
     (let [max-value (/ Long/MAX_VALUE 100000) ; 10000 = 10^fast-money-max-scale
           min-value (/ Long/MIN_VALUE 100000)] ; 10000 = 10^fast-money-max-scale
       (t/is (thrown? ExceptionInfo (sut/add (core/fast-money-of max-value :eur) (core/fast-money-of 1 :eur))))
-      (t/is (thrown? ExceptionInfo (sut/add (core/fast-money-of min-value :eur) (core/fast-money-of -1 :eur)))))))
+      (t/is (thrown? ExceptionInfo (sut/add (core/fast-money-of min-value :eur) (core/fast-money-of -1 :eur))))))
+  (t/testing "Mix money, fast money and rounded money"
+    (let [m1 (core/money-of 1 :eur)
+          m2 (core/fast-money-of 2 :eur)
+          m3 (core/rounded-money-of 3 :eur)]
+      ;; money and fast money
+      (t/is (= (core/money-of 3 :eur) (sut/add m1 m2)))
+      (t/is (= (core/money-of 3 :eur) (sut/add m2 m1)))
+      (t/is (= Money (type (sut/add m1 m2))))
+      (t/is (= Money (type (sut/add m2 m1))))
+      ;; money and rounded money
+      (t/is (= (core/money-of 4 :eur) (sut/add m1 m3)))
+      (t/is (= (core/money-of 4 :eur) (sut/add m3 m1)))
+      (t/is (= Money (type (sut/add m1 m3))))
+      (t/is (= Money (type (sut/add m3 m1))))
+      ;; fast money and rounded money
+      (t/is (= (core/fast-money-of 5 :eur) (sut/add m2 m3)))
+      (t/is (= (core/fast-money-of 5 :eur) (sut/add m3 m2)))
+      (t/is (= FastMoney (type (sut/add m2 m3))))
+      (t/is (= FastMoney (type (sut/add m3 m2)))))))
 
 (t/deftest subtract
   (t/testing "Money"
@@ -117,7 +133,7 @@
           m2 (core/money-of 2 :eur)
           m3 (core/money-of 1 :eur)]
       (t/is (= (core/money-of 1 :eur) (sut/subtract m1 m2)))
-      (t/is (= (core/money-of 0 :eur) (sut/subtract m1 m2 m3)))
+      (t/is (= (core/money-of 0 :eur) (reduce sut/subtract [m1 m2 m3])))
       (t/is (thrown? ExceptionInfo (sut/subtract (core/money-of 1 :eur) (core/money-of 1 :gbp))))))
   (t/testing "Rounded Money"
     (let [m1 (core/rounded-money-of 1.555 :eur 2 :down)
@@ -125,23 +141,38 @@
           m3 (core/rounded-money-of 1.555 :eur 2 :up)]
       (t/is (= (core/rounded-money-of 0 :eur 2 :down) (sut/subtract m1 m2)))
       (t/is (thrown? ExceptionInfo (sut/subtract m1 m3)))))
-  (t/testing "Mix money and rounded money"
-    (let [m1 (core/money-of 1 :eur)
-          m2 (core/rounded-money-of 1 :eur)]
-      (t/is (= (core/money-of 0 :eur) (sut/subtract m1 m2)))))
   (t/testing "Fast Money"
     (let [m1 (core/fast-money-of 3 :eur)
           m2 (core/fast-money-of 2 :eur)
           m3 (core/fast-money-of 1 :eur)]
       (t/is (= (core/fast-money-of 1 :eur) (sut/subtract m1 m2)))
-      (t/is (= (core/fast-money-of 0 :eur) (sut/subtract m1 m2 m3)))
+      (t/is (= (core/fast-money-of 0 :eur) (reduce sut/subtract [m1 m2 m3])))
       ;; different currencies
       (t/is (thrown? ExceptionInfo (sut/subtract (core/fast-money-of 1 :eur) (core/fast-money-of 1 :gbp)))))
     ;; result cannot be represented as a long
     (let [max-value (/ Long/MAX_VALUE 100000) ; 10000 = 10^fast-money-max-scale
           min-value (/ Long/MIN_VALUE 100000)] ; 10000 = 10^fast-money-max-scale
       (t/is (thrown? ExceptionInfo (sut/subtract (core/fast-money-of min-value :eur) (core/fast-money-of 1 :eur))))
-      (t/is (thrown? ExceptionInfo (sut/subtract (core/fast-money-of max-value :eur) (core/fast-money-of -1 :eur)))))))
+      (t/is (thrown? ExceptionInfo (sut/subtract (core/fast-money-of max-value :eur) (core/fast-money-of -1 :eur))))))
+  (t/testing "Mix money, fast money and rounded money"
+    (let [m1 (core/money-of 3 :eur)
+          m2 (core/fast-money-of 2 :eur)
+          m3 (core/rounded-money-of 1 :eur)]
+      ;; money and fast money
+      (t/is (= (core/money-of 1 :eur) (sut/subtract m1 m2)))
+      (t/is (= (core/money-of -1 :eur) (sut/subtract m2 m1)))
+      (t/is (= Money (type (sut/subtract m1 m2))))
+      (t/is (= Money (type (sut/subtract m2 m1))))
+      ;; money and rounded money
+      (t/is (= (core/money-of 2 :eur) (sut/subtract m1 m3)))
+      (t/is (= (core/money-of -2 :eur) (sut/subtract m3 m1)))
+      (t/is (= Money (type (sut/subtract m1 m3))))
+      (t/is (= Money (type (sut/subtract m3 m1))))
+      ;; fast money and rounded money
+      (t/is (= (core/fast-money-of 1 :eur) (sut/subtract m2 m3)))
+      (t/is (= (core/fast-money-of -1 :eur) (sut/subtract m3 m2)))
+      (t/is (= FastMoney (type (sut/subtract m2 m3))))
+      (t/is (= FastMoney (type (sut/subtract m3 m2)))))))
 
 (t/deftest multiply
   (t/testing "Money"
