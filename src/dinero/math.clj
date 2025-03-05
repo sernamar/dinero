@@ -99,21 +99,15 @@
 
 (defmulti add
   "Adds the given monetary amounts."
-  {:arglists '([& moneis])}
-  (fn [& moneis]
-    (condp some moneis
-      core/money? Money
-      core/fast-money? FastMoney
-      RoundedMoney)))
+  {:arglists '([money1 money2])}
+  (fn [money1 money2]
+    [(class money1) (class money2)]))
 
 (defmulti subtract
   "Subtracts the given monetary amounts."
-  {:arglists '([& moneis])}
-  (fn [& moneis]
-    (condp some moneis
-      core/money? Money
-      core/fast-money? FastMoney
-      RoundedMoney)))
+  {:arglists '([money1 money2])}
+  (fn [money1 money2]
+    [(class money1) (class money2)]))
 
 (defmulti multiply
   "Multiplies the given monetary amount by the given factor."
@@ -155,61 +149,133 @@
       core/fast-money? FastMoney
       RoundedMoney)))
 
-(defmethod add Money
-  [& moneis]
-  (apply assert-same-currency moneis)
-  (let [sum (reduce + (map core/get-amount moneis))
-        currency (core/get-currency (first moneis))]
+(defmethod add :default
+  [money1 money2]
+  (assert-same-currency money1 money2)
+  (let [amount1 (core/get-amount money1)
+        amount2 (core/get-amount money2)
+        sum (+ amount1 amount2)
+        currency (core/get-currency money1)]
     (core/money-of sum currency)))
 
-(defmethod add RoundedMoney
-  [& moneis]
-  (apply assert-same-currency-scale-and-rounding-mode moneis)
-  (let [sum (reduce + (map core/get-amount moneis))
-        currency (core/get-currency (first moneis))
-        scale (core/get-scale (first moneis))
-        rounding-mode (core/get-rounding-mode (first moneis))]
+(defmethod add [RoundedMoney RoundedMoney]
+  [money1 money2]
+  (assert-same-currency-scale-and-rounding-mode money1 money2)
+  (let [amount1 (core/get-amount money1)
+        amount2 (core/get-amount money2)
+        sum (+ amount1 amount2)
+        currency (core/get-currency money1)
+        scale (core/get-scale money1)
+        rounding-mode (core/get-rounding-mode money1)]
     (core/rounded-money-of sum currency scale rounding-mode)))
 
-(defmethod add FastMoney
-  [& moneis]
-  (apply assert-same-currency moneis)
-  (let [sum (try (reduce math/add-exact (map :amount moneis))
+(defmethod add [FastMoney FastMoney]
+  [money1 money2]
+  (assert-same-currency money1 money2)
+  (let [amount1 (:amount money1)
+        amount2 (:amount money2)
+        sum (try (math/add-exact amount1 amount2)
                  (catch ArithmeticException e
                    (throw (ex-info "`FastMoney` addition failed: amount exceeds precision of `FastMoney` (`long`-based). Consider using `Money` (`BigDecimal`-based) instead."
-                                   {:moneis moneis
+                                   {:moneis [money1 money2]
                                     :error {:type (type e)
                                             :message (ex-message e)}}))))
-        currency (core/get-currency (first moneis))]
+        currency (core/get-currency money1)]
     ;; use `FastMoney` constructor because we are working with the internal representation (`long` amounts) directly
     (FastMoney. sum currency core/fast-money-max-scale)))
 
-(defmethod subtract Money
-  [& moneis]
-  (apply assert-same-currency moneis)
-  (let [difference (reduce - (map core/get-amount moneis))
-        currency (core/get-currency (first moneis))]
+(defmethod add [FastMoney RoundedMoney]
+  [money1 money2]
+  (assert-same-currency money1 money2)
+  (let [amount1 (:amount money1)
+        amount2 (core/to-fast-money-long (core/get-amount money2))
+        sum (try (math/add-exact amount1 amount2)
+                 (catch ArithmeticException e
+                   (throw (ex-info "`FastMoney` addition failed: amount exceeds precision of `FastMoney` (`long`-based). Consider using `Money` (`BigDecimal`-based) instead."
+                                   {:moneis [money1 money2]
+                                    :error {:type (type e)
+                                            :message (ex-message e)}}))))
+        currency (core/get-currency money1)]
+    ;; use `FastMoney` constructor because we are working with the internal representation (`long` amounts) directly
+    (FastMoney. sum currency core/fast-money-max-scale)))
+
+(defmethod add [RoundedMoney FastMoney]
+  [money1 money2]
+  (assert-same-currency money1 money2)
+  (let [amount1 (core/to-fast-money-long (core/get-amount money1))
+        amount2 (:amount money2)
+        sum (try (math/add-exact amount1 amount2)
+                 (catch ArithmeticException e
+                   (throw (ex-info "`FastMoney` addition failed: amount exceeds precision of `FastMoney` (`long`-based). Consider using `Money` (`BigDecimal`-based) instead."
+                                   {:moneis [money1 money2]
+                                    :error {:type (type e)
+                                            :message (ex-message e)}}))))
+        currency (core/get-currency money1)]
+    ;; use `FastMoney` constructor because we are working with the internal representation (`long` amounts) directly
+    (FastMoney. sum currency core/fast-money-max-scale)))
+
+(defmethod subtract :default
+  [money1 money2]
+  (assert-same-currency money1 money2)
+  (let [amount1 (core/get-amount money1)
+        amount2 (core/get-amount money2)
+        difference (- amount1 amount2)
+        currency (core/get-currency money1)]
     (core/money-of difference currency)))
 
-(defmethod subtract RoundedMoney
-  [& moneis]
-  (apply assert-same-currency-scale-and-rounding-mode moneis)
-  (let [difference (reduce - (map core/get-amount moneis))
-        currency (core/get-currency (first moneis))
-        scale (core/get-scale (first moneis))
-        rounding-mode (core/get-rounding-mode (first moneis))]
+(defmethod subtract [RoundedMoney RoundedMoney]
+  [money1 money2]
+  (assert-same-currency-scale-and-rounding-mode money1 money2)
+  (let [amount1 (core/get-amount money1)
+        amount2 (core/get-amount money2)
+        difference (- amount1 amount2)
+        currency (core/get-currency money1)
+        scale (core/get-scale money1)
+        rounding-mode (core/get-rounding-mode money1)]
     (core/rounded-money-of difference currency scale rounding-mode)))
 
-(defmethod subtract FastMoney
-  [& moneis]
-  (apply assert-same-currency moneis)
-  (let [difference (try (reduce math/subtract-exact (map :amount moneis))
+(defmethod subtract [FastMoney FastMoney]
+  [money1 money2]
+  (assert-same-currency money1 money2)
+  (let [amount1 (:amount money1)
+        amount2 (:amount money2)
+        difference (try (math/subtract-exact amount1 amount2)
                         (catch ArithmeticException e
-                          (throw (ex-info "`FastMoney` subtraction failed: amount exceeds precision of `FastMoney` (`long`-based). Consider using `Money` (`BigDecimal`-based) instead."
-                                          {:moneis moneis
+                          (throw (ex-info "`FastMoney` addition failed: amount exceeds precision of `FastMoney` (`long`-based). Consider using `Money` (`BigDecimal`-based) instead."
+                                          {:moneis [money1 money2]
                                            :error {:type (type e)
                                                    :message (ex-message e)}}))))
-        currency (core/get-currency (first moneis))]
+        currency (core/get-currency money1)]
+    ;; use `FastMoney` constructor because we are working with the internal representation (`long` amounts) directly
+    (FastMoney. difference currency core/fast-money-max-scale)))
+
+(defmethod subtract [FastMoney RoundedMoney]
+  [money1 money2]
+  (assert-same-currency money1 money2)
+  (let [amount1 (:amount money1)
+        amount2 (core/to-fast-money-long (core/get-amount money2))
+        difference (try (math/subtract-exact amount1 amount2)
+                        (catch ArithmeticException e
+                          (throw (ex-info "`FastMoney` addition failed: amount exceeds precision of `FastMoney` (`long`-based). Consider using `Money` (`BigDecimal`-based) instead."
+                                          {:moneis [money1 money2]
+                                           :error {:type (type e)
+                                                   :message (ex-message e)}}))))
+        currency (core/get-currency money1)]
+    ;; use `FastMoney` constructor because we are working with the internal representation (`long` amounts) directly
+    (FastMoney. difference currency core/fast-money-max-scale)))
+
+(defmethod subtract [RoundedMoney FastMoney]
+  [money1 money2]
+  (assert-same-currency money1 money2)
+  (let [amount1 (core/to-fast-money-long (core/get-amount money1))
+        amount2 (:amount money2)
+        difference (try (math/subtract-exact amount1 amount2)
+                        (catch ArithmeticException e
+                          (throw (ex-info "`FastMoney` addition failed: amount exceeds precision of `FastMoney` (`long`-based). Consider using `Money` (`BigDecimal`-based) instead."
+                                          {:moneis [money1 money2]
+                                           :error {:type (type e)
+                                                   :message (ex-message e)}}))))
+        currency (core/get-currency money1)]
     ;; use `FastMoney` constructor because we are working with the internal representation (`long` amounts) directly
     (FastMoney. difference currency core/fast-money-max-scale)))
 

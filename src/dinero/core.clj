@@ -23,7 +23,7 @@
 
 (defrecord FastMoney [^long amount currency scale])
 
-(defn- to-fast-money-long
+(defn to-fast-money-long
   "Converts the given amount to the `long`-based internal representation of `FastMoney`."
   [amount]
   (let [big-decimal-amount (bigdec amount)
