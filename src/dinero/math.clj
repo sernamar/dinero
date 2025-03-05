@@ -1,7 +1,8 @@
 (ns dinero.math
   (:require [dinero.core :as core]
             [dinero.utils :as utils]
-            [clojure.math :as math])
+            [clojure.math :as math]
+            [clojure.tools.logging :as log])
   (:import [dinero.core Money FastMoney RoundedMoney]
            [java.math RoundingMode]))
 
@@ -152,6 +153,10 @@
 (defmethod add :default
   [money1 money2]
   (assert-same-currency money1 money2)
+  (let [type1 (class money1)
+        type2 (class money2)]
+    (when-not (= type1 type2)
+      (log/warn (str "Adding different monetary types: " type1 " and " type2 ". Result will be of type `Money`."))))
   (let [amount1 (core/get-amount money1)
         amount2 (core/get-amount money2)
         sum (+ amount1 amount2)
@@ -187,6 +192,7 @@
 (defmethod add [FastMoney RoundedMoney]
   [money1 money2]
   (assert-same-currency money1 money2)
+  (log/warn "Adding `FastMoney` and `RoundedMoney`. Result will be of type `FastMoney`.")
   (let [amount1 (:amount money1)
         amount2 (core/to-fast-money-long (core/get-amount money2))
         sum (try (math/add-exact amount1 amount2)
@@ -202,6 +208,7 @@
 (defmethod add [RoundedMoney FastMoney]
   [money1 money2]
   (assert-same-currency money1 money2)
+  (log/warn "Adding `RoundedMoney` and `FastMoney`. Result will be of type `FastMoney`.")
   (let [amount1 (core/to-fast-money-long (core/get-amount money1))
         amount2 (:amount money2)
         sum (try (math/add-exact amount1 amount2)
@@ -217,6 +224,10 @@
 (defmethod subtract :default
   [money1 money2]
   (assert-same-currency money1 money2)
+  (let [type1 (class money1)
+        type2 (class money2)]
+    (when-not (= type1 type2)
+      (log/warn (str "Subtracting different monetary types: " type1 " and " type2 ". Result will be of type `Money`."))))
   (let [amount1 (core/get-amount money1)
         amount2 (core/get-amount money2)
         difference (- amount1 amount2)
@@ -252,6 +263,7 @@
 (defmethod subtract [FastMoney RoundedMoney]
   [money1 money2]
   (assert-same-currency money1 money2)
+  (log/warn "Subtracting `FastMoney` and `RoundedMoney`. Result will be of type `FastMoney`.")
   (let [amount1 (:amount money1)
         amount2 (core/to-fast-money-long (core/get-amount money2))
         difference (try (math/subtract-exact amount1 amount2)
@@ -267,6 +279,7 @@
 (defmethod subtract [RoundedMoney FastMoney]
   [money1 money2]
   (assert-same-currency money1 money2)
+  (log/warn "Subtracting `RoundedMoney` and `FastMoney`. Result will be of type `FastMoney`.")
   (let [amount1 (core/to-fast-money-long (core/get-amount money1))
         amount2 (:amount money2)
         difference (try (math/subtract-exact amount1 amount2)
