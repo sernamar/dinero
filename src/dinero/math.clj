@@ -98,13 +98,21 @@
 ;;; Arithmetic operations
 
 (defmulti add
-  "Adds the given monetary amounts."
+  "Adds the given monetary amounts.
+
+  If the arguments are of different types, the result will be of the type with more precision:
+  - If `Money` is mixed with either `FastMoney` or `RoundedMoney`, the result will be of type `Money`.
+  - If `FastMoney` and `RoundedMoney` are mixed, the result will be of type `FastMoney`."
   {:arglists '([money1 money2])}
   (fn [money1 money2]
     [(class money1) (class money2)]))
 
 (defmulti subtract
-  "Subtracts the given monetary amounts."
+  "Subtracts the given monetary amounts.
+
+  If the arguments are of different types, the result will be of the type with more precision:
+  - If `Money` is mixed with either `FastMoney` or `RoundedMoney`, the result will be of type `Money`.
+  - If `FastMoney` and `RoundedMoney` are mixed, the result will be of type `FastMoney`."
   {:arglists '([money1 money2])}
   (fn [money1 money2]
     [(class money1) (class money2)]))
