@@ -60,8 +60,9 @@
   ([amount]
    (money-of amount *default-currency*))
   ([amount currency]
-   (currency/assert-currency currency)
-   (Money. (bigdec amount) currency)))
+   (let [currency (utils/to-lowercase-keyword currency)]
+     (currency/assert-currency currency)
+     (Money. (bigdec amount) currency))))
 
 (defn rounded-money-of
   "Creates a rounded monetary amount with the given amount, currency, scale, and rounding mode."
@@ -76,12 +77,13 @@
   ([amount currency scale]
    (rounded-money-of amount currency scale *default-rounding-mode*))
   ([amount currency scale rounding-mode]
-   (currency/assert-currency currency)
-   (let [scale (or scale (currency/get-minor-units currency))
+   (let [currency (utils/to-lowercase-keyword currency)
+         scale (or scale (currency/get-minor-units currency))
          rounding-mode (or rounding-mode *default-rounding-mode* :half-even)
          rounding-mode-object (utils/keyword->rounding-mode rounding-mode)]
      (when (neg? scale)
        (throw (ex-info "Scale must be non-negative" {:scale scale})))
+     (currency/assert-currency currency)
      (RoundedMoney. (BigDecimal/.stripTrailingZeros (BigDecimal/.setScale ^BigDecimal (bigdec amount) ^int scale ^RoundingMode rounding-mode-object))
                     currency
                     scale
@@ -94,7 +96,9 @@
   ([amount]
    (fast-money-of amount *default-currency*))
   ([amount currency]
-   (let [internal-amount (to-fast-money-long amount)]
+   (let [currency (utils/to-lowercase-keyword currency)
+         internal-amount (to-fast-money-long amount)]
+     (currency/assert-currency currency)
      (FastMoney. internal-amount currency fast-money-max-scale))))
 
 (defn money?

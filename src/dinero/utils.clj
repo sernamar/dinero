@@ -43,3 +43,13 @@
   "Returns the currency for the given locale."
   [locale]
   (keyword (str/lower-case (Currency/.getCurrencyCode (Currency/getInstance ^Locale locale)))))
+
+(defn to-lowercase-keyword
+  "Returns the lower-case keyword representation of the given argument."
+  [arg]
+  (keyword (str/lower-case
+            (cond
+              (string? arg) arg
+              (keyword? arg) (name arg)
+              (symbol? arg) (name arg)
+              :else (throw (ex-info "Invalid argument" {:arg arg}))))))

@@ -53,7 +53,7 @@ This library support three types of monetary amounts:
 **** Monetary amounts of type =Money=
 You can use =money-of= to create monetary amounts with arbitrary precision and scale. It accepts two arguments:
 - =amount=: can be either an integer, a floating-point number, a =BigDecimal= or a =String=.
-- =currency=: must be a keyword.
+- =currency=: can be a keyword, a string, or a symbol, in either uppercase or lowercase.
 If the =currency= is not specified, the =money-of= function will use the default currency set in the configuration file. If a currency is provided, it will override the default and use the specified currency instead:
 #+begin_src clojure
   (require '[dinero.core :as dinero])
@@ -109,7 +109,7 @@ So for accurate numerical computations, especially in financial applications, do
 **** Monetary amounts of type =FastMoney=
 You can use =fast-money-of= to create monetary amounts optimized for performance while maintaining sufficient accuracy. It accepts up to two arguments:
 - =amount=: can be an integer, a floating-point number, a =BigDecimal=, or a =String=.
-- =currency=: must be a keyword.
+- =currency=: can be a keyword, a string, or a symbol, in either uppercase or lowercase.
 
 If the =currency= is not specified, the =fast-money-of= function will use the default currency from the configuration file. This type of monetary amount uses a fixed scale for calculations, ensuring fast operations while remaining precise enough for most applications:
 #+begin_src clojure
@@ -119,7 +119,7 @@ If the =currency= is not specified, the =fast-money-of= function will use the de
 **** Monetary amounts of type =RoundedMoney=
 You can use =rounded-money-of= to create monetary amounts that are automatically rounded after each arithmetic operation. This function accepts up to 4 arguments:
 - =amount=: can be an integer, a floating-point number, a =BigDecimal= or a =String=.
-- =currency=: must be a keyword.
+- =currency=: can be a keyword, a string, or a symbol, in either uppercase or lowercase.
 - =scale=: the number of decimal places to which the amount will be rounded.
 - =rounding-mode=: the rounding mode to use when rounding the amount.
 If =currency= is not specified, the =rounded-money-of= function will use the default currency from the configuration file. If =scale= is not provided, the minor units of the given currency will be used. If =rounding-mode= is not specified, the default rounding mode will be applied (or =:half-even= if the default rounding mode is not set in the configuration file):
