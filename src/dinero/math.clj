@@ -95,7 +95,7 @@
   [money]
   (neg? (core/get-amount money)))
 
-;;; Arithmetic operations
+;;; Arithmetic operations API
 
 (defmulti add
   "Adds the given monetary amounts.
@@ -157,14 +157,7 @@
       core/fast-money? FastMoney
       RoundedMoney)))
 
-(defmethod add :default
-  [money1 money2]
-  (assert-same-currency money1 money2)
-  (let [amount1 (core/get-amount money1)
-        amount2 (core/get-amount money2)
-        sum (+ amount1 amount2)
-        currency (core/get-currency money1)]
-    (core/money-of sum currency)))
+;;; Add
 
 (defmethod add [RoundedMoney RoundedMoney]
   [money1 money2]
@@ -222,14 +215,17 @@
     ;; use `FastMoney` constructor because we are working with the internal representation (`long` amounts) directly
     (FastMoney. sum currency core/fast-money-max-scale)))
 
-(defmethod subtract :default
+;; Handles addition for: [Money Money], [Money RoundedMoney], [RoundedMoney Money], [Money FastMoney], [FastMoney Money]
+(defmethod add :default
   [money1 money2]
   (assert-same-currency money1 money2)
   (let [amount1 (core/get-amount money1)
         amount2 (core/get-amount money2)
-        difference (- amount1 amount2)
+        sum (+ amount1 amount2)
         currency (core/get-currency money1)]
-    (core/money-of difference currency)))
+    (core/money-of sum currency)))
+
+;;; Subtract
 
 (defmethod subtract [RoundedMoney RoundedMoney]
   [money1 money2]
@@ -287,6 +283,18 @@
     ;; use `FastMoney` constructor because we are working with the internal representation (`long` amounts) directly
     (FastMoney. difference currency core/fast-money-max-scale)))
 
+;; Handles subtraction for: [Money Money], [Money RoundedMoney], [RoundedMoney Money], [Money FastMoney], [FastMoney Money]
+(defmethod subtract :default
+  [money1 money2]
+  (assert-same-currency money1 money2)
+  (let [amount1 (core/get-amount money1)
+        amount2 (core/get-amount money2)
+        difference (- amount1 amount2)
+        currency (core/get-currency money1)]
+    (core/money-of difference currency)))
+
+;;; Multiply
+
 (defmethod multiply Money
   [money factor]
   (let [amount (core/get-amount money)
@@ -317,10 +325,12 @@
     ;; use `FastMoney` constructor because we are working with the internal representation (`long` amounts) directly
     (FastMoney. product-as-long currency core/fast-money-max-scale)))
 
+;;; Divide
+
 (defmethod divide Money
   [money divisor]
   (let [amount (core/get-amount money)
-        scale 256 ; max precision
+        scale 256                       ; max precision
         rounding-mode (utils/keyword->rounding-mode (or core/*default-rounding-mode* :half-even))
         quotient (BigDecimal/.divide ^BigDecimal amount (bigdec divisor) scale ^RoundingMode rounding-mode)
         currency (core/get-currency money)]
@@ -349,6 +359,8 @@
         currency (core/get-currency money)]
     ;; use `FastMoney` constructor because we are working with the internal representation (`long` amounts) directly
     (FastMoney. quotient currency core/fast-money-max-scale)))
+
+;;; Negate, absolute value, max, and min
 
 (defmethod negate Money
   [money]
