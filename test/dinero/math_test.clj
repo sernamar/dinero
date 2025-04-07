@@ -2,8 +2,7 @@
   (:require [dinero.core :as core]
             [dinero.math :as sut]
             [clojure.test :as t])
-  (:import [clojure.lang ExceptionInfo]
-           [dinero.core Money FastMoney]))
+  (:import [clojure.lang ExceptionInfo]))
 
 ;;; Equality and comparison
 
@@ -34,13 +33,6 @@
       (t/is (thrown? ExceptionInfo (sut/money<= m1 m4)))
       (t/is (thrown? ExceptionInfo (sut/money> m1 m4)))
       (t/is (thrown? ExceptionInfo (sut/money>= m1 m4)))))
-  (t/testing "Mix money and rounded money"
-    (let [m1 (core/money-of 1 :eur)
-          m2 (core/rounded-money-of 2 :eur)]
-      (t/is (sut/money< m1 m2))
-      (t/is (sut/money<= m1 m2))
-      (t/is (sut/money> m2 m1))
-      (t/is (sut/money>= m2 m1))))
   (t/testing "Fast Money"
     (let [m1 (core/fast-money-of 1 :eur)
           m2 (core/fast-money-of 1 :eur)
@@ -53,7 +45,26 @@
       (t/is (thrown? ExceptionInfo (sut/money< m1 m4)))
       (t/is (thrown? ExceptionInfo (sut/money<= m1 m4)))
       (t/is (thrown? ExceptionInfo (sut/money> m1 m4)))
-      (t/is (thrown? ExceptionInfo (sut/money>= m1 m4))))))
+      (t/is (thrown? ExceptionInfo (sut/money>= m1 m4)))))
+  (t/testing "Mix money types"
+    (let [m1 (core/money-of 1 :eur)
+          m2 (core/fast-money-of 2 :eur)
+          m3 (core/rounded-money-of 3 :eur)]
+      ;; money and fast money
+      (t/is (thrown? ExceptionInfo (sut/money< m1 m2)))
+      (t/is (thrown? ExceptionInfo (sut/money<= m1 m2)))
+      (t/is (thrown? ExceptionInfo (sut/money> m1 m2)))
+      (t/is (thrown? ExceptionInfo (sut/money>= m1 m2)))
+      ;; money and rounded money
+      (t/is (thrown? ExceptionInfo (sut/money< m1 m3)))
+      (t/is (thrown? ExceptionInfo (sut/money<= m1 m3)))
+      (t/is (thrown? ExceptionInfo (sut/money> m1 m3)))
+      (t/is (thrown? ExceptionInfo (sut/money>= m1 m3)))
+      ;; fast money and rounded money
+      (t/is (thrown? ExceptionInfo (sut/money< m2 m3)))
+      (t/is (thrown? ExceptionInfo (sut/money<= m2 m3)))
+      (t/is (thrown? ExceptionInfo (sut/money> m2 m3)))
+      (t/is (thrown? ExceptionInfo (sut/money>= m2 m3))))))
 
 (t/deftest sign-operations
   (t/testing "Money"
@@ -107,25 +118,13 @@
           min-value (/ Long/MIN_VALUE 100000)] ; 10000 = 10^fast-money-max-scale
       (t/is (thrown? ExceptionInfo (sut/add (core/fast-money-of max-value :eur) (core/fast-money-of 1 :eur))))
       (t/is (thrown? ExceptionInfo (sut/add (core/fast-money-of min-value :eur) (core/fast-money-of -1 :eur))))))
-  (t/testing "Mix money, fast money and rounded money"
+  (t/testing "Mix money types"
     (let [m1 (core/money-of 1 :eur)
           m2 (core/fast-money-of 2 :eur)
           m3 (core/rounded-money-of 3 :eur)]
-      ;; money and fast money
-      (t/is (= (core/money-of 3 :eur) (sut/add m1 m2)))
-      (t/is (= (core/money-of 3 :eur) (sut/add m2 m1)))
-      (t/is (= Money (type (sut/add m1 m2))))
-      (t/is (= Money (type (sut/add m2 m1))))
-      ;; money and rounded money
-      (t/is (= (core/money-of 4 :eur) (sut/add m1 m3)))
-      (t/is (= (core/money-of 4 :eur) (sut/add m3 m1)))
-      (t/is (= Money (type (sut/add m1 m3))))
-      (t/is (= Money (type (sut/add m3 m1))))
-      ;; fast money and rounded money
-      (t/is (= (core/fast-money-of 5 :eur) (sut/add m2 m3)))
-      (t/is (= (core/fast-money-of 5 :eur) (sut/add m3 m2)))
-      (t/is (= FastMoney (type (sut/add m2 m3))))
-      (t/is (= FastMoney (type (sut/add m3 m2)))))))
+      (t/is (thrown? ExceptionInfo (sut/add m1 m2)))
+      (t/is (thrown? ExceptionInfo (sut/add m1 m3)))
+      (t/is (thrown? ExceptionInfo (sut/add m2 m3))))))
 
 (t/deftest subtract
   (t/testing "Money"
@@ -154,25 +153,13 @@
           min-value (/ Long/MIN_VALUE 100000)] ; 10000 = 10^fast-money-max-scale
       (t/is (thrown? ExceptionInfo (sut/subtract (core/fast-money-of min-value :eur) (core/fast-money-of 1 :eur))))
       (t/is (thrown? ExceptionInfo (sut/subtract (core/fast-money-of max-value :eur) (core/fast-money-of -1 :eur))))))
-  (t/testing "Mix money, fast money and rounded money"
-    (let [m1 (core/money-of 3 :eur)
+  (t/testing "Mix money types"
+    (let [m1 (core/money-of 1 :eur)
           m2 (core/fast-money-of 2 :eur)
-          m3 (core/rounded-money-of 1 :eur)]
-      ;; money and fast money
-      (t/is (= (core/money-of 1 :eur) (sut/subtract m1 m2)))
-      (t/is (= (core/money-of -1 :eur) (sut/subtract m2 m1)))
-      (t/is (= Money (type (sut/subtract m1 m2))))
-      (t/is (= Money (type (sut/subtract m2 m1))))
-      ;; money and rounded money
-      (t/is (= (core/money-of 2 :eur) (sut/subtract m1 m3)))
-      (t/is (= (core/money-of -2 :eur) (sut/subtract m3 m1)))
-      (t/is (= Money (type (sut/subtract m1 m3))))
-      (t/is (= Money (type (sut/subtract m3 m1))))
-      ;; fast money and rounded money
-      (t/is (= (core/fast-money-of 1 :eur) (sut/subtract m2 m3)))
-      (t/is (= (core/fast-money-of -1 :eur) (sut/subtract m3 m2)))
-      (t/is (= FastMoney (type (sut/subtract m2 m3))))
-      (t/is (= FastMoney (type (sut/subtract m3 m2)))))))
+          m3 (core/rounded-money-of 3 :eur)]
+      (t/is (thrown? ExceptionInfo (sut/subtract m1 m2)))
+      (t/is (thrown? ExceptionInfo (sut/subtract m1 m3)))
+      (t/is (thrown? ExceptionInfo (sut/subtract m2 m3))))))
 
 (t/deftest multiply
   (t/testing "Money"
@@ -280,21 +267,20 @@
       (t/is (= m3 (sut/money-max m1 m2 m3)))
       (t/is (thrown? ExceptionInfo (sut/money-max m1 m4)))
       (t/is (thrown? ExceptionInfo (sut/money-max m1 m5)))))
-  (t/testing "Mix money and rounded money"
-    (let [m1 (core/money-of 1 :eur)
-          m2 (core/rounded-money-of 1 :eur)
-          m3 (core/rounded-money-of 2 :eur)]
-      (t/is (= m1 (sut/money-max m1 m2)))
-      (t/is (= m1 (sut/money-max m2 m1)))
-      (t/is (= (core/money-of 2 :eur) (sut/money-max m1 m3)))
-      (t/is (= (core/money-of 2 :eur) (sut/money-max m3 m1)))))
   (t/testing "Fast Money"
     (let [m1 (core/fast-money-of 1 :eur)
           m2 (core/fast-money-of 2 :eur)
           m3 (core/fast-money-of 3 :eur)]
       (t/is (= m2 (sut/money-max m1 m2)))
       (t/is (= m3 (sut/money-max m1 m2 m3)))
-      (t/is (thrown? ExceptionInfo (sut/money-max m1 (core/fast-money-of 1 :gbp)))))))
+      (t/is (thrown? ExceptionInfo (sut/money-max m1 (core/fast-money-of 1 :gbp))))))
+  (t/testing "Mix money types"
+    (let [m1 (core/money-of 1 :eur)
+          m2 (core/fast-money-of 2 :eur)
+          m3 (core/rounded-money-of 3 :eur)]
+      (t/is (thrown? ExceptionInfo (sut/money-max m1 m2)))
+      (t/is (thrown? ExceptionInfo (sut/money-max m1 m3)))
+      (t/is (thrown? ExceptionInfo (sut/money-max m2 m3))))))
 
 (t/deftest money-min
   (t/testing "Money"
@@ -314,18 +300,17 @@
       (t/is (= m1 (sut/money-min m1 m2 m3)))
       (t/is (thrown? ExceptionInfo (sut/money-min m1 m4)))
       (t/is (thrown? ExceptionInfo (sut/money-min m1 m5)))))
-  (t/testing "Mix money and rounded money"
-    (let [m1 (core/money-of 1 :eur)
-          m2 (core/rounded-money-of 1 :eur)
-          m3 (core/rounded-money-of 2 :eur)]
-      (t/is (= m1 (sut/money-min m1 m2)))
-      (t/is (= m1 (sut/money-min m2 m1)))
-      (t/is (= (core/money-of 1 :eur) (sut/money-min m1 m3)))
-      (t/is (= (core/money-of 1 :eur) (sut/money-min m3 m1)))))
   (t/testing "Fast Money"
     (let [m1 (core/fast-money-of 1 :eur)
           m2 (core/fast-money-of 2 :eur)
           m3 (core/fast-money-of 3 :eur)]
       (t/is (= m1 (sut/money-min m1 m2)))
       (t/is (= m1 (sut/money-min m1 m2 m3)))
-      (t/is (thrown? ExceptionInfo (sut/money-min m1 (core/fast-money-of 1 :gbp)))))))
+      (t/is (thrown? ExceptionInfo (sut/money-min m1 (core/fast-money-of 1 :gbp))))))
+  (t/testing "Mix money types"
+    (let [m1 (core/money-of 1 :eur)
+          m2 (core/fast-money-of 2 :eur)
+          m3 (core/rounded-money-of 3 :eur)]
+      (t/is (thrown? ExceptionInfo (sut/money-max m1 m2)))
+      (t/is (thrown? ExceptionInfo (sut/money-max m1 m3)))
+      (t/is (thrown? ExceptionInfo (sut/money-max m2 m3))))))
