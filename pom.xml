@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.sernamar</groupId>
   <artifactId>dinero</artifactId>
-  <version>0.2.1</version>
+  <version>0.2.2</version>
   <name>dinero</name>
   <description>A Clojure library for working with money</description>
   <url>https://github.com/sernamar/dinero</url>
@@ -42,7 +42,7 @@
     <dependency>
       <groupId>com.github.seancorfield</groupId>
       <artifactId>next.jdbc</artifactId>
-      <version>1.3.994</version>
+      <version>1.3.1002</version>
     </dependency>
     <dependency>
       <groupId>cheshire</groupId>
