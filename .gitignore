@@ -11,6 +11,3 @@
 .nrepl-port
 .cpcache/
 **/.cache
-
-# Ignore Emacs temporary files
-*~
