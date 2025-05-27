@@ -472,6 +472,6 @@ Additionally, you can retrieve exchange rates from external providers. Currently
   ;; => {:amount 52314.756527447545254192M, :currency :eur}
 #+end_src
 ** License
-Copyright © 2024 Sergio Navarro
+Copyright © 2025 Sergio Navarro
 
-Distributed under the [[https://www.apache.org/licenses/LICENSE-2.0][Apache License, Version 2.0]].
+Distributed under the [[https://www.mozilla.org/en-US/MPL/2.0/][Mozilla Public License, version 2.0]].
