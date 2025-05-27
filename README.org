@@ -30,11 +30,11 @@ In terms of currencies, it supports all ISO 4217 currencies by default, allowing
 ** Installation
 Clojure CLI/deps.edn:
 #+begin_src shell
-  com.sernamar/dinero {:mvn/version "0.2.2"}
+  com.sernamar/dinero {:mvn/version "0.3.0"}
 #+end_src
 Leiningen/Boot:
 #+begin_src shell
-  [com.sernamar/dinero "0.2.2"]
+  [com.sernamar/dinero "0.3.0"]
 #+end_src
 ** Configuration
 Before using this library, you can configure the default currency and default rounding mode using a configuration file named =config.edn=, which should be located in the root directory of the project.

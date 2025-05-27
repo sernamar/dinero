@@ -9,7 +9,7 @@
             [deps-deploy.deps-deploy :as dd]))
 
 (def lib 'com.sernamar/dinero)
-(def version "0.2.2")
+(def version "0.3.0")
 
 (def target-dir "target/")
 (def class-dir (str target-dir "classes/"))
