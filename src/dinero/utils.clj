@@ -41,8 +41,7 @@
   (str/upper-case
    (cond
      (string? arg) arg
-     (keyword? arg) (name arg)
-     (symbol? arg) (name arg)
+     (or (keyword? arg) (symbol? arg)) (name arg)
      :else (throw (ex-info "Invalid argument" {:arg arg})))))
 
 (defn get-locale-currency
@@ -56,6 +55,5 @@
   (keyword (str/lower-case
             (cond
               (string? arg) arg
-              (keyword? arg) (name arg)
-              (symbol? arg) (name arg)
+              (or (keyword? arg) (symbol? arg)) (name arg)
               :else (throw (ex-info "Invalid argument" {:arg arg}))))))
