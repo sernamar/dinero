@@ -6,7 +6,7 @@
   <version>0.3.0</version>
   <name>dinero</name>
   <description>A Clojure library for working with money</description>
-  <url>https://github.com/sernamar/dinero</url>
+  <url>https://codeberg.org/sernamar/dinero</url>
   <licenses>
     <license>
       <name>Mozilla Public License 2.0</name>
@@ -19,9 +19,9 @@
     </developer>
   </developers>
   <scm>
-    <url>https://github.com/sernamar/dinero</url>
-    <connection>scm:git:git://github.com/sernamar/dinero.git</connection>
-    <developerConnection>scm:git:ssh://git@github.com/sernamar/dinero.git</developerConnection>
+    <url>https://codeberg.org/sernamar/dinero</url>
+    <connection>scm:git:git://codeberg.org/sernamar/dinero.git</connection>
+    <developerConnection>scm:git:ssh://git@codeberg.org/sernamar/dinero.git</developerConnection>
   </scm>
   <dependencies>
     <dependency>
