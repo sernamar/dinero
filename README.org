@@ -1,3 +1,9 @@
+*NOTE: Project moved to Codeberg*
+
+[[https://codeberg.org/sernamar/dinero][https://codeberg.org/sernamar/dinero]]
+
+This GitHub repo is archived and preserved only for reference.
+
 ** dinero                                                          :noexport:
 [[https://clojars.org/com.sernamar/dinero][file:https://img.shields.io/clojars/v/com.sernamar/dinero.svg]]
 
