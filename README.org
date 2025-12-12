@@ -1,3 +1,4 @@
+#+OPTIONS: toc:nil
 ** dinero                                                          :noexport:
 [[https://clojars.org/com.sernamar/dinero][file:https://img.shields.io/clojars/v/com.sernamar/dinero.svg]]
 
