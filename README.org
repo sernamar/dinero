@@ -14,9 +14,9 @@ It supports three types of monetary amounts:
 It also offers functionality to format monetary amounts and parse strings representing monetary amounts. It takes care of different formats and currencies based on the user's locale settings, ensuring accurate and locale-sensitive representations.
 
 In terms of currencies, it supports all ISO 4217 currencies by default, allowing for seamless handling of all internationally recognized currencies like the Euro (=EUR=) and British Pound (=GBP=). You can also extend support to non-ISO currencies, such as cryptocurrencies like Bitcoin (=BTC=), or even custom currencies specific to your domain, through an EDN configuration file.
-** Table of contents
-#+TOC: :headlines 3
-** Installation
+* Table of contents
+#+TOC: :headlines 2
+* Installation
 Clojure CLI/deps.edn:
 #+begin_src shell
   com.sernamar/dinero {:mvn/version "0.3.0"}
@@ -25,7 +25,7 @@ Leiningen/Boot:
 #+begin_src shell
   [com.sernamar/dinero "0.3.0"]
 #+end_src
-** Configuration
+* Configuration
 Before using this library, you can configure the default currency and default rounding mode using a configuration file named =config.edn=, which should be located in the root directory of the project.
 
 For example, to set /euros/ as the default currency and the /half even/ method as the default rounding method, the =config.edn= file should have the following content:
@@ -33,13 +33,13 @@ For example, to set /euros/ as the default currency and the /half even/ method a
   {:default-currency :eur
    :default-rounding-mode :half-even}
 #+end_src
-** Usage
-*** Monetary amounts
+* Usage
+** Monetary amounts
 This library support three types of monetary amounts:
 - =Money=: represents monetary amounts with arbitrary precision and scale, ensuring accurate numerical computations during arithmetic operations.
 - =FastMoney=: represents monetary amounts using a fixed scale, offering a balance between performance and accuracy while being precise enough for most applications.
 - =RoundedMoney=: represents monetary amounts that are automatically rounded after each arithmetic operation.
-**** Monetary amounts of type =Money=
+*** Monetary amounts of type =Money=
 You can use =money-of= to create monetary amounts with arbitrary precision and scale. It accepts two arguments:
 - =amount=: can be either an integer, a floating-point number, a =BigDecimal= or a =String=.
 - =currency=: can be a keyword, a string, or a symbol, in either uppercase or lowercase.
@@ -95,7 +95,7 @@ So for accurate numerical computations, especially in financial applications, do
   ;; => {:amount 0.123456789123456789123456789M, :currency :eur}
 #+end_src
 #+end_quote
-**** Monetary amounts of type =FastMoney=
+*** Monetary amounts of type =FastMoney=
 You can use =fast-money-of= to create monetary amounts optimized for performance while maintaining sufficient accuracy. It accepts up to two arguments:
 - =amount=: can be an integer, a floating-point number, a =BigDecimal=, or a =String=.
 - =currency=: can be a keyword, a string, or a symbol, in either uppercase or lowercase.
@@ -105,7 +105,7 @@ If the =currency= is not specified, the =fast-money-of= function will use the de
   (dinero/fast-money-of 1 :eur)
   ;; => {:amount 1M, :currency :eur}
 #+end_src
-**** Monetary amounts of type =RoundedMoney=
+*** Monetary amounts of type =RoundedMoney=
 You can use =rounded-money-of= to create monetary amounts that are automatically rounded after each arithmetic operation. This function accepts up to 4 arguments:
 - =amount=: can be an integer, a floating-point number, a =BigDecimal= or a =String=.
 - =currency=: can be a keyword, a string, or a symbol, in either uppercase or lowercase.
@@ -122,7 +122,7 @@ If =currency= is not specified, the =rounded-money-of= function will use the def
   (dinero/rounded-money-of 1234.5678 :eur 0 :down)
   ;; => {:amount 1234M, :currency :eur, :scale 0, :rounding-mode :down}
 #+end_src
-**** Amount, currency, and rounding information
+*** Amount, currency, and rounding information
 Given a monetary amount, you can get its amount and currency using the =get-amount= and =get-currency= functions:
 #+begin_src clojure
   (let [money (dinero/money-of 1 :eur)]
@@ -142,7 +142,7 @@ For rounded monetary amounts, you can also use the =get-scale= and =get-rounding
     (dinero/get-rounding-mode money))
   ;; => :half-even
 #+end_src
-*** Currencies
+** Currencies
 This library supports all ISO 4217 currencies by default, providing seamless handling of all internationally recognized currencies like the Euro (=EUR=) and British Pound (=GBP=). Additionally, you can extend support to non-ISO currencies, such as cryptocurrencies like Bitcoin (=BTC=), or even custom currencies specific to your domain, by editing the =resources/currencies.edn= file. The format for defining currencies is as follows:
 #+begin_src clojure
   {:eur {:type :iso-4217, :currency-code "EUR", :minor-units 2},
@@ -154,7 +154,7 @@ For ISO 4217 currencies, the =:symbol= key should not be used, as the library au
 For non-ISO currencies, such as Bitcoin, the =:symbol= key is required because they are not supported by =java.util.Locale=. Since their symbols are not locale-specific, we define a single symbol in the =resources/currencies.edn= file, which is used consistently across all locales.
 
 This approach provides flexibility in handling both standardized and custom currencies, allowing your application to adapt to a wide range of monetary systems.
-*** Formatting
+** Formatting
 As already mentioned, monetary amounts could be stored internally with more decimal places than the smallest unit of the currency. Although this may be important for accurate numerical computations, you might be interested in displaying amounts in a user-friendly format.
 
 To display monetary amounts in a user-friendly format, you can use the =format-money= function. This function will convert the internal representation of the monetary amount into a string with a more readable format.
@@ -200,7 +200,7 @@ For example:
   ;; 1.235 €
   ;; 1.234 €
 #+end_src
-*** Parsing
+** Parsing
 This library supports parsing strings with both ISO 4217 currencies (e.g., Euro) and non-ISO 4217 currencies (e.g., Bitcoin), whether they use currency symbols (e.g., =€= or =₿=) or currency codes (e.g., =EUR= or =BTC=).
 
 To parse a string representing a monetary amount, use the =parse-string= function, which accepts a map of configuration options as its second argument. The available options are:
@@ -262,7 +262,7 @@ If =parse-string= cannot recognize the format or the currency in the string, it 
   ;; Unhandled java.text.ParseException
   ;; Unparseable number: "1.234,56 ₿"
 #+end_src
-*** Equality and comparison
+** Equality and comparison
 You could use the following functions to do equality and comparison operations on monetary amounts: ~=~, =not==, =money<=, =money<==, =money>=, =money>==, =money-zero?=, =money-pos?=, and =money-neg?=.
 
 For example:
@@ -307,7 +307,7 @@ For example:
     (math/money-neg? money))
   ;; => true
 #+end_src
-*** Arithmetic operations
+** Arithmetic operations
 You can use =add=, =substract=, =multiply=, and =divide= to perform arithmetic operations on monetary amounts:
 #+begin_src clojure
   (require '[dinero.core :as dinero]
@@ -356,7 +356,7 @@ Adding or substracting monetary amounts with different currencies throws an =Exc
   ;; Currencies do not match
   ;; {:currencies (:eur :gbp)}
 #+end_src
-*** Rounding
+** Rounding
 As previously mentioned, money amounts could be stored internally with more decimal places than the smallest unit of the currency. But some applications might require operating with amounts rounded to the smallest unit of currency. In such cases, you can use a monetary amount of type rounded, but you can also use the =round= function to adjust the monetary amount accordingly.
 
 By default, the =round= function rounds amounts to the smallest unit of the currency, using the default rounding mode specified in the configuration file (if no rounding mode is configured, it defaults to =:half-even=):
@@ -409,7 +409,7 @@ This approach is also useful when formatting currencies with special rounding re
     (format/format-money rounded-money {:locale (java.util.Locale. "de" "CH")}))
   ;; => "CHF 1.05"
 #+end_src
-*** Currency conversion
+** Currency conversion
 This library provides several functions to convert monetary amounts between currencies using various sources for exchange rates.
 
 The simplest function is =convert-using-exchange-rate=, where you provide the exchange rate for the conversion:
@@ -460,7 +460,7 @@ Additionally, you can retrieve exchange rates from external providers. Currently
     (conversion/convert-using-coinbase money :eur date))
   ;; => {:amount 52314.756527447545254192M, :currency :eur}
 #+end_src
-** License
+* License
 Copyright © 2025 Sergio Navarro
 
 Distributed under the [[https://www.mozilla.org/en-US/MPL/2.0/][Mozilla Public License, version 2.0]].
