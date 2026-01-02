@@ -1,10 +1,12 @@
-;; Copyright (c) 2025 Sergio Navarro
-;;
-;; This Source Code Form is subject to the terms of the Mozilla Public
-;; License, v. 2.0. If a copy of the MPL was not distributed with this
-;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
-;;
-;; SPDX-License-Identifier: MPL-2.0.
+;;; dinero - A Clojure library for working with money
+;;;
+;;; Copyright (c) 2025 Sergio Navarro <sernamar@protonmail.com>
+;;;
+;;; This Source Code Form is subject to the terms of the Mozilla Public
+;;; License, v. 2.0. If a copy of the MPL was not distributed with this
+;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
+;;;
+;;; SPDX-License-Identifier: MPL-2.0.
 
 (ns dinero.conversion.ecb
   (:require [clojure.string :as str]
