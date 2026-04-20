@@ -35,7 +35,7 @@ For example, to set /euros/ as the default currency and the /half even/ method a
 #+end_src
 * Usage
 ** Monetary amounts
-This library support three types of monetary amounts:
+This library supports three types of monetary amounts:
 - =Money=: represents monetary amounts with arbitrary precision and scale, ensuring accurate numerical computations during arithmetic operations.
 - =FastMoney=: represents monetary amounts using a fixed scale, offering a balance between performance and accuracy while being precise enough for most applications.
 - =RoundedMoney=: represents monetary amounts that are automatically rounded after each arithmetic operation.
@@ -59,7 +59,7 @@ For convenience, you can use the =with-currency= macro to bind the default curre
     (dinero/money-of 1))
   ;; => {:amount 1M, :currency :gbp}
 #+end_src
-If none the =amount= nor the =currency= is specified, it uses =0= as the amount, and the default currency as the currency:
+If neither the =amount= nor the =currency= is specified, it uses =0= as the amount, and the default currency as the currency:
 #+begin_src clojure
   (dinero/money-of)
   ;; => {:amount 0M, :currency :eur}
@@ -111,7 +111,7 @@ You can use =rounded-money-of= to create monetary amounts that are automatically
 - =currency=: can be a keyword, a string, or a symbol, in either uppercase or lowercase.
 - =scale=: the number of decimal places to which the amount will be rounded.
 - =rounding-mode=: the rounding mode to use when rounding the amount.
-If =currency= is not specified, the =rounded-money-of= function will use the default currency from the configuration file. If =scale= is not provided, the minor units of the given currency will be used. If =rounding-mode= is not specified, the default rounding mode will be applied (or =:half-even= if the default rounding mode is not set in the configuration file):
+If the =currency= is not specified, the =rounded-money-of= function will use the default currency from the configuration file. If =scale= is not provided, the minor units of the given currency will be used. If =rounding-mode= is not specified, the default rounding mode will be applied (or =:half-even= if the default rounding mode is not set in the configuration file):
 #+begin_src clojure
   (dinero/rounded-money-of 1234.5678 :eur)
   ;; => {:amount 1234.57M, :currency :eur, :scale 2, :rounding-mode :half-even}
@@ -308,7 +308,7 @@ For example:
   ;; => true
 #+end_src
 ** Arithmetic operations
-You can use =add=, =substract=, =multiply=, and =divide= to perform arithmetic operations on monetary amounts:
+You can use =add=, =subtract=, =multiply=, and =divide= to perform arithmetic operations on monetary amounts:
 #+begin_src clojure
   (require '[dinero.core :as dinero]
            '[dinero.math :as math])
@@ -357,7 +357,7 @@ Adding or substracting monetary amounts with different currencies throws an =Exc
   ;; {:currencies (:eur :gbp)}
 #+end_src
 ** Rounding
-As previously mentioned, money amounts could be stored internally with more decimal places than the smallest unit of the currency. But some applications might require operating with amounts rounded to the smallest unit of currency. In such cases, you can use a monetary amount of type rounded, but you can also use the =round= function to adjust the monetary amount accordingly.
+As previously mentioned, monetary amounts could be stored internally with more decimal places than the smallest unit of the currency. But some applications might require operating with amounts rounded to the smallest unit of currency. In such cases, you can use a monetary amount of type =RoundedMoney=, but you can also use the =round= function to adjust the monetary amount accordingly.
 
 By default, the =round= function rounds amounts to the smallest unit of the currency, using the default rounding mode specified in the configuration file (if no rounding mode is configured, it defaults to =:half-even=):
 #+begin_src clojure
@@ -377,7 +377,7 @@ By default, the =round= function rounds amounts to the smallest unit of the curr
     (math/add m1-rounded m2-rounded))
   ;; => {:amount 3.12M, :currency :eur}
 #+end_src
-But you can also speficy the number of decimal places and the rounding mode you want to use when rounding. For example:
+But you can also specify the number of decimal places and the rounding mode you want to use when rounding. For example:
 #+begin_src clojure
   (let [m1 (dinero/money-of 1.555 :eur)
         m2 (dinero/money-of 1.555 :eur)
@@ -386,9 +386,9 @@ But you can also speficy the number of decimal places and the rounding mode you 
     (math/add m1-rounded m2-rounded))
   ;; => {:amount 4M, :currency :eur}
 #+end_src
-If necessary, you can also call =round= with two arguments, which are the monetary amount and a custom rounding funtion to use to round the monetary amount. This allows you to specify different rounding rules for certain cases.
+If necessary, you can also call =round= with two arguments, which are the monetary amount and a custom rounding function to use to round the monetary amount. This allows you to specify different rounding rules for certain cases.
 
-For example, the Swiss Franc (=CHF=) uses unique rounding rules because the smallest unit of currency in Switzerland is the 5-centime (=0.05 CHF=) coin. To handle the specific rounding requirements for Swiss Francs, you can use the =chf-rounding-fn= function, which containins a rounding function tailored to =CHF=:
+For example, the Swiss Franc (=CHF=) uses unique rounding rules because the smallest unit of currency in Switzerland is the 5-centime (=0.05 CHF=) coin. To handle the specific rounding requirements for Swiss Francs, you can use the =chf-rounding-fn= function, which contains a rounding function tailored to =CHF=:
 #+begin_src clojure
   (let [money (dinero/money-of 1.024 :chf)]
     (rounding/round money rounding/chf-rounding-fn))
